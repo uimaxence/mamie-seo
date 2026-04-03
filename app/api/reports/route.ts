@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { getUserReports } from '@/lib/report-store';
 import { getCredits } from '@/lib/credits';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   const userId = request.nextUrl.searchParams.get('userId');
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Verify user exists
-  const { data: user } = await supabase.auth.admin.getUserById(userId);
+  const { data: user } = await getSupabase().auth.admin.getUserById(userId);
   if (!user?.user) {
     return Response.json({ error: 'Utilisateur introuvable.' }, { status: 404 });
   }

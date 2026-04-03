@@ -1,9 +1,9 @@
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 import type { Report } from './types';
 
 // Save report to Supabase for persistence
 export async function persistReport(report: Report, userId?: string) {
-  const { error } = await supabase.from('reports').upsert({
+  const { error } = await getSupabase().from('reports').upsert({
     id: report.id,
     user_id: userId || null,
     email: report.onboarding ? sessionEmail(report) : '',
@@ -22,7 +22,7 @@ function sessionEmail(report: Report): string {
 
 // Get report from Supabase
 export async function getPersistedReport(id: string): Promise<Report | null> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('reports')
     .select('report_data')
     .eq('id', id)
@@ -39,7 +39,7 @@ export async function getUserReports(userId: string): Promise<{
   score: number;
   createdAt: string;
 }[]> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('reports')
     .select('id, url_analyzed, report_data, created_at')
     .eq('user_id', userId)
@@ -67,7 +67,7 @@ export async function getUserReports(userId: string): Promise<{
 
 // Link an anonymous report to a user after they sign up
 export async function linkReportToUser(reportId: string, userId: string, email: string) {
-  await supabase
+  await getSupabase()
     .from('reports')
     .update({ user_id: userId, email })
     .eq('id', reportId);

@@ -1,15 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+let _supabase: SupabaseClient | null = null;
 
-// Server-side client with service role key (full access)
-export const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Server-side client with service role key (full access), lazily initialized
+export function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    _supabase = createClient(supabaseUrl, supabaseServiceKey);
+  }
+  return _supabase;
+}
 
 // ─── Check if an email or IP has already used their free analysis ───
 
 export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{ limited: boolean; reason?: string }> {
   // Check by email
+  const supabase = getSupabase();
+
   const { data: emailData } = await supabase
     .from('analyses')
     .select('id')
@@ -42,6 +50,7 @@ export async function recordAnalysis(params: {
   url: string;
   reportId: string;
 }) {
+  const supabase = getSupabase();
   const { error } = await supabase.from('analyses').insert({
     email: params.email.toLowerCase().trim(),
     ip_address: params.ip,
@@ -58,6 +67,7 @@ export async function recordAnalysis(params: {
 // ─── Save email to leads table ───
 
 export async function saveEmail(email: string, reportId: string) {
+  const supabase = getSupabase();
   const { error } = await supabase.from('leads').upsert(
     {
       email: email.toLowerCase().trim(),

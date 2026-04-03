@@ -1,7 +1,7 @@
-import { supabase } from './supabase';
+import { getSupabase } from './supabase';
 
 export async function getCredits(email: string): Promise<number> {
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from('credits')
     .select('amount')
     .eq('email', email.toLowerCase().trim())
@@ -14,7 +14,7 @@ export async function deductCredit(email: string): Promise<boolean> {
   const normalizedEmail = email.toLowerCase().trim();
 
   // Try atomic decrement via SQL function first
-  const { error: rpcError } = await supabase.rpc('deduct_credit', {
+  const { error: rpcError } = await getSupabase().rpc('deduct_credit', {
     p_email: normalizedEmail,
   });
 
@@ -24,7 +24,7 @@ export async function deductCredit(email: string): Promise<boolean> {
   const current = await getCredits(normalizedEmail);
   if (current <= 0) return false;
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await getSupabase()
     .from('credits')
     .update({ amount: current - 1, updated_at: new Date().toISOString() })
     .eq('email', normalizedEmail)
@@ -37,7 +37,7 @@ export async function addCredits(email: string, amount: number): Promise<void> {
   const normalizedEmail = email.toLowerCase().trim();
 
   // Try upsert with increment
-  const { data: existing } = await supabase
+  const { data: existing } = await getSupabase()
     .from('credits')
     .select('amount')
     .eq('email', normalizedEmail)
@@ -45,13 +45,13 @@ export async function addCredits(email: string, amount: number): Promise<void> {
 
   if (!existing) {
     // Insert new row
-    await supabase.from('credits').insert({
+    await getSupabase().from('credits').insert({
       email: normalizedEmail,
       amount,
     });
   } else {
     // Update existing — add to current amount
-    await supabase
+    await getSupabase()
       .from('credits')
       .update({
         amount: existing.amount + amount,
