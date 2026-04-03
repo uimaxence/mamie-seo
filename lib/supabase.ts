@@ -14,32 +14,47 @@ export function getSupabase(): SupabaseClient {
 
 // ─── Check if an email or IP has already used their free analysis ───
 
-export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{ limited: boolean; reason?: string }> {
-  // Check by email
+export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{
+  limited: boolean;
+  reason?: string;
+  luckyDay?: boolean; // true = 2nd free analysis allowed
+}> {
   const supabase = getSupabase();
+  const normalizedEmail = email.toLowerCase().trim();
 
+  // Count analyses by email
   const { data: emailData } = await supabase
     .from('analyses')
     .select('id')
-    .eq('email', email.toLowerCase().trim())
-    .limit(1);
+    .eq('email', normalizedEmail);
 
-  if (emailData && emailData.length > 0) {
-    return { limited: true, reason: 'Cet email a déjà été utilisé pour une analyse.' };
-  }
+  const emailCount = emailData?.length ?? 0;
 
-  // Check by IP
+  // Count analyses by IP
   const { data: ipData } = await supabase
     .from('analyses')
     .select('id')
-    .eq('ip_address', ip)
-    .limit(1);
+    .eq('ip_address', ip);
 
-  if (ipData && ipData.length > 0) {
-    return { limited: true, reason: 'Une analyse a déjà été effectuée depuis cette connexion.' };
+  const ipCount = ipData?.length ?? 0;
+
+  const maxCount = Math.max(emailCount, ipCount);
+
+  // First analysis: no problem
+  if (maxCount === 0) {
+    return { limited: false };
   }
 
-  return { limited: false };
+  // Second analysis: "lucky day" — allow it
+  if (maxCount === 1) {
+    return { limited: false, luckyDay: true };
+  }
+
+  // 2+ analyses: blocked, must go Pro
+  return {
+    limited: true,
+    reason: 'Vous avez utilisé vos 2 analyses gratuites. Passez en Pro pour continuer !',
+  };
 }
 
 // ─── Record an analysis ───

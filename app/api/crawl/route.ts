@@ -42,14 +42,15 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "L'URL fournie n'est pas valide." }, { status: 400 });
   }
 
-  // Check rate limit: 1 analysis per email AND per IP (via Supabase)
+  // Check rate limit: 2 free analyses max, then block
   const rateCheck = await hasAlreadyAnalyzed(email, ip);
   if (rateCheck.limited) {
     return Response.json(
-      { error: rateCheck.reason || 'Vous avez déjà utilisé votre analyse gratuite.' },
+      { error: rateCheck.reason, upgrade: true },
       { status: 429 }
     );
   }
+  const isLuckyDay = rateCheck.luckyDay === true;
 
   // Use Server-Sent Events for progress
   const encoder = new TextEncoder();
@@ -63,6 +64,15 @@ export async function POST(request: NextRequest) {
   // Run the analysis in the background
   (async () => {
     try {
+      // Send lucky day message if applicable
+      if (isLuckyDay) {
+        await sendEvent({
+          step: 'connecting',
+          message: "C'est votre jour de chance ! Vous avez droit à une seconde analyse gratuite.",
+          detail: 'lucky_day',
+        });
+      }
+
       // Step 1-5: Crawl
       const crawlResult = await crawlSite(url, async (step, detail, progress) => {
         await sendEvent({ step: step as ProgressEvent['step'], message: detail || step, progress });
@@ -100,7 +110,7 @@ export async function POST(request: NextRequest) {
 
       // Save report in memory + persist in Supabase
       saveReport(report);
-      persistReport(report).catch(console.error);
+      persistReport(report, undefined, email).catch(console.error);
 
       // Record analysis in Supabase (rate limiting + lead capture)
       await recordAnalysis({ email, ip, url: crawlResult.finalUrl, reportId: report.id });
