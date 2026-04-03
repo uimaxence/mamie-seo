@@ -1,19 +1,18 @@
 import { jsPDF } from 'jspdf';
 import type { Report, DeepPageAnalysis } from './types';
 
-// ─── Colors ───
+// ─── Constants ───
 const PRIMARY = '#1A1A18';
 const SECONDARY = '#73726C';
 const MUTED = '#C2C0B6';
 const BORDER = '#EEEDEB';
 const WHITE = '#FFFFFF';
 const SURFACE = '#F8F8F7';
+const GREEN = '#22A168';
+const ORANGE = '#F27A2A';
 
 function hexToRgb(hex: string): [number, number, number] {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return [r, g, b];
+  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
 }
 
 function scoreColor(score: number): string {
@@ -23,341 +22,477 @@ function scoreColor(score: number): string {
   return '#22A168';
 }
 
-// ─── SEO Report PDF ───
+// ─── PDF Builder helper class ───
+class PdfBuilder {
+  doc: jsPDF;
+  y: number;
+  margin: number;
+  pageWidth: number;
+  contentWidth: number;
+
+  constructor() {
+    this.doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    this.y = 25;
+    this.margin = 20;
+    this.pageWidth = 210;
+    this.contentWidth = this.pageWidth - this.margin * 2;
+  }
+
+  checkBreak(needed: number) {
+    if (this.y + needed > 272) {
+      this.doc.addPage();
+      this.y = 25;
+    }
+  }
+
+  // Get line height for a given font size (in mm)
+  lineH(size: number): number {
+    return size * 0.38;
+  }
+
+  // Calculate wrapped text height before drawing
+  textHeight(text: string, size: number, maxWidth: number): number {
+    this.doc.setFontSize(size);
+    this.doc.setFont('helvetica', 'normal');
+    const lines = this.doc.splitTextToSize(text, maxWidth);
+    return lines.length * this.lineH(size) + (lines.length - 1) * 0.5;
+  }
+
+  text(text: string, x: number, options: {
+    size?: number; color?: string; bold?: boolean; maxWidth?: number; align?: 'left' | 'right';
+  } = {}): number {
+    const { size = 9, color = PRIMARY, bold = false, maxWidth, align = 'left' } = options;
+    this.doc.setFontSize(size);
+    this.doc.setTextColor(...hexToRgb(color));
+    this.doc.setFont('helvetica', bold ? 'bold' : 'normal');
+
+    if (maxWidth) {
+      const lines = this.doc.splitTextToSize(text, maxWidth) as string[];
+      const lh = this.lineH(size) + 0.5;
+      for (const line of lines) {
+        this.doc.text(line, x, this.y);
+        this.y += lh;
+      }
+      return lines.length * lh;
+    }
+
+    if (align === 'right') {
+      const w = this.doc.getTextWidth(text);
+      this.doc.text(text, x - w, this.y);
+    } else {
+      this.doc.text(text, x, this.y);
+    }
+    return this.lineH(size);
+  }
+
+  // Section header with uppercase label
+  sectionHeader(label: string) {
+    this.checkBreak(12);
+    this.y += 3;
+    this.doc.setFillColor(...hexToRgb(SURFACE));
+    this.doc.roundedRect(this.margin, this.y - 3.5, this.contentWidth, 7, 1, 1, 'F');
+    this.doc.setFontSize(7);
+    this.doc.setTextColor(...hexToRgb(SECONDARY));
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text(label, this.margin + 4, this.y);
+    this.y += 7;
+  }
+
+  // Thin horizontal line
+  separator() {
+    this.doc.setDrawColor(...hexToRgb(BORDER));
+    this.doc.setLineWidth(0.2);
+    this.doc.line(this.margin, this.y, this.pageWidth - this.margin, this.y);
+    this.y += 3;
+  }
+
+  // Progress bar
+  progressBar(x: number, w: number, pct: number, color: string) {
+    this.doc.setFillColor(...hexToRgb(BORDER));
+    this.doc.roundedRect(x, this.y, w, 2.5, 1, 1, 'F');
+    if (pct > 0) {
+      this.doc.setFillColor(...hexToRgb(color));
+      this.doc.roundedRect(x, this.y, Math.max(2, w * (pct / 100)), 2.5, 1, 1, 'F');
+    }
+    this.y += 5;
+  }
+
+  // Card with white background and border
+  cardStart() {
+    // We just add padding — the card visual is implied by spacing
+    this.y += 1;
+  }
+
+  gap(mm = 3) {
+    this.y += mm;
+  }
+
+  // Add footer to all pages
+  addFooters(leftText: string) {
+    const total = this.doc.getNumberOfPages();
+    for (let i = 1; i <= total; i++) {
+      this.doc.setPage(i);
+      this.doc.setFontSize(7);
+      this.doc.setTextColor(...hexToRgb(MUTED));
+      this.doc.text(leftText, this.margin, 287);
+      this.doc.text(`${i} / ${total}`, this.pageWidth - this.margin - 8, 287);
+      // Top line on non-first pages
+      if (i > 1) {
+        this.doc.setDrawColor(...hexToRgb(BORDER));
+        this.doc.setLineWidth(0.2);
+        this.doc.line(this.margin, 20, this.pageWidth - this.margin, 20);
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// SEO Report PDF
+// ═══════════════════════════════════════
 
 export function generateSeoReportPdf(report: Report): void {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pageWidth = 210;
-  const margin = 20;
-  const contentWidth = pageWidth - margin * 2;
-  let y = 20;
-
+  const b = new PdfBuilder();
   const { crawlResult, technicalScore, editorialAnalysis } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
   const combinedScore = editorialAnalysis
     ? Math.round((technicalScore.total + editorialScore) / 2)
     : technicalScore.total;
 
-  // ─── Helper functions ───
-  function addPage() {
-    doc.addPage();
-    y = 20;
-  }
-
-  function checkPageBreak(needed: number) {
-    if (y + needed > 275) addPage();
-  }
-
-  function drawText(text: string, x: number, yPos: number, options: {
-    size?: number; color?: string; weight?: 'normal' | 'bold'; maxWidth?: number;
-  } = {}) {
-    const { size = 10, color = PRIMARY, weight = 'normal', maxWidth } = options;
-    doc.setFontSize(size);
-    doc.setTextColor(...hexToRgb(color));
-    doc.setFont('helvetica', weight);
-    if (maxWidth) {
-      const lines = doc.splitTextToSize(text, maxWidth);
-      doc.text(lines, x, yPos);
-      return lines.length * (size * 0.4);
-    }
-    doc.text(text, x, yPos);
-    return size * 0.4;
-  }
-
-  function drawLine(x1: number, yPos: number, x2: number) {
-    doc.setDrawColor(...hexToRgb(BORDER));
-    doc.setLineWidth(0.3);
-    doc.line(x1, yPos, x2, yPos);
-  }
-
-  function drawRect(x: number, yPos: number, w: number, h: number, fill: string, radius = 2) {
-    doc.setFillColor(...hexToRgb(fill));
-    doc.roundedRect(x, yPos, w, h, radius, radius, 'F');
-  }
-
   // ─── Header ───
-  drawText('MAMIE SEO', margin, y, { size: 16, weight: 'bold' });
-  drawText('Rapport d\'analyse SEO', margin + 45, y, { size: 10, color: MUTED });
-  y += 4;
-  drawText(report.url, margin, y + 4, { size: 9, color: SECONDARY });
-  drawText(new Date(report.createdAt).toLocaleDateString('fr-FR', {
-    day: 'numeric', month: 'long', year: 'numeric'
-  }), pageWidth - margin, y + 4, { size: 8, color: MUTED });
-  // Right-align date
-  doc.setFontSize(8);
-  const dateWidth = doc.getTextWidth(new Date(report.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }));
-  doc.text(new Date(report.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }), pageWidth - margin - dateWidth, y + 4);
-
-  y += 12;
-  drawLine(margin, y, pageWidth - margin);
-  y += 8;
+  b.text('Mamie SEO', b.margin, { size: 14, bold: true });
+  b.y += 5;
+  b.text('Rapport d\'analyse SEO', b.margin, { size: 8, color: MUTED });
+  b.y += 5;
+  b.text(report.url, b.margin, { size: 9, color: SECONDARY });
+  b.y += 1;
+  b.text(new Date(report.createdAt).toLocaleDateString('fr-FR', {
+    day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  }), b.pageWidth - b.margin, { size: 8, color: MUTED, align: 'right' });
+  b.y += 3;
+  b.separator();
+  b.gap(2);
 
   // ─── Score global ───
-  drawRect(margin, y, contentWidth, 28, WHITE, 3);
-  doc.setDrawColor(...hexToRgb(BORDER));
-  doc.roundedRect(margin, y, contentWidth, 28, 3, 3, 'S');
+  b.doc.setFillColor(...hexToRgb(WHITE));
+  b.doc.roundedRect(b.margin, b.y, b.contentWidth, 22, 3, 3, 'FD');
+  b.doc.setDrawColor(...hexToRgb(BORDER));
+  b.doc.roundedRect(b.margin, b.y, b.contentWidth, 22, 3, 3, 'S');
 
-  drawText('SCORE GLOBAL', margin + contentWidth / 2 - 12, y + 6, { size: 7, color: MUTED, weight: 'bold' });
-  drawText(`${combinedScore}`, margin + contentWidth / 2 - 5, y + 18, { size: 22, color: scoreColor(combinedScore), weight: 'bold' });
-  drawText('/100', margin + contentWidth / 2 + 10, y + 18, { size: 9, color: MUTED });
+  const scoreCenterX = b.margin + b.contentWidth / 2;
+  b.doc.setFontSize(8);
+  b.doc.setTextColor(...hexToRgb(MUTED));
+  b.doc.setFont('helvetica', 'bold');
+  b.doc.text('SCORE GLOBAL', scoreCenterX, b.y + 7, { align: 'center' });
+
+  b.doc.setFontSize(20);
+  b.doc.setTextColor(...hexToRgb(scoreColor(combinedScore)));
+  b.doc.setFont('helvetica', 'bold');
+  b.doc.text(`${combinedScore}`, scoreCenterX - 4, b.y + 16);
+  b.doc.setFontSize(9);
+  b.doc.setTextColor(...hexToRgb(MUTED));
+  b.doc.text('/100', scoreCenterX + 9, b.y + 16);
 
   if (editorialAnalysis) {
-    drawText(`Tech: ${technicalScore.total}`, margin + 10, y + 18, { size: 9, color: SECONDARY });
-    drawText(`Éditorial: ${editorialScore}`, pageWidth - margin - 35, y + 18, { size: 9, color: SECONDARY });
+    b.doc.setFontSize(8);
+    b.doc.setTextColor(...hexToRgb(SECONDARY));
+    b.doc.text(`Technique: ${technicalScore.total}`, b.margin + 8, b.y + 16);
+    b.doc.text(`Editorial: ${editorialScore}`, b.pageWidth - b.margin - 32, b.y + 16);
   }
 
-  y += 34;
+  b.y += 28;
 
-  // ─── Ce qu'on a détecté ───
-  drawText('CE QU\'ON A DÉTECTÉ', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-  y += 6;
+  // ─── Détection technique ───
+  b.sectionHeader('CE QU\'ON A DETECTE');
 
   const cms = crawlResult.technologies.find(t => t.category === 'cms');
-  const techItems = [
-    `${crawlResult.totalUrlsCrawled} pages analysées`,
+  const items = [
+    `${crawlResult.totalUrlsCrawled} pages analysees`,
     cms ? `CMS : ${cms.name}` : null,
     `HTTPS : ${crawlResult.isHttps ? 'actif' : 'inactif'}`,
-    `Temps de réponse : ${(crawlResult.homepageResponseTimeMs / 1000).toFixed(1)}s`,
-    `Sitemap : ${crawlResult.sitemapFound ? `${crawlResult.sitemapUrls} URLs` : 'non trouvé'}`,
+    `Temps de reponse : ${(crawlResult.homepageResponseTimeMs / 1000).toFixed(1)}s`,
+    `Sitemap : ${crawlResult.sitemapFound ? `${crawlResult.sitemapUrls} URLs` : 'non trouve'}`,
   ].filter(Boolean) as string[];
 
-  for (const item of techItems) {
-    drawText(`• ${item}`, margin + 4, y, { size: 9, color: SECONDARY });
-    y += 4.5;
+  for (const item of items) {
+    b.text(`  •  ${item}`, b.margin + 2, { size: 8.5, color: SECONDARY });
+    b.y += 1;
   }
-  y += 4;
+  b.gap(2);
 
   // ─── Critères techniques ───
-  drawText('SCORE TECHNIQUE DÉTAILLÉ', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-  y += 6;
+  b.sectionHeader('SCORE TECHNIQUE DETAILLE');
 
-  for (const criterion of technicalScore.criteria) {
-    checkPageBreak(14);
-    const pct = (criterion.score / criterion.maxScore) * 100;
+  for (const c of technicalScore.criteria) {
+    const pct = (c.score / c.maxScore) * 100;
     const color = scoreColor(pct);
 
-    drawText(criterion.name, margin + 4, y, { size: 9, weight: 'bold' });
-    drawText(`${criterion.score}/${criterion.maxScore}`, pageWidth - margin - 15, y, { size: 9, color, weight: 'bold' });
-    y += 4;
+    b.checkBreak(18);
+
+    // Name + Score on same line
+    b.doc.setFontSize(9);
+    b.doc.setFont('helvetica', 'bold');
+    b.doc.setTextColor(...hexToRgb(PRIMARY));
+    b.doc.text(c.name, b.margin + 4, b.y);
+    b.doc.setTextColor(...hexToRgb(color));
+    b.doc.text(`${c.score}/${c.maxScore}`, b.pageWidth - b.margin - 4, b.y, { align: 'right' });
+    b.y += 4;
 
     // Progress bar
-    drawRect(margin + 4, y, contentWidth - 24, 2, SURFACE);
-    drawRect(margin + 4, y, (contentWidth - 24) * (pct / 100), 2, color);
-    y += 4;
+    b.progressBar(b.margin + 4, b.contentWidth - 8, pct, color);
 
-    const detailHeight = drawText(criterion.details, margin + 4, y, { size: 8, color: SECONDARY, maxWidth: contentWidth - 8 });
-    y += detailHeight + 4;
+    // Description
+    const descH = b.textHeight(c.details, 8, b.contentWidth - 10);
+    b.checkBreak(descH + 2);
+    b.text(c.details, b.margin + 4, { size: 8, color: SECONDARY, maxWidth: b.contentWidth - 10 });
+    b.gap(3);
   }
 
   // ─── Analyse éditoriale ───
   if (editorialAnalysis) {
-    checkPageBreak(20);
-    y += 4;
-    drawText('ANALYSE ÉDITORIALE', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-    y += 6;
+    b.sectionHeader('ANALYSE EDITORIALE');
 
-    const dimensions: [string, { score: number; resume: string; point_fort: string; point_amelioration: string }][] = [
-      ['Compréhension de l\'activité', editorialAnalysis.comprehension_activite],
-      ['Cohérence des offres', editorialAnalysis.coherence_offres],
+    const dims: [string, { score: number; resume: string; point_fort: string; point_amelioration: string }][] = [
+      ['Comprehension de l\'activite', editorialAnalysis.comprehension_activite],
+      ['Coherence des offres', editorialAnalysis.coherence_offres],
       ['Signaux de confiance', editorialAnalysis.signaux_confiance],
-      ['Appels à l\'action', editorialAnalysis.call_to_action],
-      ['Cohérence tonale', editorialAnalysis.coherence_tonale],
+      ['Appels a l\'action', editorialAnalysis.call_to_action],
+      ['Coherence tonale', editorialAnalysis.coherence_tonale],
     ];
 
-    for (const [title, dim] of dimensions) {
-      checkPageBreak(28);
-      drawText(title, margin + 4, y, { size: 9, weight: 'bold' });
-      drawText(`${dim.score}/100`, pageWidth - margin - 18, y, { size: 9, color: scoreColor(dim.score), weight: 'bold' });
-      y += 5;
+    for (const [title, dim] of dims) {
+      const totalH = 6 + b.textHeight(dim.resume, 8, b.contentWidth - 10) + 10
+        + b.textHeight(dim.point_fort, 8, b.contentWidth - 14)
+        + b.textHeight(dim.point_amelioration, 8, b.contentWidth - 14);
+      b.checkBreak(Math.min(totalH, 50));
 
-      const resumeH = drawText(dim.resume, margin + 4, y, { size: 8, color: SECONDARY, maxWidth: contentWidth - 8 });
-      y += resumeH + 2;
+      // Title + score
+      b.doc.setFontSize(9.5);
+      b.doc.setFont('helvetica', 'bold');
+      b.doc.setTextColor(...hexToRgb(PRIMARY));
+      b.doc.text(title, b.margin + 4, b.y);
+      b.doc.setTextColor(...hexToRgb(scoreColor(dim.score)));
+      b.doc.text(`${dim.score}`, b.pageWidth - b.margin - 4, b.y, { align: 'right' });
+      b.y += 5;
 
-      drawText(`✓ ${dim.point_fort}`, margin + 4, y, { size: 8, color: '#22A168', maxWidth: contentWidth - 8 });
-      y += 5;
-      const amelH = drawText(`→ ${dim.point_amelioration}`, margin + 4, y, { size: 8, color: '#F27A2A', maxWidth: contentWidth - 8 });
-      y += amelH + 5;
+      // Resume
+      b.text(dim.resume, b.margin + 4, { size: 8, color: SECONDARY, maxWidth: b.contentWidth - 10 });
+      b.gap(1);
+
+      // Point fort
+      b.text(`+ ${dim.point_fort}`, b.margin + 6, { size: 8, color: GREEN, maxWidth: b.contentWidth - 14 });
+      b.gap(0.5);
+
+      // Point amelioration
+      b.text(`- ${dim.point_amelioration}`, b.margin + 6, { size: 8, color: ORANGE, maxWidth: b.contentWidth - 14 });
+      b.gap(3);
+
+      // Thin separator between dimensions
+      b.doc.setDrawColor(...hexToRgb(BORDER));
+      b.doc.setLineWidth(0.1);
+      b.doc.line(b.margin + 4, b.y, b.pageWidth - b.margin - 4, b.y);
+      b.y += 3;
     }
 
     // ─── Mots-clés ───
     if (editorialAnalysis.mots_cles_metier) {
-      checkPageBreak(20);
-      drawText('MOTS-CLÉS', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-      y += 6;
-      drawText(`Détectés : ${editorialAnalysis.mots_cles_metier.mots_detectes.join(', ')}`, margin + 4, y, { size: 8, color: '#22A168', maxWidth: contentWidth - 8 });
-      y += 5;
-      drawText(`Manquants : ${editorialAnalysis.mots_cles_metier.mots_manquants_suggeres.join(', ')}`, margin + 4, y, { size: 8, color: '#F27A2A', maxWidth: contentWidth - 8 });
-      y += 8;
+      b.sectionHeader('MOTS-CLES');
+      b.text(`Detectes : ${editorialAnalysis.mots_cles_metier.mots_detectes.join(', ')}`, b.margin + 4, {
+        size: 8.5, color: GREEN, maxWidth: b.contentWidth - 10
+      });
+      b.gap(1);
+      b.text(`Manquants : ${editorialAnalysis.mots_cles_metier.mots_manquants_suggeres.join(', ')}`, b.margin + 4, {
+        size: 8.5, color: ORANGE, maxWidth: b.contentWidth - 10
+      });
+      b.gap(4);
     }
 
     // ─── Plan d'action ───
     if (editorialAnalysis.plan_action_prioritaire?.length > 0) {
-      checkPageBreak(20);
-      drawText('PLAN D\'ACTION PRIORISÉ', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-      y += 6;
+      b.sectionHeader('PLAN D\'ACTION PRIORISE');
 
       for (const action of editorialAnalysis.plan_action_prioritaire) {
-        checkPageBreak(10);
-        drawText(`${action.priorite}.`, margin + 4, y, { size: 9, weight: 'bold' });
-        const actionH = drawText(action.titre, margin + 12, y, { size: 9, maxWidth: contentWidth - 20 });
-        y += 4;
-        drawText(`Impact: ${action.impact} | ${action.difficulte} | ~${action.temps_estime}`, margin + 12, y, { size: 7, color: MUTED });
-        y += actionH + 4;
+        b.checkBreak(12);
+
+        // Circle with number
+        b.doc.setFillColor(...hexToRgb(SURFACE));
+        b.doc.circle(b.margin + 7, b.y - 1, 3, 'F');
+        b.doc.setFontSize(8);
+        b.doc.setTextColor(...hexToRgb(PRIMARY));
+        b.doc.setFont('helvetica', 'bold');
+        b.doc.text(`${action.priorite}`, b.margin + 7, b.y, { align: 'center' });
+
+        // Action text
+        b.text(action.titre, b.margin + 14, { size: 9, bold: true, maxWidth: b.contentWidth - 18 });
+
+        b.text(`Impact: ${action.impact}  •  ${action.difficulte}  •  ~${action.temps_estime}`, b.margin + 14, {
+          size: 7, color: MUTED
+        });
+        b.y += 3;
       }
     }
   }
 
-  // ─── Footer ───
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7);
-    doc.setTextColor(...hexToRgb(MUTED));
-    doc.text('Mamie SEO — mamie-seo.vercel.app', margin, 290);
-    doc.text(`${i} / ${totalPages}`, pageWidth - margin - 10, 290);
-  }
+  b.addFooters('Mamie SEO — mamie-seo.vercel.app');
 
-  // Save
   const domain = new URL(report.url).hostname.replace(/\./g, '-');
-  doc.save(`mamie-seo-rapport-${domain}.pdf`);
+  b.doc.save(`mamie-seo-rapport-${domain}.pdf`);
 }
 
-// ─── Deep Page Analysis PDF ───
+// ═══════════════════════════════════════
+// Deep Page Analysis PDF
+// ═══════════════════════════════════════
 
 export function generateDeepAnalysisPdf(
   analysis: DeepPageAnalysis,
   pageUrl: string,
   siteUrl: string
 ): void {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-  const pageWidth = 210;
-  const margin = 20;
-  const contentWidth = pageWidth - margin * 2;
-  let y = 20;
+  const b = new PdfBuilder();
 
-  function checkPageBreak(needed: number) {
-    if (y + needed > 275) { doc.addPage(); y = 20; }
-  }
+  // ─── Header ───
+  b.text('Mamie SEO', b.margin, { size: 14, bold: true });
+  b.y += 5;
+  b.text('Analyse de page approfondie', b.margin, { size: 8, color: MUTED });
+  b.y += 5;
 
-  function drawText(text: string, x: number, yPos: number, options: {
-    size?: number; color?: string; weight?: 'normal' | 'bold'; maxWidth?: number;
-  } = {}) {
-    const { size = 10, color = PRIMARY, weight = 'normal', maxWidth } = options;
-    doc.setFontSize(size);
-    doc.setTextColor(...hexToRgb(color));
-    doc.setFont('helvetica', weight);
-    if (maxWidth) {
-      const lines = doc.splitTextToSize(text, maxWidth);
-      doc.text(lines, x, yPos);
-      return lines.length * (size * 0.4);
-    }
-    doc.text(text, x, yPos);
-    return size * 0.4;
-  }
+  let displayUrl = pageUrl;
+  try { displayUrl = new URL(pageUrl).pathname || pageUrl; } catch { /* */ }
+  b.text(displayUrl, b.margin, { size: 9, color: SECONDARY, maxWidth: b.contentWidth });
+  b.gap(2);
+  b.separator();
+  b.gap(2);
 
-  // Header
-  drawText('MAMIE SEO', margin, y, { size: 16, weight: 'bold' });
-  drawText('Analyse de page approfondie', margin + 45, y, { size: 10, color: MUTED });
-  y += 6;
-  drawText(pageUrl, margin, y, { size: 8, color: SECONDARY, maxWidth: contentWidth });
-  y += 8;
-  doc.setDrawColor(...hexToRgb(BORDER));
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 8;
+  // ─── Score + resume ───
+  b.doc.setFillColor(...hexToRgb(WHITE));
+  b.doc.roundedRect(b.margin, b.y, b.contentWidth, 18, 3, 3, 'FD');
+  b.doc.setDrawColor(...hexToRgb(BORDER));
+  b.doc.roundedRect(b.margin, b.y, b.contentWidth, 18, 3, 3, 'S');
 
-  // Score
-  drawText('SCORE GLOBAL', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-  drawText(`${analysis.score_global}/100`, margin + 35, y, { size: 14, color: scoreColor(analysis.score_global), weight: 'bold' });
-  y += 8;
+  b.doc.setFontSize(18);
+  b.doc.setTextColor(...hexToRgb(scoreColor(analysis.score_global)));
+  b.doc.setFont('helvetica', 'bold');
+  b.doc.text(`${analysis.score_global}`, b.margin + 12, b.y + 12);
+  b.doc.setFontSize(8);
+  b.doc.setTextColor(...hexToRgb(MUTED));
+  b.doc.text('/100', b.margin + 24, b.y + 12);
 
-  // Executive summary
-  const summaryH = drawText(analysis.resume_executif, margin, y, { size: 9, color: SECONDARY, maxWidth: contentWidth });
-  y += summaryH + 6;
+  // Resume inside score card
+  b.doc.setFontSize(8);
+  b.doc.setTextColor(...hexToRgb(SECONDARY));
+  b.doc.setFont('helvetica', 'normal');
+  const summaryLines = b.doc.splitTextToSize(analysis.resume_executif, b.contentWidth - 45);
+  b.doc.text(summaryLines.slice(0, 3), b.margin + 35, b.y + 7);
 
-  // Scores by dimension
-  drawText('SCORES PAR DIMENSION', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-  y += 6;
+  b.y += 24;
+
+  // ─── Scores par dimension ───
+  b.sectionHeader('SCORES PAR DIMENSION');
 
   for (const [, dim] of Object.entries(analysis.scores_par_dimension)) {
-    checkPageBreak(8);
-    drawText(dim.label, margin + 4, y, { size: 8 });
-    drawText(`${dim.score}`, pageWidth - margin - 10, y, { size: 9, color: scoreColor(dim.score), weight: 'bold' });
-    y += 3;
-
-    doc.setFillColor(...hexToRgb(SURFACE));
-    doc.roundedRect(margin + 4, y, contentWidth - 18, 1.5, 0.5, 0.5, 'F');
-    doc.setFillColor(...hexToRgb(scoreColor(dim.score)));
-    doc.roundedRect(margin + 4, y, (contentWidth - 18) * (dim.score / 100), 1.5, 0.5, 0.5, 'F');
-    y += 5;
+    b.checkBreak(9);
+    b.doc.setFontSize(8.5);
+    b.doc.setFont('helvetica', 'normal');
+    b.doc.setTextColor(...hexToRgb(PRIMARY));
+    b.doc.text(dim.label, b.margin + 4, b.y);
+    b.doc.setFont('helvetica', 'bold');
+    b.doc.setTextColor(...hexToRgb(scoreColor(dim.score)));
+    b.doc.text(`${dim.score}`, b.pageWidth - b.margin - 4, b.y, { align: 'right' });
+    b.y += 3.5;
+    b.progressBar(b.margin + 4, b.contentWidth - 8, dim.score, scoreColor(dim.score));
   }
-  y += 4;
+  b.gap(2);
 
-  // Annotations
-  drawText('ANNOTATIONS', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-  y += 6;
+  // ─── Annotations ───
+  b.sectionHeader('ANNOTATIONS');
 
   const typeLabels: Record<string, string> = {
-    critique: 'CRITIQUE', avertissement: 'AVERTISSEMENT', positif: 'POSITIF', info: 'INFO'
+    critique: 'CRITIQUE', avertissement: 'ATTENTION', positif: 'POSITIF', info: 'INFO'
   };
   const typeColors: Record<string, string> = {
     critique: '#E05252', avertissement: '#F27A2A', positif: '#22A168', info: '#3B82F6'
   };
 
   for (const ann of analysis.annotations) {
-    checkPageBreak(24);
+    const obsH = b.textHeight(ann.observation, 8, b.contentWidth - 14);
+    const recH = b.textHeight(ann.recommandation, 8, b.contentWidth - 14);
+    b.checkBreak(15 + obsH + recH);
+
     const tc = typeColors[ann.type] || SECONDARY;
 
-    drawText(`${ann.id}`, margin + 4, y, { size: 9, color: tc, weight: 'bold' });
-    drawText(`[${typeLabels[ann.type] || ann.type}]`, margin + 10, y, { size: 7, color: tc });
-    drawText(ann.zone, margin + 38, y, { size: 7, color: MUTED });
-    y += 5;
+    // Pin circle + type badge
+    b.doc.setFillColor(...hexToRgb(tc));
+    b.doc.circle(b.margin + 6, b.y - 1, 3.5, 'F');
+    b.doc.setFontSize(8);
+    b.doc.setTextColor(255, 255, 255);
+    b.doc.setFont('helvetica', 'bold');
+    b.doc.text(`${ann.id}`, b.margin + 6, b.y, { align: 'center' });
 
-    drawText(ann.titre, margin + 4, y, { size: 9, weight: 'bold', maxWidth: contentWidth - 8 });
-    y += 5;
+    b.doc.setFontSize(6.5);
+    b.doc.setTextColor(...hexToRgb(tc));
+    b.doc.text(typeLabels[ann.type] || ann.type, b.margin + 12, b.y - 0.5);
 
-    const obsH = drawText(ann.observation, margin + 4, y, { size: 8, color: SECONDARY, maxWidth: contentWidth - 8 });
-    y += obsH + 2;
+    b.doc.setFontSize(7);
+    b.doc.setTextColor(...hexToRgb(MUTED));
+    b.doc.text(ann.zone, b.margin + 12, b.y + 2.5);
+    b.y += 5;
 
-    drawText('→ ' + ann.recommandation, margin + 4, y, { size: 8, color: '#1A1A18', maxWidth: contentWidth - 8 });
-    y += 6;
+    // Title
+    b.text(ann.titre, b.margin + 4, { size: 9.5, bold: true, maxWidth: b.contentWidth - 10 });
+    b.gap(0.5);
 
-    drawText(`Impact: ${ann.impact} | ${ann.difficulte}`, margin + 4, y, { size: 7, color: MUTED });
-    y += 6;
+    // Observation
+    b.text(ann.observation, b.margin + 4, { size: 8, color: SECONDARY, maxWidth: b.contentWidth - 10 });
+    b.gap(1);
+
+    // Recommendation (in a light bg)
+    const recStartY = b.y;
+    b.text(ann.recommandation, b.margin + 6, { size: 8, color: PRIMARY, maxWidth: b.contentWidth - 14 });
+    // Draw a subtle left bar for the recommendation
+    b.doc.setFillColor(...hexToRgb(tc));
+    b.doc.rect(b.margin + 3.5, recStartY - 2.5, 0.8, b.y - recStartY + 1, 'F');
+    b.gap(1);
+
+    // Meta
+    b.text(`Impact: ${ann.impact}  •  ${ann.difficulte}`, b.margin + 4, { size: 7, color: MUTED });
+    b.y += 2;
+
+    // Separator
+    b.doc.setDrawColor(...hexToRgb(BORDER));
+    b.doc.setLineWidth(0.1);
+    b.doc.line(b.margin + 4, b.y, b.pageWidth - b.margin - 4, b.y);
+    b.y += 3;
   }
 
-  // Action plan
+  // ─── Plan d'action ───
   if (analysis.plan_action?.length > 0) {
-    checkPageBreak(15);
-    drawText('PLAN D\'ACTION', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-    y += 6;
+    b.sectionHeader('PLAN D\'ACTION');
 
     for (const action of analysis.plan_action) {
-      checkPageBreak(10);
-      drawText(`${action.priorite}.`, margin + 4, y, { size: 9, weight: 'bold' });
-      drawText(action.action, margin + 12, y, { size: 9, maxWidth: contentWidth - 20 });
-      y += 4;
-      drawText(`${action.categorie} | Impact: ${action.impact} | ${action.difficulte} | ~${action.temps_estime}`, margin + 12, y, { size: 7, color: MUTED });
-      y += 6;
+      b.checkBreak(12);
+
+      b.doc.setFillColor(...hexToRgb(SURFACE));
+      b.doc.circle(b.margin + 7, b.y - 1, 3, 'F');
+      b.doc.setFontSize(8);
+      b.doc.setTextColor(...hexToRgb(PRIMARY));
+      b.doc.setFont('helvetica', 'bold');
+      b.doc.text(`${action.priorite}`, b.margin + 7, b.y, { align: 'center' });
+
+      b.text(action.action, b.margin + 14, { size: 9, bold: true, maxWidth: b.contentWidth - 18 });
+      b.text(`${action.categorie}  •  Impact: ${action.impact}  •  ${action.difficulte}  •  ~${action.temps_estime}`, b.margin + 14, {
+        size: 7, color: MUTED
+      });
+      b.y += 3;
     }
   }
 
-  // Verdict
-  checkPageBreak(15);
-  y += 2;
-  drawText('VERDICT', margin, y, { size: 7, color: MUTED, weight: 'bold' });
-  y += 5;
-  drawText(analysis.verdict_final, margin + 4, y, { size: 9, color: PRIMARY, maxWidth: contentWidth - 8 });
+  // ─── Verdict ───
+  b.checkBreak(20);
+  b.sectionHeader('VERDICT');
+  b.text(analysis.verdict_final, b.margin + 4, { size: 9, maxWidth: b.contentWidth - 8 });
 
-  // Footer
-  const totalPages = doc.getNumberOfPages();
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(7);
-    doc.setTextColor(...hexToRgb(MUTED));
-    doc.text('Mamie SEO — mamie-seo.vercel.app', margin, 290);
-    doc.text(`${i} / ${totalPages}`, pageWidth - margin - 10, 290);
-  }
+  b.addFooters('Mamie SEO — mamie-seo.vercel.app');
 
-  const pageDomain = new URL(pageUrl).pathname.replace(/\//g, '-').replace(/^-|-$/g, '') || 'homepage';
-  doc.save(`mamie-seo-analyse-${pageDomain}.pdf`);
+  let filename = 'homepage';
+  try { filename = new URL(pageUrl).pathname.replace(/\//g, '-').replace(/^-|-$/g, '') || 'homepage'; } catch { /* */ }
+  b.doc.save(`mamie-seo-analyse-${filename}.pdf`);
 }
