@@ -12,6 +12,7 @@ import KeywordsSection from '@/components/KeywordsSection';
 import ScoreRadar from '@/components/ScoreRadar';
 import AnnotatedScreenshot from '@/components/AnnotatedScreenshot';
 import AnnotationCard from '@/components/AnnotationCard';
+import { generateSeoReportPdf, generateDeepAnalysisPdf } from '@/lib/pdf-export';
 import { IconSearch, IconTarget, IconBarChart, IconStar, IconArrowRight, IconCreditCard } from '@/components/Icons';
 
 const EDITORIAL_TITLES: Record<string, string> = {
@@ -236,6 +237,17 @@ export default function ReportPage() {
         {/* ════════════════════════════ TAB: AUDIT SEO ════════════════════════════ */}
         {activeTab === 'seo' && (
           <div className="animate-fade-in-up">
+            {/* Download PDF */}
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => generateSeoReportPdf(report)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEDEB] rounded-[8px] text-[12px] font-medium text-[#73726C] hover:text-[#1A1A18] hover:border-[#C2C0B6] transition-colors"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Télécharger le PDF
+              </button>
+            </div>
+
             {/* Bento row 1: Score + Tech metrics */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
               {/* Score card — spans 1 col */}
@@ -759,6 +771,17 @@ export default function ReportPage() {
                 <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                   <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3">Verdict</h3>
                   <p className="text-[13px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.verdict_final}</p>
+                </div>
+
+                {/* Download deep analysis PDF */}
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => generateDeepAnalysisPdf(deepResult.analysis, customUrl || '', report.url)}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Télécharger l&apos;analyse en PDF
+                  </button>
                 </div>
               </div>
             )}

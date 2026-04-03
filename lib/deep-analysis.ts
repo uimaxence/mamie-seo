@@ -130,50 +130,76 @@ export async function analyzePageDeep(
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const metier = onboarding.metierAutre || onboarding.metier;
 
-  // Capture screenshots + extract page data in parallel
-  const [screenshots, pageData] = await Promise.all([
-    captureScreenshots(pageUrl),
-    extractPageData(pageUrl),
-  ]);
+  // Try to capture screenshots (may fail on Vercel/serverless)
+  let screenshots: Awaited<ReturnType<typeof captureScreenshots>> | null = null;
+  let pageData: Awaited<ReturnType<typeof extractPageData>>;
 
-  // Prepare images for Claude Vision
-  const segments = await segmentScreenshot(screenshots.desktop);
-  const isSegmented = segments.length > 1;
-
-  // Build image content blocks for Claude
-  const imageBlocks: Anthropic.Messages.ImageBlockParam[] = [];
-  let segmentInfo = '';
-
-  if (isSegmented) {
-    segmentInfo = `\nLe screenshot a été découpé en ${segments.length} segments avec 100px de chevauchement :`;
-    for (const seg of segments) {
-      segmentInfo += `\nImage ${seg.index + 1} : pixels ${seg.offsetY} à ${seg.offsetY + seg.height}`;
-      imageBlocks.push({
-        type: 'image',
-        source: {
-          type: 'base64',
-          media_type: 'image/png',
-          data: seg.buffer.toString('base64'),
-        },
-      });
-    }
-    segmentInfo += '\nLes coordonnées y_percent doivent être relatives à la HAUTEUR TOTALE de la page, pas au segment.';
-  } else {
-    const optimized = await optimizeForApi(screenshots.desktop);
-    imageBlocks.push({
-      type: 'image',
-      source: {
-        type: 'base64',
-        media_type: 'image/png',
-        data: optimized.toString('base64'),
-      },
+  try {
+    const [s, p] = await Promise.all([
+      captureScreenshots(pageUrl),
+      extractPageData(pageUrl),
+    ]);
+    screenshots = s;
+    pageData = p;
+  } catch {
+    // Playwright unavailable — fallback to HTML-only analysis via fetch
+    const res = await fetch(pageUrl, {
+      headers: { 'User-Agent': 'MamieSEO-Analyzer/1.0' },
+      signal: AbortSignal.timeout(30_000),
     });
+    if (!res.ok) throw new Error(`Page inaccessible (${res.status})`);
+    const html = await res.text();
+    const cheerio = await import('cheerio');
+    const $ = cheerio.load(html);
+    $('script, style, noscript').remove();
+    pageData = {
+      text: $('body').text().replace(/\s+/g, ' ').trim().slice(0, 10000),
+      h1: $('h1').first().text().trim(),
+      h2List: $('h2').map((_, el) => $(el).text().trim()).get(),
+      ctaList: $('button, a[class*="btn"], a[class*="cta"], [type="submit"]').map((_, el) => $(el).text().trim()).get().filter((t: string) => t.length > 0 && t.length < 80).slice(0, 10),
+      font: 'Non détectée (mode texte)',
+      imgCount: $('img').length,
+      formCount: $('form').length,
+      videoCount: $('video, iframe[src*="youtube"]').length,
+    };
   }
 
-  const systemPrompt = buildSystemPrompt(screenshots.desktopWidth, screenshots.desktopHeight);
+  // Build content blocks for Claude
+  const imageBlocks: Anthropic.Messages.ImageBlockParam[] = [];
+  let segmentInfo = '';
+  let screenshotWidth = 1440;
+  let screenshotHeight = 3000;
+
+  if (screenshots) {
+    const segments = await segmentScreenshot(screenshots.desktop);
+    screenshotWidth = screenshots.desktopWidth;
+    screenshotHeight = screenshots.desktopHeight;
+
+    if (segments.length > 1) {
+      segmentInfo = `\nLe screenshot a été découpé en ${segments.length} segments avec 100px de chevauchement :`;
+      for (const seg of segments) {
+        segmentInfo += `\nImage ${seg.index + 1} : pixels ${seg.offsetY} à ${seg.offsetY + seg.height}`;
+        imageBlocks.push({
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/png', data: seg.buffer.toString('base64') },
+        });
+      }
+      segmentInfo += '\nLes coordonnées y_percent doivent être relatives à la HAUTEUR TOTALE de la page, pas au segment.';
+    } else {
+      const optimized = await optimizeForApi(screenshots.desktop);
+      imageBlocks.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: optimized.toString('base64') },
+      });
+    }
+  } else {
+    segmentInfo = '\nATTENTION : Pas de screenshot disponible. Analyse basée uniquement sur le HTML extrait. Positionne quand même les annotations avec des y_percent estimés selon la structure typique (hero ~5%, nav ~2%, services ~35%, testimonials ~65%, footer ~95%).';
+  }
+
+  const systemPrompt = buildSystemPrompt(screenshotWidth, screenshotHeight);
   const userPrompt = buildUserPrompt(
     pageUrl, metier, pageData,
-    screenshots.desktopWidth, screenshots.desktopHeight,
+    screenshotWidth, screenshotHeight,
     segmentInfo
   );
 
@@ -207,19 +233,30 @@ export async function analyzePageDeep(
     ann.y_percent = Math.max(2, Math.min(98, ann.y_percent));
   }
 
-  // Prepare base64 screenshots for frontend
-  const desktopOptimized = await optimizeForApi(screenshots.desktop);
+  // Prepare base64 screenshots for frontend (may be null on serverless)
+  let desktopBase64 = '';
   let mobileBase64: string | null = null;
-  try {
-    const mobileOptimized = await optimizeForApi(screenshots.mobile);
-    mobileBase64 = mobileOptimized.toString('base64');
-  } catch { /* mobile screenshot may fail */ }
+  let finalWidth = screenshotWidth;
+  let finalHeight = screenshotHeight;
+
+  if (screenshots) {
+    try {
+      const desktopOptimized = await optimizeForApi(screenshots.desktop);
+      desktopBase64 = desktopOptimized.toString('base64');
+      finalWidth = screenshots.desktopWidth;
+      finalHeight = screenshots.desktopHeight;
+    } catch { /* */ }
+    try {
+      const mobileOptimized = await optimizeForApi(screenshots.mobile);
+      mobileBase64 = mobileOptimized.toString('base64');
+    } catch { /* */ }
+  }
 
   return {
     analysis,
-    desktopScreenshot: desktopOptimized.toString('base64'),
+    desktopScreenshot: desktopBase64,
     mobileScreenshot: mobileBase64,
-    desktopWidth: screenshots.desktopWidth,
-    desktopHeight: screenshots.desktopHeight,
+    desktopWidth: finalWidth,
+    desktopHeight: finalHeight,
   };
 }
