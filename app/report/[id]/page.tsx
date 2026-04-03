@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
+import AuthHeader from '@/components/AuthHeader';
 import type { Report, DeepPageAnalysis, DeepAnalysisResult } from '@/lib/types';
 import ScoreGauge from '@/components/ScoreGauge';
 import TechBlock from '@/components/TechBlock';
@@ -29,6 +31,7 @@ export default function ReportPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { email: authEmail } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -80,7 +83,7 @@ export default function ReportPage() {
   }, [searchParams]);
 
   const handleDeepAnalysis = async (url: string) => {
-    const email = sessionStorage.getItem('mamie_email');
+    const email = authEmail || sessionStorage.getItem('mamie_email');
     if (!email) {
       setDeepError('Session expirée. Veuillez relancer une analyse.');
       return;
@@ -169,24 +172,7 @@ export default function ReportPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <header className="px-6 py-4 flex items-center justify-between border-b border-[#EEEDEB] bg-white">
-        <span className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</span>
-        <div className="flex items-center gap-4">
-          {credits !== null && (
-            <span className="text-[11px] text-[#73726C] flex items-center gap-1">
-              <IconCreditCard size={14} />
-              {credits} crédit{credits !== 1 ? 's' : ''}
-            </span>
-          )}
-          <button
-            onClick={() => router.push('/')}
-            className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors"
-          >
-            Nouvelle analyse
-          </button>
-        </div>
-      </header>
+      <AuthHeader showNewAnalysis />
 
       {/* Report header */}
       <div className="bg-white border-b border-[#EEEDEB] px-6 pt-6 pb-0">
@@ -508,7 +494,7 @@ export default function ReportPage() {
                       <button
                         onClick={async () => {
                           if (!promoCode.trim()) return;
-                          const email = sessionStorage.getItem('mamie_email');
+                          const email = authEmail || sessionStorage.getItem('mamie_email');
                           if (!email) { setPromoError('Session expirée.'); return; }
                           setPromoLoading(true);
                           setPromoError('');

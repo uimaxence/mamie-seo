@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
+import AuthHeader from '@/components/AuthHeader';
 import {
   IconSearch, IconBarChart, IconTarget, IconStar,
   IconShield, IconZap, IconType, IconCreditCard, IconArrowRight, IconCheck
@@ -88,9 +90,15 @@ const FEATURES = [
 
 export default function LandingPage() {
   const router = useRouter();
+  const { user, email: authEmail } = useAuth();
   const [url, setUrl] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+
+  // Prefill email if user is logged in
+  useEffect(() => {
+    if (authEmail && !email) setEmail(authEmail);
+  }, [authEmail, email]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,26 +112,23 @@ export default function LandingPage() {
       return;
     }
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    // If logged in, use auth email directly
+    const finalEmail = user?.email || email;
+    if (!finalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalEmail)) {
       setError("Entrez une adresse email valide.");
       return;
     }
 
     const fullUrl = url.startsWith('http') ? url : `https://${url}`;
     sessionStorage.setItem('mamie_url', fullUrl);
-    sessionStorage.setItem('mamie_email', email.trim().toLowerCase());
+    sessionStorage.setItem('mamie_email', (user?.email || email).trim().toLowerCase());
     router.push('/onboarding');
   };
 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="px-6 py-4 flex items-center justify-between max-w-5xl mx-auto w-full">
-        <span className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</span>
-        <a href="#pricing" className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors">
-          Tarifs
-        </a>
-      </header>
+      <AuthHeader />
 
       {/* Hero section */}
       <section className="flex-1 flex flex-col items-center px-6 pt-12 pb-16">
@@ -153,13 +158,20 @@ export default function LandingPage() {
                   className="w-full px-4 py-3.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
                   autoFocus
                 />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="vous@exemple.com"
-                  className="w-full px-4 py-3.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
-                />
+                {user ? (
+                  <div className="flex items-center gap-2 px-4 py-3 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#73726C]">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-7" stroke="#22A168" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    Connecté en tant que {user.email}
+                  </div>
+                ) : (
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="vous@exemple.com"
+                    className="w-full px-4 py-3.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
+                  />
+                )}
                 {error && <p className="text-[11px] text-[#E05252] px-1">{error}</p>}
                 <button
                   type="submit"
