@@ -149,34 +149,76 @@ export interface EditorialAnalysis {
 
 // ─── Deep Page Analysis ───
 
-export interface DeepPageSection {
+export interface DimensionScore {
   score: number;
-  resume: string;
-  points: string[];
-  zone_page?: string;
+  label: string;
 }
 
 export interface PageAnnotation {
-  label: string;
+  id: number;
+  zone: string;
+  x_percent: number;
   y_percent: number;
-  verdict: 'positif' | 'neutre' | 'negatif';
-  note: string;
+  type: 'critique' | 'avertissement' | 'positif' | 'info';
+  titre: string;
+  observation: string;
+  recommandation: string;
+  impact: string;
+  difficulte: string;
+  glossaire_terme?: string | null;
+}
+
+export interface MobileAnalysis {
+  score: number;
+  problemes_critiques: string[];
+  points_positifs: string[];
+}
+
+export interface CoherenceVisuelle {
+  score: number;
+  palette_detectee: string;
+  coherence_couleurs: string;
+  coherence_typographie: string;
+  problemes_detectes: string[];
+}
+
+export interface DeepActionItem {
+  priorite: number;
+  categorie: string;
+  action: string;
+  impact: string;
+  difficulte: string;
+  temps_estime: string;
+  annotation_ref?: number;
 }
 
 export interface DeepPageAnalysis {
   score_global: number;
-  premiere_impression: DeepPageSection;
-  structure_page: DeepPageSection;
-  copywriting: DeepPageSection;
-  call_to_action: DeepPageSection;
-  confiance_preuve_sociale: DeepPageSection;
-  annotations?: PageAnnotation[];
-  recommandations: {
-    priorite: number;
-    titre: string;
-    description: string;
-    impact: string;
-  }[];
+  resume_executif: string;
+  scores_par_dimension: {
+    premiere_impression: DimensionScore;
+    hierarchie_visuelle: DimensionScore;
+    copywriting: DimensionScore;
+    cta_conversion: DimensionScore;
+    confiance_credibilite: DimensionScore;
+    coherence_design: DimensionScore;
+    mobile_readability: DimensionScore;
+  };
+  annotations: PageAnnotation[];
+  analyse_mobile: MobileAnalysis;
+  analyse_coherence_visuelle: CoherenceVisuelle;
+  plan_action: DeepActionItem[];
+  verdict_final: string;
+}
+
+// Screenshots data passed alongside analysis
+export interface DeepAnalysisResult {
+  analysis: DeepPageAnalysis;
+  desktopScreenshot: string; // base64
+  mobileScreenshot: string | null; // base64
+  desktopWidth: number;
+  desktopHeight: number;
+  remainingCredits: number;
 }
 
 // ─── Full Report ───

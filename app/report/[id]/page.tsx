@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import type { Report, DeepPageAnalysis, PageAnnotation } from '@/lib/types';
+import type { Report, DeepPageAnalysis, DeepAnalysisResult } from '@/lib/types';
 import ScoreGauge from '@/components/ScoreGauge';
 import TechBlock from '@/components/TechBlock';
 import CriteriaCard from '@/components/CriteriaCard';
 import EditorialSection from '@/components/EditorialSection';
 import ActionPlan from '@/components/ActionPlan';
 import KeywordsSection from '@/components/KeywordsSection';
+import ScoreRadar from '@/components/ScoreRadar';
+import AnnotatedScreenshot from '@/components/AnnotatedScreenshot';
+import AnnotationCard from '@/components/AnnotationCard';
 import { IconSearch, IconTarget, IconBarChart, IconStar, IconArrowRight, IconCreditCard } from '@/components/Icons';
 
 const EDITORIAL_TITLES: Record<string, string> = {
@@ -19,13 +22,7 @@ const EDITORIAL_TITLES: Record<string, string> = {
   coherence_tonale: 'Cohérence tonale',
 };
 
-const DEEP_SECTION_TITLES: Record<string, { title: string; icon: React.ReactNode }> = {
-  premiere_impression: { title: 'Première impression', icon: <IconTarget size={16} /> },
-  structure_page: { title: 'Structure de la page', icon: <IconBarChart size={16} /> },
-  copywriting: { title: 'Copywriting', icon: <IconStar size={16} /> },
-  call_to_action: { title: 'Appels à l\'action', icon: <IconArrowRight size={16} /> },
-  confiance_preuve_sociale: { title: 'Confiance & preuve sociale', icon: <IconSearch size={16} /> },
-};
+// Deep section titles removed — now using ScoreRadar + AnnotationCard
 
 export default function ReportPage() {
   const params = useParams();
@@ -39,12 +36,11 @@ export default function ReportPage() {
   // Deep page analysis state
   const [customUrl, setCustomUrl] = useState('');
   const [deepLoading, setDeepLoading] = useState(false);
-  const [deepAnalysis, setDeepAnalysis] = useState<DeepPageAnalysis | null>(null);
+  const [deepResult, setDeepResult] = useState<DeepAnalysisResult | null>(null);
   const [deepError, setDeepError] = useState('');
   const [credits, setCredits] = useState<number | null>(null);
-  const [screenshot, setScreenshot] = useState<string | null>(null);
-  const [screenshotLoading, setScreenshotLoading] = useState(false);
   const [activeAnnotation, setActiveAnnotation] = useState<number | null>(null);
+  const [screenshotView, setScreenshotView] = useState<'desktop' | 'mobile'>('desktop');
 
   const id = params.id as string;
 
@@ -87,7 +83,7 @@ export default function ReportPage() {
 
     setDeepLoading(true);
     setDeepError('');
-    setDeepAnalysis(null);
+    setDeepResult(null);
 
     try {
       const res = await fetch('/api/deep-analyze', {
@@ -118,20 +114,15 @@ export default function ReportPage() {
         return;
       }
 
-      setDeepAnalysis(data.analysis);
+      setDeepResult({
+        analysis: data.analysis,
+        desktopScreenshot: data.desktopScreenshot,
+        mobileScreenshot: data.mobileScreenshot,
+        desktopWidth: data.desktopWidth,
+        desktopHeight: data.desktopHeight,
+        remainingCredits: data.remainingCredits,
+      });
       setCredits(data.remainingCredits);
-
-      // Take screenshot in parallel (non-blocking)
-      setScreenshotLoading(true);
-      fetch('/api/screenshot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-      })
-        .then((r) => r.json())
-        .then((d) => { if (d.screenshot) setScreenshot(d.screenshot); })
-        .catch(() => {})
-        .finally(() => setScreenshotLoading(false));
     } catch {
       setDeepError('Erreur de connexion.');
     } finally {
@@ -404,7 +395,7 @@ export default function ReportPage() {
         {activeTab === 'page' && (
           <div className="animate-fade-in-up max-w-2xl mx-auto">
             {/* Page selector */}
-            {!deepAnalysis && !deepLoading && (
+            {!deepResult && !deepLoading && (
               <div className="space-y-6">
                 <div className="text-center mb-2">
                   <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2">
@@ -512,167 +503,206 @@ export default function ReportPage() {
             )}
 
             {/* Deep analysis results */}
-            {deepAnalysis && (
+            {deepResult && (
               <div className="space-y-6 max-w-none">
                 <div className="flex items-center justify-between">
                   <h2 className="text-[18px] font-medium text-[#1A1A18]">Analyse approfondie</h2>
                   <button
-                    onClick={() => { setDeepAnalysis(null); setDeepError(''); setScreenshot(null); setActiveAnnotation(null); }}
+                    onClick={() => { setDeepResult(null); setDeepError(''); setActiveAnnotation(null); }}
                     className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors"
                   >
                     Analyser une autre page
                   </button>
                 </div>
 
-                {/* Global score */}
-                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6 flex justify-center">
-                  <ScoreGauge score={deepAnalysis.score_global} size={140} label="Score page" />
-                </div>
-
-                {/* Screenshot + annotations panel */}
-                {(screenshot || screenshotLoading) && (
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 overflow-hidden">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-4">
-                      Capture annotée
-                    </h3>
-                    <div className="flex gap-4">
-                      {/* Screenshot with annotation markers */}
-                      <div className="relative flex-shrink-0 w-[340px] border border-[#EEEDEB] rounded-[8px] overflow-hidden bg-[#F8F8F7]">
-                        {screenshotLoading && !screenshot ? (
-                          <div className="h-[500px] flex items-center justify-center">
-                            <div className="w-8 h-8 border-2 border-[#EEEDEB] border-t-[#1A1A18] rounded-full animate-spin" />
-                          </div>
-                        ) : screenshot ? (
-                          <div className="relative">
-                            <img
-                              src={`data:image/png;base64,${screenshot}`}
-                              alt="Capture de la page"
-                              className="w-full"
-                            />
-                            {/* Annotation markers on the screenshot */}
-                            {deepAnalysis.annotations?.map((ann, i) => {
-                              const verdictColor = ann.verdict === 'positif' ? '#22A168' : ann.verdict === 'negatif' ? '#E05252' : '#F0C744';
-                              return (
-                                <button
-                                  key={i}
-                                  className="absolute left-2 flex items-center gap-1 transition-all"
-                                  style={{ top: `${ann.y_percent}%`, transform: 'translateY(-50%)' }}
-                                  onClick={() => setActiveAnnotation(activeAnnotation === i ? null : i)}
-                                >
-                                  <span
-                                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-medium shadow-sm"
-                                    style={{ backgroundColor: verdictColor }}
-                                  >
-                                    {i + 1}
-                                  </span>
-                                  {activeAnnotation === i && (
-                                    <span className="bg-white border border-[#EEEDEB] rounded-[8px] px-3 py-2 text-[11px] text-[#1A1A18] shadow-[0_1px_4px_rgba(0,0,0,.06)] max-w-[200px] z-10 whitespace-normal">
-                                      <strong className="block mb-0.5">{ann.label}</strong>
-                                      <span className="text-[#73726C]">{ann.note}</span>
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : null}
-                      </div>
-
-                      {/* Annotation list */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-2">
-                          Points observés
-                        </p>
-                        {deepAnalysis.annotations?.map((ann, i) => {
-                          const verdictColor = ann.verdict === 'positif' ? '#22A168' : ann.verdict === 'negatif' ? '#E05252' : '#F0C744';
-                          const verdictBg = ann.verdict === 'positif' ? '#EAF3DE' : ann.verdict === 'negatif' ? '#FEE' : '#FAEEDA';
-                          return (
-                            <div
-                              key={i}
-                              className={`flex items-start gap-3 p-3 rounded-[8px] cursor-pointer transition-colors ${
-                                activeAnnotation === i ? 'bg-[#F8F8F7] border border-[#EEEDEB]' : 'hover:bg-[#F8F8F7]'
-                              }`}
-                              onClick={() => setActiveAnnotation(activeAnnotation === i ? null : i)}
-                            >
-                              <span
-                                className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-medium shrink-0 mt-0.5"
-                                style={{ backgroundColor: verdictColor }}
-                              >
-                                {i + 1}
-                              </span>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                  <span className="text-[12px] font-medium text-[#1A1A18]">{ann.label}</span>
-                                  <span
-                                    className="px-1.5 py-0.5 rounded-full text-[9px] font-medium"
-                                    style={{ backgroundColor: verdictBg, color: verdictColor }}
-                                  >
-                                    {ann.verdict}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-[#73726C] leading-relaxed">{ann.note}</p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                {/* Row 1: Score + Radar + Executive summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6 flex flex-col items-center justify-center">
+                    <ScoreGauge score={deepResult.analysis.score_global} size={140} label="Score page" />
+                  </div>
+                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 flex items-center justify-center">
+                    <ScoreRadar scores={deepResult.analysis.scores_par_dimension} />
+                  </div>
+                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3">Diagnostic</h3>
+                    <p className="text-[13px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.resume_executif}</p>
+                    {/* Legend */}
+                    <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-dashed border-[#EEEDEB]">
+                      {[
+                        { color: '#E05252', label: 'Critique' },
+                        { color: '#F27A2A', label: 'Avertissement' },
+                        { color: '#22A168', label: 'Positif' },
+                        { color: '#3B82F6', label: 'Info' },
+                      ].map((l) => (
+                        <span key={l.label} className="flex items-center gap-1.5 text-[10px] text-[#73726C]">
+                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color }} />
+                          {l.label}
+                        </span>
+                      ))}
                     </div>
                   </div>
-                )}
+                </div>
 
-                {/* Dimension cards — bento */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {(Object.keys(DEEP_SECTION_TITLES) as string[]).map((key) => {
-                    const section = deepAnalysis[key as keyof DeepPageAnalysis];
-                    if (!section || typeof section !== 'object' || !('score' in section)) return null;
-                    const config = DEEP_SECTION_TITLES[key];
-                    const s = section as { score: number; resume: string; points: string[] };
-                    const color = s.score < 40 ? '#E05252' : s.score < 65 ? '#F27A2A' : s.score < 85 ? '#F0C744' : '#22A168';
+                {/* Row 2: Annotated screenshot */}
+                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">
+                      Capture annotée
+                    </h3>
+                    {deepResult.mobileScreenshot && (
+                      <div className="flex bg-[#F8F8F7] rounded-[8px] p-0.5">
+                        <button
+                          onClick={() => setScreenshotView('desktop')}
+                          className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
+                            screenshotView === 'desktop' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#73726C]'
+                          }`}
+                        >
+                          Desktop
+                        </button>
+                        <button
+                          onClick={() => setScreenshotView('mobile')}
+                          className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
+                            screenshotView === 'mobile' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#73726C]'
+                          }`}
+                        >
+                          Mobile
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className={`${screenshotView === 'mobile' ? 'max-w-[240px] mx-auto' : ''}`}>
+                    <AnnotatedScreenshot
+                      screenshot={screenshotView === 'mobile' && deepResult.mobileScreenshot
+                        ? deepResult.mobileScreenshot
+                        : deepResult.desktopScreenshot}
+                      annotations={deepResult.analysis.annotations}
+                      activeAnnotation={activeAnnotation}
+                      onAnnotationClick={(id) => {
+                        setActiveAnnotation(id);
+                        if (id !== null) {
+                          document.getElementById(`annotation-card-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }}
+                      isMobile={screenshotView === 'mobile'}
+                    />
+                  </div>
+                </div>
 
-                    return (
-                      <div key={key} className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2 text-[#73726C]">
-                            {config.icon}
-                            <span className="text-[14px] font-medium text-[#1A1A18]">{config.title}</span>
-                          </div>
-                          <span className="tabular-nums text-[18px] font-medium" style={{ color }}>{s.score}</span>
-                        </div>
-                        <p className="text-[13px] text-[#73726C] leading-relaxed mb-3">{s.resume}</p>
-                        <ul className="space-y-1.5">
-                          {s.points.map((point, i) => (
+                {/* Row 3: Annotation cards */}
+                <div>
+                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3 px-1">
+                    Annotations ({deepResult.analysis.annotations.length})
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {deepResult.analysis.annotations.map((ann) => (
+                      <AnnotationCard
+                        key={ann.id}
+                        annotation={ann}
+                        isActive={activeAnnotation === ann.id}
+                        onMouseEnter={() => setActiveAnnotation(ann.id)}
+                        onMouseLeave={() => setActiveAnnotation(null)}
+                        onClick={() => setActiveAnnotation(activeAnnotation === ann.id ? null : ann.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Row 4: Mobile + Coherence side by side */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Mobile analysis */}
+                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">Expérience mobile</h3>
+                      <span className="tabular-nums text-[18px] font-medium" style={{
+                        color: deepResult.analysis.analyse_mobile.score < 40 ? '#E05252' : deepResult.analysis.analyse_mobile.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_mobile.score < 85 ? '#F0C744' : '#22A168'
+                      }}>{deepResult.analysis.analyse_mobile.score}</span>
+                    </div>
+                    {deepResult.analysis.analyse_mobile.problemes_critiques.length > 0 && (
+                      <div className="mb-3">
+                        <p className="text-[10px] font-medium text-[#E05252] uppercase tracking-wider mb-1">Problèmes</p>
+                        <ul className="space-y-1">
+                          {deepResult.analysis.analyse_mobile.problemes_critiques.map((p, i) => (
                             <li key={i} className="flex items-start gap-2 text-[12px] text-[#73726C]">
-                              <span className="w-1 h-1 rounded-full bg-[#C2C0B6] mt-1.5 shrink-0" />
-                              {point}
+                              <span className="w-1 h-1 rounded-full bg-[#E05252] mt-1.5 shrink-0" />
+                              {p}
                             </li>
                           ))}
                         </ul>
                       </div>
-                    );
-                  })}
+                    )}
+                    {deepResult.analysis.analyse_mobile.points_positifs.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-medium text-[#22A168] uppercase tracking-wider mb-1">Points positifs</p>
+                        <ul className="space-y-1">
+                          {deepResult.analysis.analyse_mobile.points_positifs.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2 text-[12px] text-[#73726C]">
+                              <span className="w-1 h-1 rounded-full bg-[#22A168] mt-1.5 shrink-0" />
+                              {p}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Visual coherence */}
+                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">Cohérence visuelle</h3>
+                      <span className="tabular-nums text-[18px] font-medium" style={{
+                        color: deepResult.analysis.analyse_coherence_visuelle.score < 40 ? '#E05252' : deepResult.analysis.analyse_coherence_visuelle.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_coherence_visuelle.score < 85 ? '#F0C744' : '#22A168'
+                      }}>{deepResult.analysis.analyse_coherence_visuelle.score}</span>
+                    </div>
+                    <div className="space-y-2 text-[12px] text-[#73726C]">
+                      <p><span className="text-[#1A1A18] font-medium">Palette :</span> {deepResult.analysis.analyse_coherence_visuelle.palette_detectee}</p>
+                      <p><span className="text-[#1A1A18] font-medium">Couleurs :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_couleurs}</p>
+                      <p><span className="text-[#1A1A18] font-medium">Typo :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_typographie}</p>
+                      {deepResult.analysis.analyse_coherence_visuelle.problemes_detectes.length > 0 && (
+                        <ul className="mt-2 space-y-1">
+                          {deepResult.analysis.analyse_coherence_visuelle.problemes_detectes.map((p, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="w-1 h-1 rounded-full bg-[#F27A2A] mt-1.5 shrink-0" />
+                              {p}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Recommendations */}
-                {deepAnalysis.recommandations?.length > 0 && (
+                {/* Row 5: Action plan */}
+                {deepResult.analysis.plan_action?.length > 0 && (
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                     <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-4">
-                      Recommandations
+                      Plan d&apos;action priorisé
                     </h3>
                     <div className="space-y-0">
-                      {deepAnalysis.recommandations.map((rec, i) => (
+                      {deepResult.analysis.plan_action.map((action, i) => (
                         <div key={i} className={`flex items-start gap-4 py-4 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
                           <span className="w-7 h-7 shrink-0 rounded-full bg-[#F8F8F7] flex items-center justify-center text-[13px] font-medium text-[#1A1A18]">
-                            {rec.priorite}
+                            {action.priorite}
                           </span>
-                          <div>
-                            <p className="text-[13px] font-medium text-[#1A1A18] mb-1">{rec.titre}</p>
-                            <p className="text-[12px] text-[#73726C] leading-relaxed">{rec.description}</p>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-medium text-[#1A1A18] mb-1">{action.action}</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#73726C] border border-[#EEEDEB]">{action.categorie}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#73726C] border border-[#EEEDEB]">Impact {action.impact}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#73726C] border border-[#EEEDEB]">{action.difficulte}</span>
+                              {action.temps_estime && <span className="text-[10px] text-[#C2C0B6]">~{action.temps_estime}</span>}
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+
+                {/* Verdict */}
+                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3">Verdict</h3>
+                  <p className="text-[13px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.verdict_final}</p>
+                </div>
               </div>
             )}
           </div>
