@@ -41,6 +41,10 @@ export default function ReportPage() {
   const [credits, setCredits] = useState<number | null>(null);
   const [activeAnnotation, setActiveAnnotation] = useState<number | null>(null);
   const [screenshotView, setScreenshotView] = useState<'desktop' | 'mobile'>('desktop');
+  const [promoCode, setPromoCode] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoMessage, setPromoMessage] = useState('');
+  const [promoError, setPromoError] = useState('');
 
   const id = params.id as string;
 
@@ -459,20 +463,73 @@ export default function ReportPage() {
                   </div>
                 </div>
 
-                {/* Pricing info */}
-                <div className="bg-[#F8F8F7] border border-[#EEEDEB] rounded-[12px] p-5 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <IconCreditCard size={16} className="text-[#73726C]" />
-                    <span className="text-[14px] font-medium text-[#1A1A18]">3 analyses pour 4,90 EUR</span>
-                  </div>
-                  <p className="text-[12px] text-[#73726C] leading-relaxed">
-                    Analyse UI, copywriting, conversion et recommandations actionnables par IA pour chaque page.
-                  </p>
-                  {credits !== null && credits > 0 && (
-                    <p className="text-[11px] text-[#22A168] mt-2 font-medium">
-                      Vous avez {credits} crédit{credits > 1 ? 's' : ''} restant{credits > 1 ? 's' : ''}
+                {/* Pricing + Promo */}
+                <div className="bg-[#F8F8F7] border border-[#EEEDEB] rounded-[12px] p-5">
+                  <div className="text-center mb-4">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <IconCreditCard size={16} className="text-[#73726C]" />
+                      <span className="text-[14px] font-medium text-[#1A1A18]">3 analyses pour 4,90 EUR</span>
+                    </div>
+                    <p className="text-[12px] text-[#73726C] leading-relaxed">
+                      Analyse UI, copywriting, conversion et recommandations actionnables par IA pour chaque page.
                     </p>
-                  )}
+                    {credits !== null && credits > 0 && (
+                      <p className="text-[11px] text-[#22A168] mt-2 font-medium">
+                        Vous avez {credits} crédit{credits > 1 ? 's' : ''} restant{credits > 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Promo code */}
+                  <div className="pt-4 border-t border-dashed border-[#EEEDEB]">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-2 text-center">
+                      Code promo
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoMessage(''); }}
+                        placeholder="VOTRECODE"
+                        className="flex-1 px-3 py-2.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors text-center uppercase tracking-wider"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!promoCode.trim()) return;
+                          const email = sessionStorage.getItem('mamie_email');
+                          if (!email) { setPromoError('Session expirée.'); return; }
+                          setPromoLoading(true);
+                          setPromoError('');
+                          setPromoMessage('');
+                          try {
+                            const res = await fetch('/api/promo', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ code: promoCode.trim(), email }),
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                              setPromoMessage(data.message);
+                              setCredits((prev) => (prev ?? 0) + data.credits);
+                              setPromoCode('');
+                            } else {
+                              setPromoError(data.error);
+                            }
+                          } catch {
+                            setPromoError('Erreur de connexion.');
+                          } finally {
+                            setPromoLoading(false);
+                          }
+                        }}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="px-4 py-2.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 shrink-0"
+                      >
+                        {promoLoading ? '...' : 'Appliquer'}
+                      </button>
+                    </div>
+                    {promoError && <p className="text-[11px] text-[#E05252] mt-2 text-center">{promoError}</p>}
+                    {promoMessage && <p className="text-[11px] text-[#22A168] mt-2 text-center font-medium">{promoMessage}</p>}
+                  </div>
                 </div>
               </div>
             )}

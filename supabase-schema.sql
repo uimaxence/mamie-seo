@@ -86,4 +86,29 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Table des codes promo
+CREATE TABLE IF NOT EXISTS promo_codes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  credits INTEGER NOT NULL DEFAULT 3,
+  max_uses INTEGER DEFAULT NULL, -- null = illimité
+  used_count INTEGER DEFAULT 0 NOT NULL,
+  expires_at TIMESTAMPTZ DEFAULT NULL, -- null = jamais
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_promo_codes_code ON promo_codes (code);
+
+-- Table d'utilisation des codes promo (1 code par email)
+CREATE TABLE IF NOT EXISTS promo_uses (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  promo_code TEXT NOT NULL,
+  email TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(promo_code, email)
+);
+
+ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promo_uses ENABLE ROW LEVEL SECURITY;
+
 -- Pas de policy publique : seul le service_role key peut lire/écrire
