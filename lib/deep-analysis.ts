@@ -4,10 +4,13 @@ import {
   captureScreenshots,
   optimizeForApi,
   segmentScreenshot,
-  segmentToAbsoluteY,
   extractPageData,
-  type ScreenshotResult,
 } from './screenshot';
+import {
+  externalScreenshot,
+  extractPageDataEnhanced,
+  bufferToBase64,
+} from './screenshot-fallback';
 
 function isPrivateUrl(url: string): boolean {
   try {
@@ -130,11 +133,15 @@ export async function analyzePageDeep(
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const metier = onboarding.metierAutre || onboarding.metier;
 
-  // Try to capture screenshots (may fail on Vercel/serverless)
+  // ─── Step 1: Get screenshots + page data ───
+  // Strategy: Playwright (full) → External screenshot + enhanced HTML extraction (fallback)
   let screenshots: Awaited<ReturnType<typeof captureScreenshots>> | null = null;
   let pageData: Awaited<ReturnType<typeof extractPageData>>;
+  let externalDesktopBuf: Buffer | null = null;
+  let externalMobileBuf: Buffer | null = null;
 
   try {
+    // Try Playwright first (works on Railway/Render, not on Vercel)
     const [s, p] = await Promise.all([
       captureScreenshots(pageUrl),
       extractPageData(pageUrl),
@@ -142,35 +149,30 @@ export async function analyzePageDeep(
     screenshots = s;
     pageData = p;
   } catch {
-    // Playwright unavailable — fallback to HTML-only analysis via fetch
-    const res = await fetch(pageUrl, {
-      headers: { 'User-Agent': 'MamieSEO-Analyzer/1.0' },
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!res.ok) throw new Error(`Page inaccessible (${res.status})`);
-    const html = await res.text();
-    const cheerio = await import('cheerio');
-    const $ = cheerio.load(html);
-    $('script, style, noscript').remove();
-    pageData = {
-      text: $('body').text().replace(/\s+/g, ' ').trim().slice(0, 10000),
-      h1: $('h1').first().text().trim(),
-      h2List: $('h2').map((_, el) => $(el).text().trim()).get(),
-      ctaList: $('button, a[class*="btn"], a[class*="cta"], [type="submit"]').map((_, el) => $(el).text().trim()).get().filter((t: string) => t.length > 0 && t.length < 80).slice(0, 10),
-      font: 'Non détectée (mode texte)',
-      imgCount: $('img').length,
-      formCount: $('form').length,
-      videoCount: $('video, iframe[src*="youtube"]').length,
-    };
+    // Playwright unavailable — use external screenshot + enhanced HTML extraction
+    console.log('Playwright unavailable, using external screenshot fallback');
+
+    // Fetch screenshot and page data in parallel
+    const [desktopBuf, mobileBuf, enhancedData] = await Promise.all([
+      externalScreenshot(pageUrl, { width: 1440 }),
+      externalScreenshot(pageUrl, { width: 390, mobile: true }),
+      extractPageDataEnhanced(pageUrl),
+    ]);
+
+    externalDesktopBuf = desktopBuf;
+    externalMobileBuf = mobileBuf;
+    pageData = enhancedData;
   }
 
-  // Build content blocks for Claude
+  // ─── Step 2: Build content blocks for Claude ───
   const imageBlocks: Anthropic.Messages.ImageBlockParam[] = [];
   let segmentInfo = '';
   let screenshotWidth = 1440;
   let screenshotHeight = 3000;
+  const hasScreenshot = !!(screenshots || externalDesktopBuf);
 
   if (screenshots) {
+    // Playwright screenshots available
     const segments = await segmentScreenshot(screenshots.desktop);
     screenshotWidth = screenshots.desktopWidth;
     screenshotHeight = screenshots.desktopHeight;
@@ -190,6 +192,26 @@ export async function analyzePageDeep(
       imageBlocks.push({
         type: 'image',
         source: { type: 'base64', media_type: 'image/png', data: optimized.toString('base64') },
+      });
+    }
+  } else if (externalDesktopBuf) {
+    // External screenshot available (thum.io)
+    // Optimize with sharp if available, otherwise use raw
+    try {
+      const optimized = await optimizeForApi(externalDesktopBuf);
+      const sharp = await import('sharp');
+      const meta = await sharp.default(optimized).metadata();
+      screenshotWidth = meta.width || 1440;
+      screenshotHeight = meta.height || 3000;
+      imageBlocks.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: optimized.toString('base64') },
+      });
+    } catch {
+      // Sharp may not be available either — use raw buffer
+      imageBlocks.push({
+        type: 'image',
+        source: { type: 'base64', media_type: 'image/png', data: bufferToBase64(externalDesktopBuf) },
       });
     }
   } else {
@@ -233,7 +255,7 @@ export async function analyzePageDeep(
     ann.y_percent = Math.max(2, Math.min(98, ann.y_percent));
   }
 
-  // Prepare base64 screenshots for frontend (may be null on serverless)
+  // ─── Step 4: Prepare base64 screenshots for frontend ───
   let desktopBase64 = '';
   let mobileBase64: string | null = null;
   let finalWidth = screenshotWidth;
@@ -250,6 +272,11 @@ export async function analyzePageDeep(
       const mobileOptimized = await optimizeForApi(screenshots.mobile);
       mobileBase64 = mobileOptimized.toString('base64');
     } catch { /* */ }
+  } else if (externalDesktopBuf) {
+    desktopBase64 = bufferToBase64(externalDesktopBuf);
+    if (externalMobileBuf) {
+      mobileBase64 = bufferToBase64(externalMobileBuf);
+    }
   }
 
   return {

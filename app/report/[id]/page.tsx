@@ -612,8 +612,8 @@ export default function ReportPage() {
                   </div>
                 </div>
 
-                {/* Row 2: Annotated screenshot */}
-                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                {/* Row 2: Annotated screenshot (only if screenshot is available) */}
+                {deepResult.desktopScreenshot && <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">
                       Capture annotée
@@ -655,7 +655,7 @@ export default function ReportPage() {
                       isMobile={screenshotView === 'mobile'}
                     />
                   </div>
-                </div>
+                </div>}
 
                 {/* Row 3: Annotation cards */}
                 <div>
