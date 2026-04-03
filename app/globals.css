@@ -1,26 +1,114 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neutrals — backbone */
+  --color-white: #FFFFFF;
+  --color-surface: #F8F8F7;
+  --color-border-light: #EEEDEB;
+  --color-muted: #C2C0B6;
+  --color-secondary: #73726C;
+  --color-primary: #1A1A18;
+
+  /* Semantic accents */
+  --color-purple: #7F77DD;
+  --color-green: #7ABF6C;
+  --color-amber: #F0C744;
+  --color-orange: #F27A2A;
+  --color-teal: #22A168;
+  --color-red: #E05252;
+
+  /* Pill backgrounds */
+  --color-purple-light: #EEEDFE;
+  --color-green-light: #EAF3DE;
+  --color-amber-light: #FAEEDA;
+
+  /* Pill text */
+  --color-purple-dark: #3C3489;
+  --color-green-dark: #3B6D11;
+  --color-amber-dark: #854F0B;
+
+  /* Spacing scale (4px base) */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-surface);
+  --color-foreground: var(--color-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Tabular numbers for KPI values */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Caption style */
+.caption {
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-secondary);
+}
+
+/* Gauge animation */
+@keyframes gauge-fill {
+  from { stroke-dashoffset: 251; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}
+
+/* Blur overlay for email gate */
+.blur-gate {
+  filter: blur(6px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Progress steps */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Shimmer effect for progress bar */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* Bounce for loading dots */
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+  40% { transform: scale(1); opacity: 1; }
 }
