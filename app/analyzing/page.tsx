@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProgressEvent, OnboardingAnswers } from '@/lib/types';
+import { useAuth } from '@/components/AuthProvider';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
 import { IconArrowRight, IconCheck } from '@/components/Icons';
 
@@ -42,6 +43,7 @@ export default function AnalyzingPage() {
   const [tipIndex, setTipIndex] = useState(0);
   const [luckyDay, setLuckyDay] = useState(false);
   const startedRef = useRef(false);
+  const { user } = useAuth();
 
   // Account creation state (shown after analysis completes)
   const [reportId, setReportId] = useState<string | null>(null);
@@ -123,9 +125,15 @@ export default function AnalyzingPage() {
 
             if (event.step === 'done') {
               setCompletedSteps(new Set(STEPS.map((s) => s.key)));
-              setReportId(event.message);
-              // Show account creation prompt instead of redirecting
-              setTimeout(() => setShowAccountPrompt(true), 600);
+              const rid = event.message;
+              setReportId(rid);
+              // If already logged in → go straight to report
+              // If not → show account creation prompt
+              if (user) {
+                setTimeout(() => router.push(`/report/${rid}`), 600);
+              } else {
+                setTimeout(() => setShowAccountPrompt(true), 600);
+              }
               return;
             }
 
