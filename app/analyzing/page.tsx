@@ -226,7 +226,7 @@ export default function AnalyzingPage() {
                   <IconCheck size={24} className="text-[#22A168]" />
                 </div>
                 <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2">Compte créé !</h2>
-                <p className="text-[13px] text-[#73726C]">Redirection vers votre rapport...</p>
+                <p className="text-[15px] text-[#504F4A]">Redirection vers votre rapport...</p>
               </div>
             ) : (
               <>
@@ -236,21 +236,21 @@ export default function AnalyzingPage() {
                 <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2 text-center">
                   Votre rapport est prêt !
                 </h2>
-                <p className="text-[13px] text-[#73726C] text-center mb-6 leading-relaxed">
+                <p className="text-[15px] text-[#504F4A] text-center mb-6 leading-relaxed">
                   Créez un mot de passe pour retrouver vos rapports et vos crédits plus tard.
                 </p>
 
                 <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 mb-4">
                   <div className="mb-3">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-1">Email</p>
-                    <p className="text-[13px] text-[#1A1A18]">{sessionStorage.getItem('mamie_email')}</p>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Email</p>
+                    <p className="text-[15px] text-[#1A1A18]">{sessionStorage.getItem('mamie_email')}</p>
                   </div>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Choisir un mot de passe (6+ car.)"
-                    className="w-full px-4 py-3 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
+                    className="w-full px-4 py-3 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
                     autoFocus
                     onKeyDown={(e) => e.key === 'Enter' && handleCreateAccount()}
                   />
@@ -268,7 +268,7 @@ export default function AnalyzingPage() {
 
                 <button
                   onClick={handleSkip}
-                  className="w-full text-center text-[12px] text-[#C2C0B6] hover:text-[#73726C] transition-colors"
+                  className="w-full text-center text-[12px] text-[#9C9A91] hover:text-[#504F4A] transition-colors"
                 >
                   Passer et voir le rapport directement
                 </button>
@@ -295,7 +295,7 @@ export default function AnalyzingPage() {
             <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2">
               Vous avez utilisé vos analyses gratuites
             </h2>
-            <p className="text-[13px] text-[#73726C] mb-6 leading-relaxed">
+            <p className="text-[15px] text-[#504F4A] mb-6 leading-relaxed">
               Passez en Pro pour continuer à analyser vos sites avec des analyses approfondies UI, copywriting et conversion.
             </p>
             <a
@@ -306,7 +306,7 @@ export default function AnalyzingPage() {
             </a>
             <button
               onClick={() => router.push('/dashboard')}
-              className="block w-full text-center text-[12px] text-[#C2C0B6] hover:text-[#73726C] transition-colors mt-4"
+              className="block w-full text-center text-[12px] text-[#9C9A91] hover:text-[#504F4A] transition-colors mt-4"
             >
               Voir mes rapports existants
             </button>
@@ -321,7 +321,7 @@ export default function AnalyzingPage() {
     <div className="min-h-screen flex flex-col">
       <header className="px-6 py-4 flex items-center justify-between">
         <span className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</span>
-        <span className="tabular-nums text-[11px] text-[#C2C0B6]">{formatTime(elapsed)}</span>
+        <span className="tabular-nums text-[12px] text-[#9C9A91]">{formatTime(elapsed)}</span>
       </header>
 
       <main className="flex-1 flex items-center justify-center px-6 pb-16">
@@ -348,12 +348,12 @@ export default function AnalyzingPage() {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="tabular-nums text-[24px] font-medium text-[#1A1A18]">{completedSteps.size}</span>
-              <span className="text-[10px] text-[#73726C]">/ {STEPS.length}</span>
+              <span className="text-[10px] text-[#504F4A]">/ {STEPS.length}</span>
             </div>
           </div>
 
           <h2 className="text-[18px] font-medium text-[#1A1A18] mb-1 text-center">Analyse en cours</h2>
-          <p className="text-[13px] text-[#73726C] mb-8 text-center">
+          <p className="text-[15px] text-[#504F4A] mb-8 text-center">
             {error ? "Une erreur est survenue" : STEPS[currentStepIndex]?.label || 'Initialisation...'}
           </p>
 
@@ -387,7 +387,7 @@ export default function AnalyzingPage() {
                         <span className="w-4 h-4 rounded-full border border-[#EEEDEB]" />
                       )}
                     </span>
-                    <span className={`text-[13px] ${isCompleted ? 'text-[#1A1A18]' : isCurrent ? 'text-[#1A1A18] font-medium' : 'text-[#C2C0B6]'}`}>
+                    <span className={`text-[13px] ${isCompleted ? 'text-[#1A1A18]' : isCurrent ? 'text-[#1A1A18] font-medium' : 'text-[#9C9A91]'}`}>
                       {isCompleted ? (step.doneLabel || step.label) : step.label}
                     </span>
                     {isCurrent && (
@@ -406,8 +406,8 @@ export default function AnalyzingPage() {
           {/* Tip */}
           {!error && (
             <div className="w-full bg-[#F8F8F7] border border-[#EEEDEB] rounded-[12px] p-4">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-2">Le saviez-vous ?</p>
-              <p key={tipIndex} className="text-[12px] text-[#73726C] leading-relaxed animate-fade-in-up">{TIPS[tipIndex]}</p>
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Le saviez-vous ?</p>
+              <p key={tipIndex} className="text-[14px] text-[#504F4A] leading-relaxed animate-fade-in-up">{TIPS[tipIndex]}</p>
             </div>
           )}
 

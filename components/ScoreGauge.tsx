@@ -75,7 +75,7 @@ export default function ScoreGauge({ score, size = 180, label }: ScoreGaugeProps
           >
             {animatedScore}
           </span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[#73726C]">
+          <span className="text-[10px] font-medium uppercase tracking-wider text-[#504F4A]">
             / 100
           </span>
         </div>

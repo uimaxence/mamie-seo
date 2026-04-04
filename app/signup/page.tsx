@@ -56,7 +56,7 @@ export default function SignupPage() {
               </svg>
             </div>
             <h1 className="text-[18px] font-medium text-[#1A1A18] mb-2">Vérifiez votre email</h1>
-            <p className="text-[13px] text-[#73726C] leading-relaxed">
+            <p className="text-[15px] text-[#504F4A] leading-relaxed">
               Un lien de confirmation a été envoyé à <strong className="text-[#1A1A18]">{email}</strong>.
               Cliquez dessus pour activer votre compte.
             </p>
@@ -70,7 +70,7 @@ export default function SignupPage() {
     <div className="min-h-screen flex flex-col">
       <header className="px-6 py-4 flex items-center justify-between">
         <a href="/" className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</a>
-        <a href="/login" className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors">
+        <a href="/login" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
           Se connecter
         </a>
       </header>
@@ -79,7 +79,7 @@ export default function SignupPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-[24px] font-medium text-[#1A1A18] mb-2">Créer un compte</h1>
-            <p className="text-[13px] text-[#73726C]">Sauvegardez vos rapports et gérez vos crédits.</p>
+            <p className="text-[15px] text-[#504F4A]">Sauvegardez vos rapports et gérez vos crédits.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -88,7 +88,7 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vous@exemple.com"
-              className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
               required
             />
             <input
@@ -96,7 +96,7 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mot de passe (6+ caractères)"
-              className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
               required
               minLength={6}
             />
@@ -111,7 +111,7 @@ export default function SignupPage() {
             </button>
           </form>
 
-          <p className="text-center mt-6 text-[11px] text-[#C2C0B6]">
+          <p className="text-center mt-6 text-[12px] text-[#9C9A91]">
             Déjà un compte ? <a href="/login" className="text-[#1A1A18] font-medium hover:underline">Se connecter</a>
           </p>
         </div>

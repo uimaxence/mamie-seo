@@ -8,7 +8,7 @@ export default function KeywordsSection({ keywords }: KeywordsSectionProps) {
   return (
     <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#73726C]">
+        <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A]">
           Mots-clés métier
         </h3>
         <span className="tabular-nums text-[18px] font-medium text-[#1A1A18]">
@@ -51,17 +51,17 @@ export default function KeywordsSection({ keywords }: KeywordsSectionProps) {
       </div>
 
       {/* Explanation */}
-      <p className="text-[13px] text-[#73726C] leading-relaxed mb-3">
+      <p className="text-[15px] text-[#504F4A] leading-relaxed mb-3">
         {keywords.explication}
       </p>
 
       {/* Example */}
       {keywords.exemple_concret && (
         <div className="bg-[#F8F8F7] rounded-[8px] p-4">
-          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#73726C] block mb-1">
+          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A] block mb-1">
             Exemple concret
           </span>
-          <p className="text-[13px] text-[#1A1A18] leading-relaxed italic">
+          <p className="text-[15px] text-[#1A1A18] leading-relaxed italic">
             {keywords.exemple_concret}
           </p>
         </div>

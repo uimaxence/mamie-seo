@@ -59,8 +59,8 @@ export default function TechBlock({ crawl }: TechBlockProps) {
           key={i}
           className="bg-white border border-[#EEEDEB] rounded-[12px] p-4 flex flex-col gap-2"
         >
-          <span className="text-[#C2C0B6]">{item.icon}</span>
-          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">
+          <span className="text-[#9C9A91]">{item.icon}</span>
+          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
             {item.label}
           </span>
           <span

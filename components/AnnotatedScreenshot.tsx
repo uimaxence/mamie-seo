@@ -45,7 +45,7 @@ export default function AnnotatedScreenshot({
       {/* Annotation pins */}
       {annotations.map((ann) => {
         const isActive = activeAnnotation === ann.id;
-        const color = PIN_COLORS[ann.type] || '#73726C';
+        const color = PIN_COLORS[ann.type] || '#504F4A';
 
         return (
           <button
@@ -79,7 +79,7 @@ export default function AnnotatedScreenshot({
             {!isMobile && (
               <span className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block bg-white border border-[#EEEDEB] rounded-[8px] px-3 py-2 text-left shadow-sm w-52 z-20 pointer-events-none">
                 <span className="text-[11px] font-medium text-[#1A1A18] block mb-0.5">{ann.titre}</span>
-                <span className="text-[10px] text-[#73726C] line-clamp-2">{ann.observation}</span>
+                <span className="text-[10px] text-[#504F4A] line-clamp-2">{ann.observation}</span>
               </span>
             )}
           </button>

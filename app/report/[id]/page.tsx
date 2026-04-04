@@ -141,7 +141,7 @@ export default function ReportPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[13px] text-[#73726C]">Chargement du rapport...</p>
+        <p className="text-[15px] text-[#504F4A]">Chargement du rapport...</p>
       </div>
     );
   }
@@ -178,11 +178,11 @@ export default function ReportPage() {
       <div className="bg-white border-b border-[#EEEDEB] px-6 pt-6 pb-0">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-6">
-            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">
               Rapport d&apos;analyse
             </p>
             <h1 className="text-[18px] font-medium text-[#1A1A18]">{report.url}</h1>
-            <p className="text-[11px] text-[#C2C0B6] mt-1">
+            <p className="text-[12px] text-[#9C9A91] mt-1">
               {new Date(report.createdAt).toLocaleDateString('fr-FR', {
                 day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
               })}
@@ -196,7 +196,7 @@ export default function ReportPage() {
               className={`px-5 py-3 text-[13px] font-medium border-b-2 transition-colors ${
                 activeTab === 'seo'
                   ? 'border-[#1A1A18] text-[#1A1A18]'
-                  : 'border-transparent text-[#C2C0B6] hover:text-[#73726C]'
+                  : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'
               }`}
             >
               Audit SEO
@@ -206,7 +206,7 @@ export default function ReportPage() {
               className={`px-5 py-3 text-[13px] font-medium border-b-2 transition-colors flex items-center gap-2 ${
                 activeTab === 'page'
                   ? 'border-[#1A1A18] text-[#1A1A18]'
-                  : 'border-transparent text-[#C2C0B6] hover:text-[#73726C]'
+                  : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'
               }`}
             >
               Analyse de page
@@ -227,7 +227,7 @@ export default function ReportPage() {
             <div className="flex justify-end mb-4">
               <button
                 onClick={() => generateSeoReportPdf(report)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEDEB] rounded-[8px] text-[12px] font-medium text-[#73726C] hover:text-[#1A1A18] hover:border-[#C2C0B6] transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEDEB] rounded-[8px] text-[12px] font-medium text-[#504F4A] hover:text-[#1A1A18] hover:border-[#9C9A91] transition-colors"
               >
                 <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Télécharger le PDF
@@ -238,7 +238,7 @@ export default function ReportPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
               {/* Score card — spans 1 col */}
               <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6 flex flex-col items-center justify-center">
-                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-4">
+                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">
                   Score global
                 </p>
                 <ScoreGauge score={combinedScore} size={140} />
@@ -246,12 +246,12 @@ export default function ReportPage() {
                   <div className="flex items-center gap-5 mt-5">
                     <div className="text-center">
                       <p className="tabular-nums text-[18px] font-medium text-[#1A1A18]">{technicalScore.total}</p>
-                      <p className="text-[10px] text-[#C2C0B6] uppercase tracking-wider">Tech</p>
+                      <p className="text-[10px] text-[#9C9A91] uppercase tracking-wider">Tech</p>
                     </div>
                     <div className="w-px h-6 bg-[#EEEDEB]" />
                     <div className="text-center">
                       <p className="tabular-nums text-[18px] font-medium text-[#1A1A18]">{editorialScore}</p>
-                      <p className="text-[10px] text-[#C2C0B6] uppercase tracking-wider">Éditorial</p>
+                      <p className="text-[10px] text-[#9C9A91] uppercase tracking-wider">Éditorial</p>
                     </div>
                   </div>
                 )}
@@ -267,7 +267,7 @@ export default function ReportPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
               {/* Worst 3 criteria */}
               <div className="lg:col-span-2 space-y-3">
-                <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] px-1">
+                <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] px-1">
                   Points critiques
                 </h2>
                 {[...technicalScore.criteria]
@@ -281,13 +281,13 @@ export default function ReportPage() {
               {/* Editorial summary */}
               {editorialAnalysis && (
                 <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 self-start">
-                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3">
+                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">
                     Résumé éditorial
                   </h3>
-                  <p className="text-[13px] text-[#1A1A18] leading-relaxed mb-3">
+                  <p className="text-[15px] text-[#1A1A18] leading-relaxed mb-3">
                     {editorialAnalysis.comprehension_activite.resume}
                   </p>
-                  <p className="text-[13px] text-[#73726C] leading-relaxed">
+                  <p className="text-[15px] text-[#504F4A] leading-relaxed">
                     {editorialAnalysis.coherence_offres?.resume}
                   </p>
                   {suggestedPage && (
@@ -295,7 +295,7 @@ export default function ReportPage() {
                       <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-1">
                         Page recommandée
                       </p>
-                      <p className="text-[12px] text-[#73726C] leading-relaxed">
+                      <p className="text-[14px] text-[#504F4A] leading-relaxed">
                         {suggestedPage.raison}
                       </p>
                       <button
@@ -315,7 +315,7 @@ export default function ReportPage() {
 
             {/* Full technical details */}
             <div className="mb-8">
-              <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3 px-1">
+              <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
                 Tous les critères techniques
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -328,7 +328,7 @@ export default function ReportPage() {
             {/* Editorial dimensions */}
             {editorialAnalysis && (
               <div className="mb-8">
-                <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3 px-1">
+                <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
                   Analyse éditoriale
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -363,7 +363,7 @@ export default function ReportPage() {
             {/* Pages with warnings */}
             {crawlResult.pages.some((p) => p.h1Count !== 1 || !p.title || !p.metaDescription) && (
               <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 mb-8">
-                <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-4">
+                <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">
                   Pages à corriger
                 </h3>
                 <div className="space-y-0">
@@ -378,7 +378,7 @@ export default function ReportPage() {
                       if (page.h1Count > 1) issues.push(`${page.h1Count} H1`);
                       return (
                         <div key={page.url} className={`py-3 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
-                          <p className="text-[13px] text-[#1A1A18] truncate mb-1">{new URL(page.url).pathname || '/'}</p>
+                          <p className="text-[15px] text-[#1A1A18] truncate mb-1">{new URL(page.url).pathname || '/'}</p>
                           <div className="flex flex-wrap gap-1.5">
                             {issues.map((issue, j) => (
                               <span key={j} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">{issue}</span>
@@ -403,7 +403,7 @@ export default function ReportPage() {
                   <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2">
                     Analyse approfondie d&apos;une page
                   </h2>
-                  <p className="text-[13px] text-[#73726C] leading-relaxed">
+                  <p className="text-[15px] text-[#504F4A] leading-relaxed">
                     Analyse UI, copywriting et conversion d&apos;une page spécifique.
                     Chaque analyse utilise 1 crédit.
                   </p>
@@ -418,7 +418,7 @@ export default function ReportPage() {
                     <p className="text-[14px] font-medium text-[#1A1A18] mb-1 truncate">
                       {new URL(suggestedPage.url).pathname}
                     </p>
-                    <p className="text-[12px] text-[#73726C] mb-4 leading-relaxed">
+                    <p className="text-[14px] text-[#504F4A] mb-4 leading-relaxed">
                       {suggestedPage.raison}
                     </p>
                     <button
@@ -434,13 +434,13 @@ export default function ReportPage() {
                 {/* Separator */}
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-[#EEEDEB]" />
-                  <span className="text-[11px] text-[#C2C0B6]">ou</span>
+                  <span className="text-[12px] text-[#9C9A91]">ou</span>
                   <div className="flex-1 h-px bg-[#EEEDEB]" />
                 </div>
 
                 {/* Custom URL */}
                 <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#73726C] mb-3">
+                  <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A] mb-3">
                     Analyser une page de votre choix
                   </p>
                   <div className="flex gap-2">
@@ -449,7 +449,7 @@ export default function ReportPage() {
                       value={customUrl}
                       onChange={(e) => setCustomUrl(e.target.value)}
                       placeholder="https://monsite.fr/ma-page"
-                      className="flex-1 px-4 py-3 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
+                      className="flex-1 px-4 py-3 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
                     />
                     <button
                       onClick={() => customUrl && handleDeepAnalysis(customUrl)}
@@ -465,10 +465,10 @@ export default function ReportPage() {
                 <div className="bg-[#F8F8F7] border border-[#EEEDEB] rounded-[12px] p-5">
                   <div className="text-center mb-4">
                     <div className="flex items-center justify-center gap-2 mb-2">
-                      <IconCreditCard size={16} className="text-[#73726C]" />
+                      <IconCreditCard size={16} className="text-[#504F4A]" />
                       <span className="text-[14px] font-medium text-[#1A1A18]">3 analyses pour 4,90 EUR</span>
                     </div>
-                    <p className="text-[12px] text-[#73726C] leading-relaxed">
+                    <p className="text-[14px] text-[#504F4A] leading-relaxed">
                       Analyse UI, copywriting, conversion et recommandations actionnables par IA pour chaque page.
                     </p>
                     {credits !== null && credits > 0 && (
@@ -480,7 +480,7 @@ export default function ReportPage() {
 
                   {/* Promo code */}
                   <div className="pt-4 border-t border-dashed border-[#EEEDEB]">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-2 text-center">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2 text-center">
                       Code promo
                     </p>
                     <div className="flex gap-2">
@@ -489,7 +489,7 @@ export default function ReportPage() {
                         value={promoCode}
                         onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoMessage(''); }}
                         placeholder="VOTRECODE"
-                        className="flex-1 px-3 py-2.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors text-center uppercase tracking-wider"
+                        className="flex-1 px-3 py-2.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors text-center uppercase tracking-wider"
                       />
                       <button
                         onClick={async () => {
@@ -540,7 +540,7 @@ export default function ReportPage() {
                   <div className="absolute inset-0 border-2 border-t-[#1A1A18] rounded-full animate-spin" />
                 </div>
                 <p className="text-[14px] font-medium text-[#1A1A18] mb-1">Analyse en cours...</p>
-                <p className="text-[12px] text-[#73726C]">Claude analyse le contenu, la structure et le copywriting de votre page.</p>
+                <p className="text-[14px] text-[#504F4A]">Claude analyse le contenu, la structure et le copywriting de votre page.</p>
               </div>
             )}
 
@@ -564,7 +564,7 @@ export default function ReportPage() {
                   <h2 className="text-[18px] font-medium text-[#1A1A18]">Analyse approfondie</h2>
                   <button
                     onClick={() => { setDeepResult(null); setDeepError(''); setActiveAnnotation(null); }}
-                    className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors"
+                    className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors"
                   >
                     Analyser une autre page
                   </button>
@@ -579,8 +579,8 @@ export default function ReportPage() {
                     <ScoreRadar scores={deepResult.analysis.scores_par_dimension} />
                   </div>
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3">Diagnostic</h3>
-                    <p className="text-[13px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.resume_executif}</p>
+                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Diagnostic</h3>
+                    <p className="text-[15px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.resume_executif}</p>
                     {/* Legend */}
                     <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-dashed border-[#EEEDEB]">
                       {[
@@ -589,7 +589,7 @@ export default function ReportPage() {
                         { color: '#22A168', label: 'Positif' },
                         { color: '#3B82F6', label: 'Info' },
                       ].map((l) => (
-                        <span key={l.label} className="flex items-center gap-1.5 text-[10px] text-[#73726C]">
+                        <span key={l.label} className="flex items-center gap-1.5 text-[10px] text-[#504F4A]">
                           <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color }} />
                           {l.label}
                         </span>
@@ -601,7 +601,7 @@ export default function ReportPage() {
                 {/* Row 2: Annotated screenshot (only if screenshot is available) */}
                 {deepResult.desktopScreenshot && <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">
+                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
                       Capture annotée
                     </h3>
                     {deepResult.mobileScreenshot && (
@@ -609,7 +609,7 @@ export default function ReportPage() {
                         <button
                           onClick={() => setScreenshotView('desktop')}
                           className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
-                            screenshotView === 'desktop' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#73726C]'
+                            screenshotView === 'desktop' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#504F4A]'
                           }`}
                         >
                           Desktop
@@ -617,7 +617,7 @@ export default function ReportPage() {
                         <button
                           onClick={() => setScreenshotView('mobile')}
                           className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
-                            screenshotView === 'mobile' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#73726C]'
+                            screenshotView === 'mobile' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#504F4A]'
                           }`}
                         >
                           Mobile
@@ -645,7 +645,7 @@ export default function ReportPage() {
 
                 {/* Row 3: Annotation cards */}
                 <div>
-                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3 px-1">
+                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
                     Annotations ({deepResult.analysis.annotations.length})
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -667,7 +667,7 @@ export default function ReportPage() {
                   {/* Mobile analysis */}
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">Expérience mobile</h3>
+                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Expérience mobile</h3>
                       <span className="tabular-nums text-[18px] font-medium" style={{
                         color: deepResult.analysis.analyse_mobile.score < 40 ? '#E05252' : deepResult.analysis.analyse_mobile.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_mobile.score < 85 ? '#F0C744' : '#22A168'
                       }}>{deepResult.analysis.analyse_mobile.score}</span>
@@ -677,7 +677,7 @@ export default function ReportPage() {
                         <p className="text-[10px] font-medium text-[#E05252] uppercase tracking-wider mb-1">Problèmes</p>
                         <ul className="space-y-1">
                           {deepResult.analysis.analyse_mobile.problemes_critiques.map((p, i) => (
-                            <li key={i} className="flex items-start gap-2 text-[12px] text-[#73726C]">
+                            <li key={i} className="flex items-start gap-2 text-[14px] text-[#504F4A]">
                               <span className="w-1 h-1 rounded-full bg-[#E05252] mt-1.5 shrink-0" />
                               {p}
                             </li>
@@ -690,7 +690,7 @@ export default function ReportPage() {
                         <p className="text-[10px] font-medium text-[#22A168] uppercase tracking-wider mb-1">Points positifs</p>
                         <ul className="space-y-1">
                           {deepResult.analysis.analyse_mobile.points_positifs.map((p, i) => (
-                            <li key={i} className="flex items-start gap-2 text-[12px] text-[#73726C]">
+                            <li key={i} className="flex items-start gap-2 text-[14px] text-[#504F4A]">
                               <span className="w-1 h-1 rounded-full bg-[#22A168] mt-1.5 shrink-0" />
                               {p}
                             </li>
@@ -703,12 +703,12 @@ export default function ReportPage() {
                   {/* Visual coherence */}
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">Cohérence visuelle</h3>
+                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Cohérence visuelle</h3>
                       <span className="tabular-nums text-[18px] font-medium" style={{
                         color: deepResult.analysis.analyse_coherence_visuelle.score < 40 ? '#E05252' : deepResult.analysis.analyse_coherence_visuelle.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_coherence_visuelle.score < 85 ? '#F0C744' : '#22A168'
                       }}>{deepResult.analysis.analyse_coherence_visuelle.score}</span>
                     </div>
-                    <div className="space-y-2 text-[12px] text-[#73726C]">
+                    <div className="space-y-2 text-[14px] text-[#504F4A]">
                       <p><span className="text-[#1A1A18] font-medium">Palette :</span> {deepResult.analysis.analyse_coherence_visuelle.palette_detectee}</p>
                       <p><span className="text-[#1A1A18] font-medium">Couleurs :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_couleurs}</p>
                       <p><span className="text-[#1A1A18] font-medium">Typo :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_typographie}</p>
@@ -729,7 +729,7 @@ export default function ReportPage() {
                 {/* Row 5: Action plan */}
                 {deepResult.analysis.plan_action?.length > 0 && (
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-4">
+                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">
                       Plan d&apos;action priorisé
                     </h3>
                     <div className="space-y-0">
@@ -741,10 +741,10 @@ export default function ReportPage() {
                           <div className="flex-1 min-w-0">
                             <p className="text-[13px] font-medium text-[#1A1A18] mb-1">{action.action}</p>
                             <div className="flex flex-wrap items-center gap-2">
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#73726C] border border-[#EEEDEB]">{action.categorie}</span>
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#73726C] border border-[#EEEDEB]">Impact {action.impact}</span>
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#73726C] border border-[#EEEDEB]">{action.difficulte}</span>
-                              {action.temps_estime && <span className="text-[10px] text-[#C2C0B6]">~{action.temps_estime}</span>}
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#504F4A] border border-[#EEEDEB]">{action.categorie}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#504F4A] border border-[#EEEDEB]">Impact {action.impact}</span>
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#504F4A] border border-[#EEEDEB]">{action.difficulte}</span>
+                              {action.temps_estime && <span className="text-[10px] text-[#9C9A91]">~{action.temps_estime}</span>}
                             </div>
                           </div>
                         </div>
@@ -755,8 +755,8 @@ export default function ReportPage() {
 
                 {/* Verdict */}
                 <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6] mb-3">Verdict</h3>
-                  <p className="text-[13px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.verdict_final}</p>
+                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Verdict</h3>
+                  <p className="text-[15px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.verdict_final}</p>
                 </div>
 
                 {/* Download deep analysis PDF */}
@@ -778,7 +778,7 @@ export default function ReportPage() {
         <div className="text-center py-8 mt-4 border-t border-[#EEEDEB]">
           <button
             onClick={() => router.push('/')}
-            className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors"
+            className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors"
           >
             Analyser un autre site
           </button>

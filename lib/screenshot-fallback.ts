@@ -14,19 +14,21 @@ export async function externalScreenshot(
 ): Promise<Buffer | null> {
   const { width = 1440, fullPage = true, mobile = false } = options;
 
-  // Build thum.io URL
+  // Build thum.io URL with wait for JS rendering
   const params = [
     `width/${width}`,
-    fullPage ? 'noanimate' : '',
-    fullPage ? 'maxAge/2' : '',
+    'wait/8',           // Wait 8 seconds for JS to render
+    'noanimate',        // Disable CSS animations
+    'maxAge/2',
     mobile ? 'viewportWidth/390' : '',
+    'crop/1200',        // Crop to reasonable height
   ].filter(Boolean).join('/');
 
   const thumbUrl = `${THUM_BASE}/${params}/${url}`;
 
   try {
     const res = await fetch(thumbUrl, {
-      signal: AbortSignal.timeout(30_000),
+      signal: AbortSignal.timeout(45_000), // 45s to allow thum.io 8s wait + rendering
     });
 
     if (!res.ok) return null;

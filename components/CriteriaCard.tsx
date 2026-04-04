@@ -48,7 +48,7 @@ export default function CriteriaCard({ criterion, index }: CriteriaCardProps) {
         />
       </div>
 
-      <p className="text-[13px] text-[#73726C] leading-relaxed">
+      <p className="text-[15px] text-[#504F4A] leading-relaxed">
         {criterion.details}
       </p>
     </div>

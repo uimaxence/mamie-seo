@@ -31,7 +31,7 @@ export default function GlossaryTooltip({ termKey, children }: GlossaryTooltipPr
       {children}
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center justify-center w-4 h-4 text-[10px] rounded-full border border-[#EEEDEB] text-[#73726C] hover:text-[#1A1A18] hover:border-[#C2C0B6] transition-colors"
+        className="inline-flex items-center justify-center w-4 h-4 text-[10px] rounded-full border border-[#EEEDEB] text-[#504F4A] hover:text-[#1A1A18] hover:border-[#9C9A91] transition-colors"
         aria-label={`Définition de ${entry.term}`}
       >
         i
@@ -39,7 +39,7 @@ export default function GlossaryTooltip({ termKey, children }: GlossaryTooltipPr
       {open && (
         <span className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border border-[#EEEDEB] rounded-[8px] p-3 text-[13px] font-normal text-[#1A1A18] shadow-[0_1px_4px_rgba(0,0,0,.06)]">
           <span className="font-medium text-[#1A1A18] block mb-1">{entry.term}</span>
-          <span className="text-[#73726C]">{entry.definition}</span>
+          <span className="text-[#504F4A]">{entry.definition}</span>
         </span>
       )}
     </span>

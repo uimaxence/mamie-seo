@@ -11,9 +11,9 @@ function getImpactBadge(impact: string) {
     case 'moyen':
       return { bg: '#FAEEDA', text: '#854F0B' };
     case 'faible':
-      return { bg: '#F8F8F7', text: '#73726C' };
+      return { bg: '#F8F8F7', text: '#504F4A' };
     default:
-      return { bg: '#F8F8F7', text: '#73726C' };
+      return { bg: '#F8F8F7', text: '#504F4A' };
   }
 }
 
@@ -26,14 +26,14 @@ function getDifficulteBadge(difficulte: string) {
     case 'difficile':
       return { bg: '#EEEDFE', text: '#3C3489' };
     default:
-      return { bg: '#F8F8F7', text: '#73726C' };
+      return { bg: '#F8F8F7', text: '#504F4A' };
   }
 }
 
 export default function ActionPlan({ actions }: ActionPlanProps) {
   return (
     <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#73726C] mb-4">
+      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A] mb-4">
         Plan d&apos;action priorisé
       </h3>
       <div className="space-y-0">
@@ -71,7 +71,7 @@ export default function ActionPlan({ actions }: ActionPlanProps) {
                     {action.difficulte}
                   </span>
                   {action.temps_estime && (
-                    <span className="text-[10px] text-[#C2C0B6]">
+                    <span className="text-[10px] text-[#9C9A91]">
                       ~{action.temps_estime}
                     </span>
                   )}

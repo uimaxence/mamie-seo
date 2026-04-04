@@ -19,25 +19,25 @@ export default function AuthHeader({ showNewAnalysis = false }: AuthHeaderProps)
         ) : user ? (
           <>
             {showNewAnalysis && (
-              <a href="/" className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors flex items-center gap-1">
+              <a href="/" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors flex items-center gap-1">
                 Nouvelle analyse <IconArrowRight size={10} />
               </a>
             )}
-            <a href="/dashboard" className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors">
+            <a href="/dashboard" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
               Mon espace
             </a>
-            <button onClick={signOut} className="text-[11px] text-[#C2C0B6] hover:text-[#1A1A18] transition-colors">
+            <button onClick={signOut} className="text-[11px] text-[#9C9A91] hover:text-[#1A1A18] transition-colors">
               Déconnexion
             </button>
           </>
         ) : (
           <>
             {showNewAnalysis && (
-              <a href="/" className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors flex items-center gap-1">
+              <a href="/" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors flex items-center gap-1">
                 Nouvelle analyse <IconArrowRight size={10} />
               </a>
             )}
-            <a href="/login" className="text-[11px] text-[#73726C] hover:text-[#1A1A18] transition-colors">
+            <a href="/login" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
               Connexion
             </a>
             <a href="/signup" className="px-3 py-1.5 bg-[#1A1A18] text-white text-[11px] font-medium rounded-[6px] hover:bg-[#333] transition-colors">

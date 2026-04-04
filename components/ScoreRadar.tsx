@@ -110,7 +110,7 @@ export default function ScoreRadar({ scores }: ScoreRadarProps) {
                 textAnchor={anchor}
                 fontSize="9"
                 fontWeight="500"
-                fill="#73726C"
+                fill="#504F4A"
               >
                 {shortLabels[key] || key}
               </text>

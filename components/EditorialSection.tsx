@@ -32,7 +32,7 @@ export default function EditorialSection({ title, dimension, index }: EditorialS
       </div>
 
       {/* Summary */}
-      <p className="text-[13px] text-[#1A1A18] mb-4 leading-relaxed">
+      <p className="text-[15px] text-[#1A1A18] mb-4 leading-relaxed">
         {dimension.resume}
       </p>
 
@@ -41,7 +41,7 @@ export default function EditorialSection({ title, dimension, index }: EditorialS
         <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#22A168] block mb-1">
           Point fort
         </span>
-        <p className="text-[13px] text-[#73726C] leading-relaxed">
+        <p className="text-[15px] text-[#504F4A] leading-relaxed">
           {dimension.point_fort}
         </p>
       </div>
@@ -51,7 +51,7 @@ export default function EditorialSection({ title, dimension, index }: EditorialS
         <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] block mb-1">
           À améliorer
         </span>
-        <p className="text-[13px] text-[#73726C] leading-relaxed">
+        <p className="text-[15px] text-[#504F4A] leading-relaxed">
           {dimension.point_amelioration}
         </p>
       </div>
@@ -59,10 +59,10 @@ export default function EditorialSection({ title, dimension, index }: EditorialS
       {/* Exemple concret */}
       {dimension.exemple_concret && (
         <div className="bg-[#F8F8F7] rounded-[8px] p-4 mt-3">
-          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#73726C] block mb-1">
+          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A] block mb-1">
             Exemple concret
           </span>
-          <p className="text-[13px] text-[#1A1A18] leading-relaxed italic">
+          <p className="text-[15px] text-[#1A1A18] leading-relaxed italic">
             {dimension.exemple_concret}
           </p>
         </div>

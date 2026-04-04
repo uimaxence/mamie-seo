@@ -116,7 +116,7 @@ export default function OnboardingPage() {
       {/* Header */}
       <header className="px-6 py-4 flex items-center justify-between">
         <span className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#C2C0B6]">
+        <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
           {step + 1} / {QUESTIONS.length}
         </span>
       </header>
@@ -148,7 +148,7 @@ export default function OnboardingPage() {
                   className={`px-4 py-2.5 rounded-[8px] text-[13px] font-medium transition-all ${
                     isSelected
                       ? 'bg-[#1A1A18] text-white'
-                      : 'bg-white border border-[#EEEDEB] text-[#73726C] hover:border-[#C2C0B6] hover:text-[#1A1A18]'
+                      : 'bg-white border border-[#EEEDEB] text-[#504F4A] hover:border-[#9C9A91] hover:text-[#1A1A18]'
                   }`}
                 >
                   {opt.label}
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
                   setFreeFields((prev) => ({ ...prev, [current.key]: e.target.value }))
                 }
                 placeholder="Précisez..."
-                className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[13px] text-[#1A1A18] placeholder:text-[#C2C0B6] outline-none focus:border-[#1A1A18] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
                 autoFocus
               />
             </div>
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
           <div className="flex items-center justify-between mt-8">
             <button
               onClick={() => step > 0 && setStep(step - 1)}
-              className={`text-[13px] text-[#73726C] hover:text-[#1A1A18] transition-colors ${
+              className={`text-[15px] text-[#504F4A] hover:text-[#1A1A18] transition-colors ${
                 step === 0 ? 'invisible' : ''
               }`}
             >
