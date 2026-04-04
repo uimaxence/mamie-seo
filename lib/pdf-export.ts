@@ -332,7 +332,7 @@ export function generateSeoReportPdf(report: Report): void {
     }
   }
 
-  b.addFooters('Mamie SEO — mamie-seo.vercel.app');
+  b.addFooters('Mamie SEO — mamie-seo.fr');
 
   const domain = new URL(report.url).hostname.replace(/\./g, '-');
   b.doc.save(`mamie-seo-rapport-${domain}.pdf`);
@@ -490,7 +490,7 @@ export function generateDeepAnalysisPdf(
   b.sectionHeader('VERDICT');
   b.text(analysis.verdict_final, b.margin + 4, { size: 9, maxWidth: b.contentWidth - 8 });
 
-  b.addFooters('Mamie SEO — mamie-seo.vercel.app');
+  b.addFooters('Mamie SEO — mamie-seo.fr');
 
   let filename = 'homepage';
   try { filename = new URL(pageUrl).pathname.replace(/\//g, '-').replace(/^-|-$/g, '') || 'homepage'; } catch { /* */ }
