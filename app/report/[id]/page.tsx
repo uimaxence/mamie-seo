@@ -245,13 +245,13 @@ export default function ReportPage() {
                 {editorialAnalysis && (
                   <div className="flex items-center gap-5 mt-5">
                     <div className="text-center">
-                      <p className="tabular-nums text-[18px] font-medium text-[#1A1A18]">{technicalScore.total}</p>
-                      <p className="text-[10px] text-[#9C9A91] uppercase tracking-wider">Tech</p>
+                      <p className="font-display text-[22px] text-[#1A1A18]">{technicalScore.total}</p>
+                      <p className="text-[11px] text-[#9C9A91] uppercase tracking-wider">Tech</p>
                     </div>
                     <div className="w-px h-6 bg-[#EEEDEB]" />
                     <div className="text-center">
-                      <p className="tabular-nums text-[18px] font-medium text-[#1A1A18]">{editorialScore}</p>
-                      <p className="text-[10px] text-[#9C9A91] uppercase tracking-wider">Éditorial</p>
+                      <p className="font-display text-[22px] text-[#1A1A18]">{editorialScore}</p>
+                      <p className="text-[11px] text-[#9C9A91] uppercase tracking-wider">Éditorial</p>
                     </div>
                   </div>
                 )}
@@ -534,13 +534,70 @@ export default function ReportPage() {
 
             {/* Loading */}
             {deepLoading && (
-              <div className="flex flex-col items-center py-16">
-                <div className="relative w-16 h-16 mb-6">
-                  <div className="absolute inset-0 border-2 border-[#EEEDEB] rounded-full" />
-                  <div className="absolute inset-0 border-2 border-t-[#1A1A18] rounded-full animate-spin" />
+              <div className="py-12">
+                {/* Animated visual */}
+                <div className="flex justify-center mb-8">
+                  <div className="relative w-24 h-24">
+                    <div className="absolute inset-0 border-[3px] border-[#EEEDEB] rounded-full" />
+                    <div className="absolute inset-0 border-[3px] border-t-[#1A1A18] border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+                    <div className="absolute inset-2 border-[2px] border-[#EEEDEB] rounded-full" />
+                    <div className="absolute inset-2 border-[2px] border-t-transparent border-r-[#F27A2A] border-b-transparent border-l-transparent rounded-full animate-spin-slow" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="text-[#1A1A18]">
+                        <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
+                        <path d="M10.5 10.5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[14px] font-medium text-[#1A1A18] mb-1">Analyse en cours...</p>
-                <p className="text-[14px] text-[#504F4A]">Claude analyse le contenu, la structure et le copywriting de votre page.</p>
+
+                <h3 className="font-display text-[20px] text-[#1A1A18] text-center mb-2">
+                  Analyse en cours
+                </h3>
+                <p className="text-[14px] text-[#504F4A] text-center mb-8 max-w-sm mx-auto leading-relaxed">
+                  Claude examine votre page comme un expert UX — section par section, du header au footer.
+                </p>
+
+                {/* Steps */}
+                <div className="max-w-xs mx-auto bg-white border border-[#EEEDEB] rounded-[12px] p-5">
+                  <div className="space-y-3">
+                    {[
+                      { label: 'Capture de la page', done: true },
+                      { label: 'Extraction du contenu', done: true },
+                      { label: 'Analyse visuelle par IA', done: false, active: true },
+                      { label: 'Génération des annotations', done: false },
+                      { label: 'Calcul des scores', done: false },
+                    ].map((step, i) => (
+                      <div key={i} className={`flex items-center gap-3 ${!step.done && !step.active ? 'opacity-40' : ''}`}>
+                        <span className="w-5 h-5 flex items-center justify-center shrink-0">
+                          {step.done ? (
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <circle cx="8" cy="8" r="8" fill="#22A168" />
+                              <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          ) : step.active ? (
+                            <span className="relative flex h-4 w-4">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F27A2A] opacity-30" />
+                              <span className="relative inline-flex rounded-full h-4 w-4 border-2 border-[#F27A2A] bg-white" />
+                            </span>
+                          ) : (
+                            <span className="w-4 h-4 rounded-full border border-[#EEEDEB]" />
+                          )}
+                        </span>
+                        <span className={`text-[13px] ${step.active ? 'text-[#1A1A18] font-medium' : step.done ? 'text-[#1A1A18]' : 'text-[#9C9A91]'}`}>
+                          {step.label}
+                        </span>
+                        {step.active && (
+                          <span className="ml-auto flex gap-0.5">
+                            <span className="w-1 h-1 rounded-full bg-[#F27A2A] animate-[bounce_1s_infinite_0ms]" />
+                            <span className="w-1 h-1 rounded-full bg-[#F27A2A] animate-[bounce_1s_infinite_150ms]" />
+                            <span className="w-1 h-1 rounded-full bg-[#F27A2A] animate-[bounce_1s_infinite_300ms]" />
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -668,7 +725,7 @@ export default function ReportPage() {
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Expérience mobile</h3>
-                      <span className="tabular-nums text-[18px] font-medium" style={{
+                      <span className="font-display text-[22px]" style={{
                         color: deepResult.analysis.analyse_mobile.score < 40 ? '#E05252' : deepResult.analysis.analyse_mobile.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_mobile.score < 85 ? '#F0C744' : '#22A168'
                       }}>{deepResult.analysis.analyse_mobile.score}</span>
                     </div>
@@ -704,7 +761,7 @@ export default function ReportPage() {
                   <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Cohérence visuelle</h3>
-                      <span className="tabular-nums text-[18px] font-medium" style={{
+                      <span className="font-display text-[22px]" style={{
                         color: deepResult.analysis.analyse_coherence_visuelle.score < 40 ? '#E05252' : deepResult.analysis.analyse_coherence_visuelle.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_coherence_visuelle.score < 85 ? '#F0C744' : '#22A168'
                       }}>{deepResult.analysis.analyse_coherence_visuelle.score}</span>
                     </div>

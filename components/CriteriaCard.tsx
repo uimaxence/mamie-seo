@@ -29,11 +29,11 @@ export default function CriteriaCard({ criterion, index }: CriteriaCardProps) {
             {criterion.name}
           </h4>
         </GlossaryTooltip>
-        <span
-          className="tabular-nums text-[14px] font-medium shrink-0 ml-3"
-          style={{ color }}
-        >
-          {criterion.score}/{criterion.maxScore}
+        <span className="shrink-0 ml-3 flex items-baseline gap-1">
+          <span className="font-display text-[18px]" style={{ color }}>
+            {criterion.score}
+          </span>
+          <span className="text-[12px] text-[#9C9A91]">/{criterion.maxScore}</span>
         </span>
       </div>
 

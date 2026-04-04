@@ -22,11 +22,8 @@ export default function EditorialSection({ title, dimension, index }: EditorialS
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <div className="flex items-start justify-between mb-4">
-        <h4 className="text-[14px] font-medium text-[#1A1A18]">{title}</h4>
-        <span
-          className="tabular-nums text-[18px] font-medium shrink-0 ml-3"
-          style={{ color }}
-        >
+        <h4 className="text-[15px] font-medium text-[#1A1A18]">{title}</h4>
+        <span className="font-display text-[22px] shrink-0 ml-3" style={{ color }}>
           {dimension.score}
         </span>
       </div>

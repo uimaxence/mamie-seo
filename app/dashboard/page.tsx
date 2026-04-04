@@ -93,17 +93,17 @@ export default function DashboardPage() {
           <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-4">
             <div className="text-[#9C9A91] mb-2"><IconBarChart size={16} /></div>
             <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Analyses SEO</p>
-            <p className="text-[24px] font-medium text-[#1A1A18] tabular-nums">{reports.length}</p>
+            <p className="font-display text-[28px] text-[#1A1A18]">{reports.length}</p>
           </div>
           <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-4">
             <div className="text-[#9C9A91] mb-2"><IconCreditCard size={16} /></div>
             <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Crédits Pro</p>
-            <p className="text-[24px] font-medium text-[#1A1A18] tabular-nums">{credits}</p>
+            <p className="font-display text-[28px] text-[#1A1A18]">{credits}</p>
           </div>
           <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-4">
             <div className="text-[#9C9A91] mb-2"><IconTarget size={16} /></div>
             <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Score moyen</p>
-            <p className="text-[24px] font-medium tabular-nums" style={{
+            <p className="font-display text-[28px]" style={{
               color: reports.length > 0 ? getScoreColor(Math.round(reports.reduce((s, r) => s + r.score, 0) / reports.length)) : '#9C9A91'
             }}>
               {reports.length > 0 ? Math.round(reports.reduce((s, r) => s + r.score, 0) / reports.length) : '—'}

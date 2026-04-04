@@ -70,12 +70,12 @@ export default function ScoreGauge({ score, size = 180, label }: ScoreGaugeProps
         {/* Score value */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className="tabular-nums font-medium text-[#1A1A18]"
-            style={{ fontSize: size * 0.22 }}
+            className="font-display text-[#1A1A18]"
+            style={{ fontSize: size * 0.28 }}
           >
             {animatedScore}
           </span>
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[#504F4A]">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-[#9C9A91]">
             / 100
           </span>
         </div>

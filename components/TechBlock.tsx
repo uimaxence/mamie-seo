@@ -60,11 +60,11 @@ export default function TechBlock({ crawl }: TechBlockProps) {
           className="bg-white border border-[#EEEDEB] rounded-[12px] p-4 flex flex-col gap-2"
         >
           <span className="text-[#9C9A91]">{item.icon}</span>
-          <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
+          <span className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
             {item.label}
           </span>
           <span
-            className="text-[14px] font-medium"
+            className="font-display text-[16px]"
             style={{ color: item.color || '#1A1A18' }}
           >
             {item.value}
