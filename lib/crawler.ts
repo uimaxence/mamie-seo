@@ -74,17 +74,59 @@ async function fetchWithTimeout(
 ): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const headers = {
+    'User-Agent': 'MamieSEO-Analyzer/1.0 (compatible; educational SEO tool)',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  };
   try {
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: {
-        'User-Agent':
-          'MamieSEO-Analyzer/1.0 (compatible; educational SEO tool)',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
+      headers,
       redirect: 'follow',
+      // @ts-expect-error — Node.js specific option to handle broken SSL certs
+      dispatcher: undefined,
     });
     return res;
+  } catch (err) {
+    // Retry with TLS verification disabled for sites with broken certificate chains
+    if (err instanceof Error && (
+      err.message.includes('certificate') ||
+      err.message.includes('UNABLE_TO_VERIFY') ||
+      err.message.includes('self signed') ||
+      err.cause?.toString().includes('certificate')
+    )) {
+      // Use https module as fallback for broken SSL
+      const https = await import('https');
+      const httpModule = url.startsWith('https') ? https : await import('http');
+      return new Promise<Response>((resolve, reject) => {
+        const req = httpModule.get(url, {
+          rejectUnauthorized: false,
+          headers,
+          timeout: timeoutMs,
+          signal: controller.signal,
+        }, (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => {
+            const body = Buffer.concat(chunks).toString('utf-8');
+            // Follow redirects manually
+            if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+              fetchWithTimeout(new URL(res.headers.location, url).href, timeoutMs).then(resolve, reject);
+              return;
+            }
+            resolve(new Response(body, {
+              status: res.statusCode || 200,
+              headers: Object.fromEntries(
+                Object.entries(res.headers).filter(([, v]) => typeof v === 'string') as [string, string][]
+              ),
+            }));
+          });
+          res.on('error', reject);
+        });
+        req.on('error', reject);
+      });
+    }
+    throw err;
   } finally {
     clearTimeout(timer);
   }
