@@ -9,7 +9,7 @@ import { persistReport } from '@/lib/report-store';
 import { v4 as uuidv4 } from 'uuid';
 import type { OnboardingAnswers, Report, ProgressEvent } from '@/lib/types';
 
-export const maxDuration = 120; // Allow up to 2 minutes
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -29,12 +29,10 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'URL, email et réponses onboarding requis.' }, { status: 400 });
   }
 
-  // Validate email
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: 'Adresse email invalide.' }, { status: 400 });
   }
 
-  // Validate URL format
   try {
     const parsed = new URL(url);
     if (!parsed.protocol.startsWith('http')) throw new Error();
@@ -42,17 +40,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "L'URL fournie n'est pas valide." }, { status: 400 });
   }
 
-  // Check rate limit: 2 free analyses max, then block
-  const rateCheck = await hasAlreadyAnalyzed(email, ip);
-  if (rateCheck.limited) {
-    return Response.json(
-      { error: rateCheck.reason, upgrade: true },
-      { status: 429 }
-    );
-  }
-  const isLuckyDay = rateCheck.luckyDay === true;
-
-  // Use Server-Sent Events for progress
+  // ═══ Return the SSE stream IMMEDIATELY — do all work inside the stream ═══
   const encoder = new TextEncoder();
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
@@ -60,16 +48,21 @@ export async function POST(request: NextRequest) {
   const sendEvent = async (event: ProgressEvent) => {
     try {
       await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-    } catch {
-      // Client disconnected — stop silently
-    }
+    } catch { /* client disconnected */ }
   };
 
-  // Run the analysis in the background
+  // Start async work AFTER returning the response
   (async () => {
     try {
-      // Send lucky day message if applicable
-      if (isLuckyDay) {
+      // Step 0: Rate limit check (inside the stream, not blocking the response)
+      const rateCheck = await hasAlreadyAnalyzed(email, ip);
+      if (rateCheck.limited) {
+        await sendEvent({ step: 'error', message: rateCheck.reason || 'Limite atteinte.' });
+        await writer.close();
+        return;
+      }
+
+      if (rateCheck.luckyDay) {
         await sendEvent({
           step: 'connecting',
           message: "C'est votre jour de chance ! Vous avez droit à une seconde analyse gratuite.",
@@ -86,18 +79,14 @@ export async function POST(request: NextRequest) {
       await sendEvent({ step: 'scoring', message: 'Calcul du score technique...' });
       const technicalScore = calculateTechnicalScore(crawlResult);
 
-      // Step 7: Claude editorial analysis (server-side API key)
+      // Step 7: Claude editorial analysis
       await sendEvent({ step: 'editorial', message: "Analyse éditoriale en cours — Claude lit chaque page de votre site..." });
       let editorialAnalysis = null;
       try {
         editorialAnalysis = await analyzeWithClaude(crawlResult, onboarding, technicalScore);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erreur lors de l'analyse éditoriale";
-        // Continue without editorial if Claude fails
-        await sendEvent({
-          step: 'editorial',
-          message: `Analyse éditoriale partielle : ${message}`,
-        });
+        await sendEvent({ step: 'editorial', message: `Analyse éditoriale partielle : ${message}` });
       }
 
       // Step 8: Generate report
@@ -116,15 +105,15 @@ export async function POST(request: NextRequest) {
       saveReport(report);
       persistReport(report, undefined, email).catch(console.error);
 
-      // Record analysis in Supabase (rate limiting + lead capture)
-      await recordAnalysis({ email, ip, url: crawlResult.finalUrl, reportId: report.id });
-      await saveEmail(email, report.id);
+      // Record analysis in Supabase (non-blocking)
+      recordAnalysis({ email, ip, url: crawlResult.finalUrl, reportId: report.id }).catch(console.error);
+      saveEmail(email, report.id).catch(console.error);
 
-      // Send report email via Brevo
+      // Send report email via Brevo (non-blocking)
       const host = request.headers.get('host') || 'localhost:3000';
       const protocol = host.includes('localhost') ? 'http' : 'https';
       const reportUrl = `${protocol}://${host}/report/${report.id}`;
-      sendReportEmail(email, report, reportUrl).catch(console.error); // fire and forget
+      sendReportEmail(email, report, reportUrl).catch(console.error);
 
       await sendEvent({
         step: 'done',
@@ -135,15 +124,16 @@ export async function POST(request: NextRequest) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       await sendEvent({ step: 'error', message });
     } finally {
-      await writer.close();
+      try { await writer.close(); } catch { /* already closed */ }
     }
   })();
 
+  // Return the stream response IMMEDIATELY — no await before this
   return new Response(stream.readable, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
+      'Connection': 'keep-alive',
     },
   });
 }
