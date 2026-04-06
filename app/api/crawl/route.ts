@@ -58,7 +58,11 @@ export async function POST(request: NextRequest) {
   const writer = stream.writable.getWriter();
 
   const sendEvent = async (event: ProgressEvent) => {
-    await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+    try {
+      await writer.write(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+    } catch {
+      // Client disconnected — stop silently
+    }
   };
 
   // Run the analysis in the background

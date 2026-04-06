@@ -95,62 +95,76 @@ export default function AnalyzingPage() {
       }
 
       const reader = response.body?.getReader();
-      if (!reader) return;
+      if (!reader) {
+        setError("Impossible de lire la réponse du serveur.");
+        return;
+      }
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let receivedDone = false;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-        buffer = lines.pop() || '';
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          try {
-            const event: ProgressEvent = JSON.parse(line.slice(6));
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            try {
+              const event: ProgressEvent = JSON.parse(line.slice(6));
 
-            if (event.step === 'error') {
-              setError(event.message);
-              return;
-            }
-
-            // Lucky day message
-            if (event.detail === 'lucky_day') {
-              setLuckyDay(true);
-            }
-
-            if (event.step === 'done') {
-              setCompletedSteps(new Set(STEPS.map((s) => s.key)));
-              const rid = event.message;
-              setReportId(rid);
-              // If already logged in → go straight to report
-              // If not → show account creation prompt
-              if (user) {
-                setTimeout(() => router.push(`/report/${rid}`), 600);
-              } else {
-                setTimeout(() => setShowAccountPrompt(true), 600);
+              if (event.step === 'error') {
+                setError(event.message);
+                return;
               }
-              return;
-            }
 
-            const stepIndex = STEPS.findIndex((s) => s.key === event.step);
-            if (stepIndex >= 0) {
-              setCompletedSteps((prev) => {
-                const next = new Set(prev);
-                for (let i = 0; i < stepIndex; i++) next.add(STEPS[i].key);
-                return next;
-              });
-            }
-            setCurrentStep(event.step);
-          } catch { /* skip */ }
+              if (event.detail === 'lucky_day') {
+                setLuckyDay(true);
+              }
+
+              if (event.step === 'done') {
+                receivedDone = true;
+                setCompletedSteps(new Set(STEPS.map((s) => s.key)));
+                const rid = event.message;
+                setReportId(rid);
+                if (user) {
+                  setTimeout(() => router.push(`/report/${rid}`), 600);
+                } else {
+                  setTimeout(() => setShowAccountPrompt(true), 600);
+                }
+                return;
+              }
+
+              const stepIndex = STEPS.findIndex((s) => s.key === event.step);
+              if (stepIndex >= 0) {
+                setCompletedSteps((prev) => {
+                  const next = new Set(prev);
+                  for (let i = 0; i < stepIndex; i++) next.add(STEPS[i].key);
+                  return next;
+                });
+              }
+              setCurrentStep(event.step);
+            } catch { /* skip malformed event */ }
+          }
+        }
+
+        // Stream ended without a 'done' event — server timed out or crashed
+        if (!receivedDone) {
+          setError("L'analyse a été interrompue. Le serveur a mis trop de temps à répondre. Essayez avec un site plus petit ou réessayez.");
+        }
+      } catch (streamErr) {
+        // Network error during streaming (connection dropped, timeout)
+        if (!receivedDone) {
+          setError("Connexion perdue pendant l'analyse. Vérifiez votre connexion internet et réessayez.");
         }
       }
     }).catch((err) => {
-      setError(err instanceof Error ? err.message : 'Erreur de connexion.');
+      setError(err instanceof Error ? err.message : 'Erreur de connexion au serveur.');
     });
   }, [router]);
 

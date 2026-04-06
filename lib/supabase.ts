@@ -12,29 +12,55 @@ export function getSupabase(): SupabaseClient {
   return _supabase;
 }
 
+// ─── Admin emails — unlimited analyses and credits ───
+
+const ADMIN_EMAILS = [
+  'maxence.cailleau1@gmail.com',
+];
+
+export function isAdmin(email: string): boolean {
+  return ADMIN_EMAILS.includes(email.toLowerCase().trim());
+}
+
 // ─── Check if an email or IP has already used their free analysis ───
 
 export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{
   limited: boolean;
   reason?: string;
-  luckyDay?: boolean; // true = 2nd free analysis allowed
+  luckyDay?: boolean;
 }> {
+  // Admin bypass — unlimited
+  if (isAdmin(email)) {
+    return { limited: false };
+  }
+
   const supabase = getSupabase();
   const normalizedEmail = email.toLowerCase().trim();
 
   // Count analyses by email
-  const { data: emailData } = await supabase
+  const { data: emailData, error: emailErr } = await supabase
     .from('analyses')
     .select('id')
     .eq('email', normalizedEmail);
 
+  if (emailErr) {
+    console.error('Supabase email check error:', emailErr);
+    // Fail open — allow analysis if DB is unreachable
+    return { limited: false };
+  }
+
   const emailCount = emailData?.length ?? 0;
 
   // Count analyses by IP
-  const { data: ipData } = await supabase
+  const { data: ipData, error: ipErr } = await supabase
     .from('analyses')
     .select('id')
     .eq('ip_address', ip);
+
+  if (ipErr) {
+    console.error('Supabase IP check error:', ipErr);
+    return { limited: false };
+  }
 
   const ipCount = ipData?.length ?? 0;
 

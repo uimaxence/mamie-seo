@@ -1,6 +1,9 @@
-import { getSupabase } from './supabase';
+import { getSupabase, isAdmin } from './supabase';
 
 export async function getCredits(email: string): Promise<number> {
+  // Admin = unlimited credits
+  if (isAdmin(email)) return 999;
+
   const { data } = await getSupabase()
     .from('credits')
     .select('amount')
@@ -11,6 +14,9 @@ export async function getCredits(email: string): Promise<number> {
 }
 
 export async function deductCredit(email: string): Promise<boolean> {
+  // Admin = never deduct
+  if (isAdmin(email)) return true;
+
   const normalizedEmail = email.toLowerCase().trim();
 
   // Try atomic decrement via SQL function first
