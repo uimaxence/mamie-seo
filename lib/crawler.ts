@@ -6,7 +6,7 @@ import type {
 } from './types';
 
 const CRAWL_TIMEOUT_PER_PAGE = 30_000;
-const MAX_URLS = 60;
+const MAX_URLS = 20;
 const MAX_DEPTH = 4;
 const EXCLUDED_EXTENSIONS = /\.(pdf|jpg|jpeg|png|gif|svg|webp|mp4|mp3|zip|doc|docx|xls|xlsx)$/i;
 const EXCLUDED_PATHS = /\/(wp-admin|wp-login|feed|admin|login|logout|cart|checkout)\b/i;
