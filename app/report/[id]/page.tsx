@@ -116,7 +116,7 @@ export default function ReportPage() {
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-[15px] text-[#525252]">Chargement du rapport...</p></div>;
-  if (error || !report) return <div className="min-h-screen flex items-center justify-center px-6"><div className="text-center"><p className="text-[13px] text-[#E05252] mb-4">{error || 'Rapport introuvable.'}</p><button onClick={() => router.push('/')} className="px-6 py-2.5 bg-[#171717] text-white text-[13px] font-medium rounded-[10px] hover:bg-[#333] transition-colors">Nouvelle analyse</button></div></div>;
+  if (error || !report) return <div className="min-h-screen flex items-center justify-center px-6"><div className="text-center"><p className="text-[14px] text-[#E05252] mb-4">{error || 'Rapport introuvable.'}</p><button onClick={() => router.push('/')} className="px-6 py-2.5 bg-[#171717] text-white text-[13px] font-medium rounded-[10px] hover:bg-[#333] transition-colors">Nouvelle analyse</button></div></div>;
 
   const { crawlResult, technicalScore, editorialAnalysis } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
@@ -154,12 +154,12 @@ export default function ReportPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             {/* Global score */}
             <div className="card-elevated p-4 flex flex-col items-center">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-3">Score global</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-3">Score global</p>
               <ScoreGauge score={combinedScore} size={90} />
             </div>
             {/* Tech score */}
             <div className="card p-4 flex flex-col">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2">Technique</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2">Technique</p>
               <div className="flex items-baseline gap-1">
                 <span className="font-display text-[28px] text-[#171717] leading-none">{technicalScore.total}</span>
                 <span className="text-[11px] text-[#a3a3a3]">/100</span>
@@ -170,7 +170,7 @@ export default function ReportPage() {
             </div>
             {/* Editorial score */}
             <div className="card p-4 flex flex-col">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2">Éditorial</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2">Éditorial</p>
               <div className="flex items-baseline gap-1">
                 <span className="font-display text-[28px] text-[#171717] leading-none">{editorialAnalysis ? editorialScore : '—'}</span>
                 <span className="text-[11px] text-[#a3a3a3]">{editorialAnalysis ? '/100' : ''}</span>
@@ -185,7 +185,7 @@ export default function ReportPage() {
             </div>
             {/* Tech detection */}
             <div className="card p-4 flex flex-col">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2">Détecté</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2">Détecté</p>
               <div className="flex flex-wrap gap-1.5">
                 {crawlResult.isHttps && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">HTTPS</span>}
                 {crawlResult.sitemapFound && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">Sitemap</span>}
@@ -258,11 +258,11 @@ export default function ReportPage() {
                     <div className="card p-6 self-start">
                       <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-3">Résumé éditorial</h3>
                       <p className="text-[15px] text-[#171717] leading-relaxed mb-3">{editorialAnalysis.comprehension_activite.resume}</p>
-                      <p className="text-[14px] text-[#525252] leading-relaxed">{editorialAnalysis.coherence_offres?.resume}</p>
+                      <p className="text-[15px] text-neutral-500 leading-relaxed">{editorialAnalysis.coherence_offres?.resume}</p>
                       {suggestedPage && (
                         <div className="mt-4 pt-4 border-t border-dashed border-[#e5e5e5]">
-                          <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#E05A2B] mb-1">Page recommandée</p>
-                          <p className="text-[13px] text-[#525252] leading-relaxed">{suggestedPage.raison}</p>
+                          <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#E05A2B] mb-1">Page recommandée</p>
+                          <p className="text-[15px] text-neutral-500 leading-relaxed">{suggestedPage.raison}</p>
                           <button onClick={() => { setActiveTab('page'); setCustomUrl(suggestedPage.url); }} className="mt-2 text-[11px] text-[#E05A2B] font-medium hover:underline flex items-center gap-1">
                             Analyser cette page <ArrowRight size={12} />
                           </button>
@@ -286,9 +286,9 @@ export default function ReportPage() {
                     </div>
                     {editorialAnalysis!.plan_action_prioritaire.slice(0, 3).map((action, i) => (
                       <div key={i} className={`flex items-start gap-4 py-3 ${i > 0 ? 'border-t border-dashed border-[#e5e5e5]' : ''}`}>
-                        <span className="w-7 h-7 shrink-0 rounded-full bg-white flex items-center justify-center text-[13px] font-medium text-[#171717]">{action.priorite}</span>
+                        <span className="w-7 h-7 shrink-0 rounded-full bg-white flex items-center justify-center text-[14px] font-medium text-[#171717]">{action.priorite}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-medium text-[#171717] mb-1">{action.titre}</p>
+                          <p className="text-[14px] font-medium text-[#171717] mb-1">{action.titre}</p>
                           <div className="flex flex-wrap gap-1.5">
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-white text-[#525252] border border-[#e5e5e5]">Impact {action.impact}</span>
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-white text-[#525252] border border-[#e5e5e5]">{action.difficulte}</span>
@@ -374,45 +374,46 @@ export default function ReportPage() {
               </div>
             )}
 
-            {/* ═══ CTA CONTACT — personal, prominent ═══ */}
-            <div className="mt-12 border-2 border-[#E05A2B] rounded-2xl overflow-hidden">
-              <div className="bg-neutral-900 px-8 py-6 text-white">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-[#E05A2B] flex items-center justify-center text-white text-[16px] font-bold shrink-0">M</div>
-                  <div>
-                    <p className="text-[15px] font-medium">Maxence</p>
-                    <p className="text-[12px] text-neutral-400">Développeur & UI/UX Designer</p>
-                  </div>
-                </div>
-                <p className="text-[15px] text-neutral-300 leading-relaxed">
-                  Je conçois des sites qui convertissent. Si ces résultats vous semblent complexes à corriger seul, je peux vous proposer une feuille de route claire — ou m&apos;en occuper directement.
+            {/* ═══ CTA CONTACT — clean, airy, centered ═══ */}
+            <div className="mt-14 relative rounded-2xl bg-neutral-50 border border-neutral-200 px-8 py-14 overflow-hidden">
+              {/* Decorative shapes */}
+              <div className="absolute -left-16 -top-16 w-48 h-48 rounded-full bg-[#E05A2B]/[0.06]" />
+              <div className="absolute -right-12 -bottom-12 w-40 h-40 rounded-full bg-[#E05A2B]/[0.08]" />
+
+              <div className="relative text-center max-w-lg mx-auto">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#E05A2B] mb-4">Maxence · Développeur & UI/UX Designer</p>
+                <h3 className="font-display text-[28px] lg:text-[32px] tracking-tight text-neutral-900 mb-4 leading-[1.15]">
+                  Besoin d&apos;un coup de main<br className="hidden sm:block" /> pour corriger tout ça ?
+                </h3>
+                <p className="text-[15px] text-neutral-500 leading-relaxed mb-8">
+                  Je conçois des sites qui convertissent. Feuille de route, corrections SEO, refonte — on en parle en 30 min, sans engagement.
                 </p>
-              </div>
-              <div className="bg-white px-8 py-5 flex flex-col sm:flex-row items-center gap-3">
                 {process.env.NEXT_PUBLIC_CAL_LINK ? (
                   <a href={process.env.NEXT_PUBLIC_CAL_LINK} target="_blank" rel="noopener noreferrer"
-                    className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2 w-full sm:w-auto justify-center">
-                    Réserver un appel gratuit de 30 min <ArrowRight size={14} />
+                    className="cta-accent px-8 py-3.5 text-[15px] inline-flex items-center gap-2">
+                    Réserver un appel gratuit <ArrowRight size={16} />
                   </a>
                 ) : (
                   <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
-                    className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2 w-full sm:w-auto justify-center">
-                    Discuter de mon projet <ArrowRight size={14} />
+                    className="cta-accent px-8 py-3.5 text-[15px] inline-flex items-center gap-2">
+                    Discuter de mon projet <ArrowRight size={16} />
                   </a>
                 )}
-                <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
-                  className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
-                  Ou m&apos;écrire directement
-                </a>
+                <p className="mt-4">
+                  <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                    className="text-[14px] text-neutral-400 hover:text-neutral-900 transition-colors underline underline-offset-2">
+                    Ou m&apos;écrire directement
+                  </a>
+                </p>
               </div>
             </div>
 
             {/* ═══ UPSELL — Analyse UI Pro ═══ */}
             <div className="card border-2 border-[#E05A2B]/20 p-8 mt-6">
               <div className="max-w-xl mx-auto text-center">
-                <span className="inline-block px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider bg-[#E05A2B]/10 text-[#E05A2B] mb-3">Aller plus loin</span>
+                <span className="inline-block px-3 py-1 rounded-full text-[11px] font-medium uppercase tracking-wider bg-[#E05A2B]/10 text-[#E05A2B] mb-3">Aller plus loin</span>
                 <h3 className="text-[18px] font-medium text-[#171717] mb-2">Analyse UI avancée — votre page en détail</h3>
-                <p className="text-[14px] text-[#525252] leading-relaxed mb-5">
+                <p className="text-[15px] text-neutral-500 leading-relaxed mb-5">
                   Screenshot annoté, analyse design & UX, copywriting section par section, recommandations mobile.
                 </p>
                 <button onClick={() => setActiveTab('page')} className="cta-accent px-7 py-3 text-[13px] inline-flex items-center gap-2">
@@ -436,9 +437,9 @@ export default function ReportPage() {
                 </div>
                 {suggestedPage && (
                   <div className="card p-6">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#E05A2B] mb-2">Page recommandée par l&apos;analyse SEO</p>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#E05A2B] mb-2">Page recommandée par l&apos;analyse SEO</p>
                     <p className="text-[14px] font-medium text-[#171717] mb-1 truncate">{(() => { try { return new URL(suggestedPage.url).pathname; } catch { return suggestedPage.url; } })()}</p>
-                    <p className="text-[13px] text-[#525252] mb-4 leading-relaxed">{suggestedPage.raison}</p>
+                    <p className="text-[14px] text-[#525252] mb-4 leading-relaxed">{suggestedPage.raison}</p>
                     <button onClick={() => handleDeepAnalysis(suggestedPage.url)} className="w-full cta-accent py-3 text-[13px] flex items-center justify-center gap-2">
                       Analyser cette page <ArrowRight size={14} />
                     </button>
@@ -459,11 +460,11 @@ export default function ReportPage() {
                       <CreditCard size={16} className="text-[#525252]" />
                       <span className="text-[14px] font-medium text-[#171717]">3 analyses pour 4,90 EUR</span>
                     </div>
-                    <p className="text-[13px] text-[#525252]">Analyse UI, copywriting, conversion et recommandations par IA.</p>
+                    <p className="text-[14px] text-[#525252]">Analyse UI, copywriting, conversion et recommandations par IA.</p>
                     {credits !== null && credits > 0 && <p className="text-[11px] text-[#22A168] mt-2 font-medium">{credits} crédit{credits > 1 ? 's' : ''} restant{credits > 1 ? 's' : ''}</p>}
                   </div>
                   <div className="pt-4 border-t border-dashed border-[#e5e5e5]">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2 text-center">Code promo</p>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2 text-center">Code promo</p>
                     <div className="flex gap-2">
                       <input type="text" value={promoCode} onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoMessage(''); }} placeholder="VOTRECODE" className="flex-1 px-3 py-2.5 bg-white border border-[#e5e5e5] rounded-[8px] text-[14px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors text-center uppercase tracking-wider" />
                       <button
@@ -509,7 +510,7 @@ export default function ReportPage() {
             {/* Deep error */}
             {deepError && !deepLoading && (
               <div className="card border-[#E05252]/20 p-6 text-center my-8">
-                <p className="text-[13px] text-[#E05252] mb-4">{deepError}</p>
+                <p className="text-[14px] text-[#E05252] mb-4">{deepError}</p>
                 <button onClick={() => setDeepError('')} className="px-6 py-2.5 bg-[#171717] text-white text-[13px] font-medium rounded-[10px] hover:bg-[#333] transition-colors">Réessayer</button>
               </div>
             )}
@@ -519,7 +520,7 @@ export default function ReportPage() {
               <div className="space-y-6 max-w-none" style={{ maxWidth: '100%' }}>
                 <div className="flex items-center justify-between">
                   <h2 className="text-[18px] font-medium text-[#171717]">Analyse approfondie</h2>
-                  <button onClick={() => { setDeepResult(null); setDeepError(''); setActiveAnnotation(null); }} className="text-[13px] text-[#525252] hover:text-[#171717]">Autre page</button>
+                  <button onClick={() => { setDeepResult(null); setDeepError(''); setActiveAnnotation(null); }} className="text-[14px] text-[#525252] hover:text-[#171717]">Autre page</button>
                 </div>
                 {/* Score + Radar + Summary */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -566,15 +567,15 @@ export default function ReportPage() {
                       <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3]">Expérience mobile</h3>
                       <span className="font-display text-[22px]" style={{ color: deepResult.analysis.analyse_mobile.score < 40 ? '#E05252' : deepResult.analysis.analyse_mobile.score < 65 ? '#E05A2B' : '#22A168' }}>{deepResult.analysis.analyse_mobile.score}</span>
                     </div>
-                    {deepResult.analysis.analyse_mobile.problemes_critiques.length > 0 && <div className="mb-3"><p className="text-[10px] font-medium text-[#E05252] uppercase tracking-wider mb-1">Problèmes</p><ul className="space-y-1">{deepResult.analysis.analyse_mobile.problemes_critiques.map((p, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-[#525252]"><span className="w-1 h-1 rounded-full bg-[#E05252] mt-1.5 shrink-0" />{p}</li>)}</ul></div>}
-                    {deepResult.analysis.analyse_mobile.points_positifs.length > 0 && <div><p className="text-[10px] font-medium text-[#22A168] uppercase tracking-wider mb-1">Points positifs</p><ul className="space-y-1">{deepResult.analysis.analyse_mobile.points_positifs.map((p, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-[#525252]"><span className="w-1 h-1 rounded-full bg-[#22A168] mt-1.5 shrink-0" />{p}</li>)}</ul></div>}
+                    {deepResult.analysis.analyse_mobile.problemes_critiques.length > 0 && <div className="mb-3"><p className="text-[10px] font-medium text-[#E05252] uppercase tracking-wider mb-1">Problèmes</p><ul className="space-y-1">{deepResult.analysis.analyse_mobile.problemes_critiques.map((p, i) => <li key={i} className="flex items-start gap-2 text-[14px] text-[#525252]"><span className="w-1 h-1 rounded-full bg-[#E05252] mt-1.5 shrink-0" />{p}</li>)}</ul></div>}
+                    {deepResult.analysis.analyse_mobile.points_positifs.length > 0 && <div><p className="text-[10px] font-medium text-[#22A168] uppercase tracking-wider mb-1">Points positifs</p><ul className="space-y-1">{deepResult.analysis.analyse_mobile.points_positifs.map((p, i) => <li key={i} className="flex items-start gap-2 text-[14px] text-[#525252]"><span className="w-1 h-1 rounded-full bg-[#22A168] mt-1.5 shrink-0" />{p}</li>)}</ul></div>}
                   </div>
                   <div className="card p-5">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3]">Cohérence visuelle</h3>
                       <span className="font-display text-[22px]" style={{ color: deepResult.analysis.analyse_coherence_visuelle.score < 40 ? '#E05252' : deepResult.analysis.analyse_coherence_visuelle.score < 65 ? '#E05A2B' : '#22A168' }}>{deepResult.analysis.analyse_coherence_visuelle.score}</span>
                     </div>
-                    <div className="space-y-2 text-[13px] text-[#525252]">
+                    <div className="space-y-2 text-[14px] text-[#525252]">
                       <p><span className="text-[#171717] font-medium">Palette :</span> {deepResult.analysis.analyse_coherence_visuelle.palette_detectee}</p>
                       <p><span className="text-[#171717] font-medium">Couleurs :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_couleurs}</p>
                       <p><span className="text-[#171717] font-medium">Typo :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_typographie}</p>
@@ -587,9 +588,9 @@ export default function ReportPage() {
                     <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-4">Plan d&apos;action</h3>
                     {deepResult.analysis.plan_action.map((action, i) => (
                       <div key={i} className={`flex items-start gap-4 py-4 ${i > 0 ? 'border-t border-dashed border-[#e5e5e5]' : ''}`}>
-                        <span className="w-7 h-7 shrink-0 rounded-full bg-white flex items-center justify-center text-[13px] font-medium text-[#171717]">{action.priorite}</span>
+                        <span className="w-7 h-7 shrink-0 rounded-full bg-white flex items-center justify-center text-[14px] font-medium text-[#171717]">{action.priorite}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-medium text-[#171717] mb-1">{action.action}</p>
+                          <p className="text-[14px] font-medium text-[#171717] mb-1">{action.action}</p>
                           <div className="flex flex-wrap gap-1.5">
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-white text-[#525252] border border-[#e5e5e5]">{action.categorie}</span>
                             <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-white text-[#525252] border border-[#e5e5e5]">Impact {action.impact}</span>
@@ -617,7 +618,7 @@ export default function ReportPage() {
 
         {/* Footer */}
         <div className="text-center py-8 mt-6 border-t border-[#e5e5e5]">
-          <button onClick={() => router.push('/')} className="text-[13px] text-[#525252] hover:text-[#171717] transition-colors">
+          <button onClick={() => router.push('/')} className="text-[14px] text-[#525252] hover:text-[#171717] transition-colors">
             Analyser un autre site
           </button>
         </div>
@@ -644,7 +645,7 @@ function BlurGate({ id }: { id: string }) {
             </svg>
           </div>
           <h3 className="text-[18px] font-medium text-[#171717] mb-2">Voir le rapport complet</h3>
-          <p className="text-[13px] text-[#525252] leading-relaxed mb-6">
+          <p className="text-[15px] text-neutral-500 leading-relaxed mb-6">
             Créez un compte gratuit pour accéder à l&apos;analyse complète, les mots-clés manquants et le plan d&apos;action.
           </p>
           <button onClick={() => { sessionStorage.setItem('mamie_pending_report', id); window.location.href = '/signup'; }} className="cta-accent w-full py-3 text-[13px] flex items-center justify-center gap-2 mb-3">

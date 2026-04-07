@@ -25,7 +25,7 @@ export default function CriteriaCard({ criterion, index }: CriteriaCardProps) {
     >
       <div className="flex items-start justify-between mb-3">
         <GlossaryTooltip termKey={criterion.key}>
-          <h4 className="text-[14px] font-medium text-[#171717]">
+          <h4 className="text-[15px] font-medium text-[#171717]">
             {criterion.name}
           </h4>
         </GlossaryTooltip>

@@ -33,7 +33,7 @@ function getDifficulteBadge(difficulte: string) {
 export default function ActionPlan({ actions }: ActionPlanProps) {
   return (
     <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-5">
-      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#525252] mb-4">
+      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#525252] mb-4">
         Plan d&apos;action priorisé
       </h3>
       <div className="space-y-0">
@@ -71,7 +71,7 @@ export default function ActionPlan({ actions }: ActionPlanProps) {
                     {action.difficulte}
                   </span>
                   {action.temps_estime && (
-                    <span className="text-[10px] text-[#a3a3a3]">
+                    <span className="text-[11px] text-[#a3a3a3]">
                       ~{action.temps_estime}
                     </span>
                   )}
