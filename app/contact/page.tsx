@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import AuthHeader from '@/components/AuthHeader';
-import { IconArrowRight, IconCheck } from '@/components/Icons';
+import { ArrowRight, Check } from 'lucide-react';
+const IconArrowRight = ArrowRight; const IconCheck = Check;
 
 const SUBJECTS = [
   { value: 'discuss', label: 'Discuter des résultats de mon audit' },
@@ -15,7 +16,7 @@ const SUBJECTS = [
 
 export default function ContactPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-[15px] text-[#504F4A]">Chargement...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><p className="text-[15px] text-[#525252]">Chargement...</p></div>}>
       <ContactPageInner />
     </Suspense>
   );
@@ -90,16 +91,16 @@ function ContactPageInner() {
         <main className="flex-1 flex items-center justify-center px-6 pb-16">
           <div className="w-full max-w-sm text-center animate-fade-in-up">
             <div className="w-14 h-14 rounded-full bg-[#EAF3DE] flex items-center justify-center mx-auto mb-4">
-              <IconCheck size={24} className="text-[#22A168]" />
+              <IconCheck size={24} className="text-[#2D8A5E]" />
             </div>
-            <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2">Message envoyé !</h2>
-            <p className="text-[15px] text-[#504F4A] leading-relaxed mb-6">
+            <h2 className="text-[18px] font-medium text-[#171717] mb-2">Message envoyé !</h2>
+            <p className="text-[15px] text-[#525252] leading-relaxed mb-6">
               Je reviens vers vous rapidement. En attendant, vous pouvez consulter votre rapport.
             </p>
             {reportId && (
               <a
                 href={`/report/${reportId}`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#171717] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
               >
                 Voir mon rapport <IconArrowRight size={14} />
               </a>
@@ -117,25 +118,25 @@ function ContactPageInner() {
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-[24px] font-medium text-[#1A1A18] mb-2">
+            <h1 className="text-[24px] font-medium text-[#171717] mb-2">
               Parlons de votre projet
             </h1>
-            <p className="text-[15px] text-[#504F4A] leading-relaxed">
+            <p className="text-[15px] text-[#525252] leading-relaxed">
               Décrivez-moi votre besoin. Je reviens vers vous sous 24h.
             </p>
           </div>
 
           {/* Cal.com CTA if available */}
           {process.env.NEXT_PUBLIC_CAL_LINK && (
-            <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 mb-6 text-center">
-              <p className="text-[14px] text-[#504F4A] mb-3">
+            <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-5 mb-6 text-center">
+              <p className="text-[14px] text-[#525252] mb-3">
                 Vous préférez en discuter de vive voix ?
               </p>
               <a
                 href={process.env.NEXT_PUBLIC_CAL_LINK}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#171717] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
               >
                 Réserver un appel de 30 min <IconArrowRight size={14} />
               </a>
@@ -144,38 +145,38 @@ function ContactPageInner() {
 
           {process.env.NEXT_PUBLIC_CAL_LINK && (
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex-1 h-px bg-[#EEEDEB]" />
-              <span className="text-[12px] text-[#9C9A91]">ou écrivez-moi</span>
-              <div className="flex-1 h-px bg-[#EEEDEB]" />
+              <div className="flex-1 h-px bg-[#e5e5e5]" />
+              <span className="text-[12px] text-[#a3a3a3]">ou écrivez-moi</span>
+              <div className="flex-1 h-px bg-[#e5e5e5]" />
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1 block">Nom</label>
+              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-1 block">Nom</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Votre nom"
-                className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-[#e5e5e5] rounded-[8px] text-[15px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors"
               />
             </div>
 
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1 block">Email</label>
+              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-1 block">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="vous@exemple.com"
                 required
-                className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-[#e5e5e5] rounded-[8px] text-[15px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors"
               />
             </div>
 
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2 block">Je souhaite</label>
+              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-2 block">Je souhaite</label>
               <div className="flex flex-wrap gap-2">
                 {SUBJECTS.map((s) => (
                   <button
@@ -184,8 +185,8 @@ function ContactPageInner() {
                     onClick={() => setSubject(s.value)}
                     className={`px-3 py-2 rounded-[8px] text-[12px] font-medium transition-all ${
                       subject === s.value
-                        ? 'bg-[#1A1A18] text-white'
-                        : 'bg-white border border-[#EEEDEB] text-[#504F4A] hover:border-[#9C9A91]'
+                        ? 'bg-[#171717] text-white'
+                        : 'bg-white border border-[#e5e5e5] text-[#525252] hover:border-[#a3a3a3]'
                     }`}
                   >
                     {s.label}
@@ -195,22 +196,22 @@ function ContactPageInner() {
             </div>
 
             <div>
-              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1 block">Message</label>
+              <label className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-1 block">Message</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={4}
                 required
-                className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors resize-none"
+                className="w-full px-4 py-3 bg-white border border-[#e5e5e5] rounded-[8px] text-[15px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors resize-none"
               />
             </div>
 
-            {error && <p className="text-[11px] text-[#E05252]">{error}</p>}
+            {error && <p className="text-[11px] text-[#C03030]">{error}</p>}
 
             <button
               type="submit"
               disabled={loading || !email || !message}
-              className="w-full py-3.5 bg-[#1A1A18] text-white text-[14px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
+              className="w-full py-3.5 bg-[#171717] text-white text-[14px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
             >
               {loading ? 'Envoi...' : 'Envoyer'}
               {!loading && <IconArrowRight size={14} />}

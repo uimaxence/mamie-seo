@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from './AuthProvider';
-import { IconArrowRight } from './Icons';
+import { ArrowRight } from 'lucide-react';
 
 interface AuthHeaderProps {
   showNewAnalysis?: boolean;
@@ -11,39 +11,38 @@ export default function AuthHeader({ showNewAnalysis = false }: AuthHeaderProps)
   const { user, loading, signOut } = useAuth();
 
   return (
-    <header className="px-6 lg:px-12 py-3.5 flex items-center justify-between border-b border-[#EEEDEB] bg-white">
-      <a href="/" className="flex items-center gap-2 group">
-        <span className="w-7 h-7 rounded-[8px] bg-[#1A1A18] flex items-center justify-center text-white text-[11px] font-bold">M</span>
-        <span className="text-[15px] font-semibold text-[#1A1A18] group-hover:text-[#504F4A] transition-colors">Mamie SEO</span>
+    <header className="flex items-center justify-between px-6 lg:px-12 py-4 border-b border-neutral-200 bg-white">
+      <a href="/" className="font-display text-[20px] text-neutral-900">
+        Audit<span className="text-[#E05A2B]">.</span>
       </a>
       <nav className="flex items-center gap-5">
         {loading ? (
-          <span className="w-16 h-3 bg-[#EEEDEB] rounded animate-pulse" />
+          <span className="w-16 h-3 bg-neutral-200 rounded animate-pulse" />
         ) : user ? (
           <>
             {showNewAnalysis && (
-              <a href="/" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors hidden sm:flex items-center gap-1">
-                Nouvelle analyse <IconArrowRight size={10} />
+              <a href="/" className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors hidden sm:flex items-center gap-1">
+                Nouvelle analyse <ArrowRight size={10} />
               </a>
             )}
-            <a href="/dashboard" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
+            <a href="/dashboard" className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
               Mon espace
             </a>
-            <button onClick={signOut} className="text-[12px] text-[#9C9A91] hover:text-[#1A1A18] transition-colors">
+            <button onClick={signOut} className="text-[12px] text-neutral-400 hover:text-neutral-900 transition-colors">
               Déconnexion
             </button>
           </>
         ) : (
           <>
             {showNewAnalysis && (
-              <a href="/" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors hidden sm:flex items-center gap-1">
-                Nouvelle analyse <IconArrowRight size={10} />
+              <a href="/" className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors hidden sm:flex items-center gap-1">
+                Nouvelle analyse <ArrowRight size={10} />
               </a>
             )}
-            <a href="/login" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
+            <a href="/login" className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
               Connexion
             </a>
-            <a href="/signup" className="px-3.5 py-1.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors">
+            <a href="/signup" className="bg-neutral-900 text-white rounded-full px-4 py-1.5 text-[12px] font-medium hover:bg-neutral-800 transition-colors">
               Créer un compte
             </a>
           </>

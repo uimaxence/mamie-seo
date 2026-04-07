@@ -11,9 +11,9 @@ function getImpactBadge(impact: string) {
     case 'moyen':
       return { bg: '#FAEEDA', text: '#854F0B' };
     case 'faible':
-      return { bg: '#F8F8F7', text: '#504F4A' };
+      return { bg: '#fafafa', text: '#525252' };
     default:
-      return { bg: '#F8F8F7', text: '#504F4A' };
+      return { bg: '#fafafa', text: '#525252' };
   }
 }
 
@@ -26,14 +26,14 @@ function getDifficulteBadge(difficulte: string) {
     case 'difficile':
       return { bg: '#EEEDFE', text: '#3C3489' };
     default:
-      return { bg: '#F8F8F7', text: '#504F4A' };
+      return { bg: '#fafafa', text: '#525252' };
   }
 }
 
 export default function ActionPlan({ actions }: ActionPlanProps) {
   return (
-    <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A] mb-4">
+    <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-5">
+      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#525252] mb-4">
         Plan d&apos;action priorisé
       </h3>
       <div className="space-y-0">
@@ -45,16 +45,16 @@ export default function ActionPlan({ actions }: ActionPlanProps) {
             <div
               key={i}
               className={`flex items-start gap-4 py-4 ${
-                i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''
+                i > 0 ? 'border-t border-dashed border-[#e5e5e5]' : ''
               }`}
             >
               {/* Priority number */}
-              <span className="w-7 h-7 shrink-0 rounded-full bg-[#F8F8F7] flex items-center justify-center text-[13px] font-medium text-[#1A1A18]">
+              <span className="w-7 h-7 shrink-0 rounded-full bg-[#fafafa] flex items-center justify-center text-[13px] font-medium text-[#171717]">
                 {action.priorite}
               </span>
 
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-[#1A1A18] mb-2">
+                <p className="text-[13px] font-medium text-[#171717] mb-2">
                   {action.titre}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +71,7 @@ export default function ActionPlan({ actions }: ActionPlanProps) {
                     {action.difficulte}
                   </span>
                   {action.temps_estime && (
-                    <span className="text-[10px] text-[#9C9A91]">
+                    <span className="text-[10px] text-[#a3a3a3]">
                       ~{action.temps_estime}
                     </span>
                   )}

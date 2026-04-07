@@ -35,7 +35,7 @@ export default function TechBlock({ crawl }: TechBlockProps) {
       icon: <IconShield size={16} />,
       label: 'HTTPS',
       value: crawl.isHttps ? 'Actif' : 'Inactif',
-      color: crawl.isHttps ? '#22A168' : '#E05252',
+      color: crawl.isHttps ? '#2D8A5E' : '#C03030',
     },
     {
       icon: <IconZap size={16} />,
@@ -48,7 +48,7 @@ export default function TechBlock({ crawl }: TechBlockProps) {
       value: crawl.sitemapFound
         ? `${crawl.sitemapUrls} URLs`
         : 'Non trouvé',
-      color: crawl.sitemapFound ? undefined : '#F27A2A',
+      color: crawl.sitemapFound ? undefined : '#E05A2B',
     },
   ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string; color?: string }[];
 
@@ -57,15 +57,15 @@ export default function TechBlock({ crawl }: TechBlockProps) {
       {items.map((item, i) => (
         <div
           key={i}
-          className="bg-white border border-[#EEEDEB] rounded-[12px] p-4 flex flex-col gap-2"
+          className="bg-white border border-[#e5e5e5] rounded-[12px] p-4 flex flex-col gap-2"
         >
-          <span className="text-[#9C9A91]">{item.icon}</span>
-          <span className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
+          <span className="text-[#a3a3a3]">{item.icon}</span>
+          <span className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3]">
             {item.label}
           </span>
           <span
             className="font-display text-[16px]"
-            style={{ color: item.color || '#1A1A18' }}
+            style={{ color: item.color || '#171717' }}
           >
             {item.value}
           </span>

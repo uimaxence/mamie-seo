@@ -9,10 +9,10 @@ interface ScoreGaugeProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  red: '#E05252',
-  orange: '#F27A2A',
-  yellow: '#F0C744',
-  green: '#22A168',
+  red: '#C03030',
+  orange: '#E05A2B',
+  yellow: '#E05A2B',
+  green: '#2D8A5E',
 };
 
 function getCategory(score: number): { key: string; label: string } {
@@ -48,7 +48,7 @@ export default function ScoreGauge({ score, size = 180, label }: ScoreGaugeProps
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#EEEDEB"
+            stroke="#e5e5e5"
             strokeWidth={strokeWidth}
           />
           {/* Score circle */}
@@ -70,12 +70,12 @@ export default function ScoreGauge({ score, size = 180, label }: ScoreGaugeProps
         {/* Score value */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span
-            className="font-display text-[#1A1A18]"
+            className="font-display text-[#171717]"
             style={{ fontSize: size * 0.28 }}
           >
             {animatedScore}
           </span>
-          <span className="text-[11px] font-medium uppercase tracking-wider text-[#9C9A91]">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-[#a3a3a3]">
             / 100
           </span>
         </div>

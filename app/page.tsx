@@ -3,19 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import AuthHeader from '@/components/AuthHeader';
 import {
-  IconSearch, IconBarChart, IconTarget, IconStar,
-  IconShield, IconZap, IconType, IconArrowRight, IconCheck
-} from '@/components/Icons';
+  Globe, ArrowRight, Check, AlertCircle, TriangleAlert,
+  BarChart2, PenLine, Scan,
+} from 'lucide-react';
 
-// ─── Animated placeholder that cycles between freelance URLs ───
+// ─── Animated placeholder ───
 const PLACEHOLDER_URLS = [
   'https://marie-coach.fr',
   'https://thomas-dev.com',
   'https://studio-bloom.fr',
   'https://sophie-naturopathe.fr',
-  'https://lucas-consultant.com',
 ];
 
 function useAnimatedPlaceholder() {
@@ -27,232 +25,41 @@ function useAnimatedPlaceholder() {
 
   useEffect(() => {
     const currentUrl = PLACEHOLDER_URLS[urlIndex];
-
     if (isPaused) {
-      const timeout = setTimeout(() => {
-        setIsPaused(false);
-        setIsDeleting(true);
-      }, 2000);
-      return () => clearTimeout(timeout);
+      const t = setTimeout(() => { setIsPaused(false); setIsDeleting(true); }, 2000);
+      return () => clearTimeout(t);
     }
-
     if (!isDeleting && charIndex < currentUrl.length) {
-      const timeout = setTimeout(() => {
-        setPlaceholder(currentUrl.slice(0, charIndex + 1));
-        setCharIndex(charIndex + 1);
-      }, 40 + Math.random() * 30);
-      return () => clearTimeout(timeout);
+      const t = setTimeout(() => { setPlaceholder(currentUrl.slice(0, charIndex + 1)); setCharIndex(charIndex + 1); }, 40 + Math.random() * 30);
+      return () => clearTimeout(t);
     }
-
-    if (!isDeleting && charIndex === currentUrl.length) {
-      setIsPaused(true);
-      return;
-    }
-
+    if (!isDeleting && charIndex === currentUrl.length) { setIsPaused(true); return; }
     if (isDeleting && charIndex > 0) {
-      const timeout = setTimeout(() => {
-        setPlaceholder(currentUrl.slice(0, charIndex - 1));
-        setCharIndex(charIndex - 1);
-      }, 20);
-      return () => clearTimeout(timeout);
+      const t = setTimeout(() => { setPlaceholder(currentUrl.slice(0, charIndex - 1)); setCharIndex(charIndex - 1); }, 20);
+      return () => clearTimeout(t);
     }
-
-    if (isDeleting && charIndex === 0) {
-      setIsDeleting(false);
-      setUrlIndex((urlIndex + 1) % PLACEHOLDER_URLS.length);
-    }
+    if (isDeleting && charIndex === 0) { setIsDeleting(false); setUrlIndex((urlIndex + 1) % PLACEHOLDER_URLS.length); }
   }, [charIndex, isDeleting, isPaused, urlIndex]);
 
   return placeholder;
 }
 
-// ─── Mini animated preview gauge ───
-function PreviewGauge() {
-  return (
-    <svg width="120" height="120" viewBox="0 0 120 120" className="mx-auto">
-      <circle cx="60" cy="60" r="50" fill="none" stroke="#EEEDEB" strokeWidth="6" />
-      <circle
-        cx="60" cy="60" r="50" fill="none" stroke="#22A168" strokeWidth="6"
-        strokeDasharray="314" strokeDashoffset="94"
-        strokeLinecap="round"
-        transform="rotate(-90 60 60)"
-        className="animate-[gauge-draw_2s_ease-out_infinite_alternate]"
-      />
-      <text x="60" y="56" textAnchor="middle" fill="#1A1A18" fontSize="28" fontWeight="500" fontFamily="system-ui">
-        72
-      </text>
-      <text x="60" y="72" textAnchor="middle" fill="#9C9A91" fontSize="10" fontWeight="500" fontFamily="system-ui">
-        /100
-      </text>
-    </svg>
-  );
-}
-
-// ─── Mini criteria preview bars ───
-function PreviewBars() {
-  const bars = [
-    { label: 'HTTPS', pct: 100, color: '#22A168' },
-    { label: 'Meta titres', pct: 60, color: '#F0C744' },
-    { label: 'Balises H1', pct: 80, color: '#22A168' },
-    { label: 'Images alt', pct: 35, color: '#E05252' },
-    { label: 'Maillage', pct: 45, color: '#F27A2A' },
-  ];
-
-  return (
-    <div className="space-y-2.5">
-      {bars.map((b) => (
-        <div key={b.label} className="flex items-center gap-3">
-          <span className="text-[10px] text-[#504F4A] w-16 text-right shrink-0">{b.label}</span>
-          <div className="flex-1 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
-            <div className="h-full rounded-full" style={{ width: `${b.pct}%`, backgroundColor: b.color }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Social proof avatars ───
-function SocialProof() {
-  const colors = ['#7F77DD', '#22A168', '#F27A2A', '#E05252', '#F0C744'];
-  const initials = ['MC', 'TD', 'SB', 'LR', 'AP'];
-
-  return (
-    <div className="flex items-center gap-3 mt-8">
-      <div className="flex -space-x-2">
-        {colors.map((bg, i) => (
-          <div
-            key={i}
-            className="w-7 h-7 rounded-full border-2 border-[#F8F8F7] flex items-center justify-center text-[8px] font-bold text-white"
-            style={{ backgroundColor: bg }}
-          >
-            {initials[i]}
-          </div>
-        ))}
-      </div>
-      <div className="text-[12px] text-[#504F4A]">
-        <span className="font-medium text-[#1A1A18]">+1 200</span> analyses ce mois
-      </div>
-    </div>
-  );
-}
-
-// ─── Stats counter bar ───
-function StatsBar() {
-  const stats = [
-    { value: '1 200+', label: 'Sites', sublabel: 'analysés' },
-    { value: '10', label: 'Critères', sublabel: 'SEO vérifiés' },
-    { value: '60s', label: "D'analyse", sublabel: '' },
-    { value: '100%', label: 'Gratuit', sublabel: '' },
-  ];
-
-  return (
-    <div className="card-elevated p-8 md:p-10">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
-        {stats.map((s, i) => (
-          <div key={i} className="text-center">
-            <p className="text-[32px] md:text-[36px] font-semibold text-[#1A1A18] tabular-nums leading-tight animate-count-up">
-              {s.value}
-            </p>
-            <p className="text-[13px] text-[#504F4A] mt-1 font-medium">{s.label}</p>
-            {s.sublabel && (
-              <p className="text-[12px] text-[#9C9A91]">{s.sublabel}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-const FEATURES = [
-  {
-    icon: <IconSearch size={20} />,
-    title: 'Crawl intelligent',
-    desc: 'Sitemap, BFS, détection CMS. On lit votre site comme Google le fait.',
-  },
-  {
-    icon: <IconBarChart size={20} />,
-    title: 'Score technique sur 100',
-    desc: '10 critères SEO analysés automatiquement avec explications accessibles.',
-  },
-  {
-    icon: <IconStar size={20} />,
-    title: 'Analyse éditoriale par IA',
-    desc: 'Claude analyse votre copywriting, offres, CTA et signaux de confiance.',
-  },
-  {
-    icon: <IconTarget size={20} />,
-    title: 'Plan d\'action prioritaire',
-    desc: 'Des actions concrètes classées par impact et difficulté.',
-  },
-  {
-    icon: <IconType size={20} />,
-    title: 'Mots-clés manquants',
-    desc: 'Découvrez les termes que vos clients tapent et que vous n\'utilisez pas.',
-  },
-  {
-    icon: <IconZap size={20} />,
-    title: 'Résultats en 60 secondes',
-    desc: 'Pas de setup, pas de compte obligatoire. Entrez votre URL, c\'est tout.',
-  },
-];
-
-const TESTIMONIALS = [
-  {
-    name: 'Marie L.',
-    role: 'Coach de vie',
-    text: 'J\'ai enfin compris pourquoi mon site n\'apparaissait pas sur Google. Les recommandations étaient claires et actionnables.',
-  },
-  {
-    name: 'Thomas R.',
-    role: 'Développeur freelance',
-    text: 'L\'analyse éditoriale par IA m\'a ouvert les yeux sur mon copywriting. Mon taux de conversion a augmenté de 30%.',
-  },
-  {
-    name: 'Sophie M.',
-    role: 'Naturopathe',
-    text: 'Simple, rapide, et les conseils sont adaptés à mon métier. Bien plus utile qu\'un audit générique.',
-  },
-];
-
 export default function LandingPage() {
   const router = useRouter();
-  const { user, email: authEmail } = useAuth();
+  const { user } = useAuth();
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
-  const [urlValid, setUrlValid] = useState<boolean | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const animatedPlaceholder = useAnimatedPlaceholder();
 
-  // Auto-focus on desktop
   useEffect(() => {
-    if (window.innerWidth > 768 && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (window.innerWidth > 768 && inputRef.current) inputRef.current.focus();
   }, []);
-
-  // Real-time URL validation
-  useEffect(() => {
-    if (!url) {
-      setUrlValid(null);
-      return;
-    }
-    try {
-      const full = url.startsWith('http') ? url : `https://${url}`;
-      const parsed = new URL(full);
-      setUrlValid(parsed.hostname.includes('.'));
-    } catch {
-      setUrlValid(false);
-    }
-  }, [url]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
     const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-
     try {
       const parsed = new URL(fullUrl);
       if (!parsed.hostname.includes('.')) throw new Error();
@@ -260,301 +67,330 @@ export default function LandingPage() {
       setError("Entrez une URL valide (ex: monsite.fr)");
       return;
     }
-
     sessionStorage.setItem('mamie_url', fullUrl);
-    // If user is logged in, store their email
-    if (user?.email) {
-      sessionStorage.setItem('mamie_email', user.email);
-    }
+    if (user?.email) sessionStorage.setItem('mamie_email', user.email);
     router.push('/analyzing');
   };
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
-      <AuthHeader />
+    <div className="min-h-screen bg-white">
+      {/* ═══ NAV ═══ */}
+      <nav className="flex items-center justify-between px-6 lg:px-12 py-4 border-b border-neutral-200">
+        <a href="/" className="font-display text-[20px] text-neutral-900">
+          Audit<span className="text-[#E05A2B]">.</span>
+        </a>
+        <div className="hidden md:flex items-center gap-8">
+          <a href="#features" className="text-[14px] text-neutral-500 hover:text-neutral-900 transition-colors">Fonctionnalités</a>
+          <a href="#preview" className="text-[14px] text-neutral-500 hover:text-neutral-900 transition-colors">Exemples</a>
+          <a href="#pricing" className="text-[14px] text-neutral-500 hover:text-neutral-900 transition-colors">Tarifs</a>
+        </div>
+        <div className="flex items-center gap-3">
+          {user ? (
+            <a href="/dashboard" className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">Mon espace</a>
+          ) : (
+            <a href="/login" className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">Connexion</a>
+          )}
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="bg-neutral-900 text-white rounded-full px-5 py-2 text-[13px] font-medium flex items-center gap-1.5 hover:bg-neutral-800 transition-colors"
+          >
+            Commencer <ArrowRight size={14} />
+          </button>
+        </div>
+      </nav>
 
-      {/* ════════ Hero ════════ */}
-      <section className="flex-1 flex flex-col items-center px-6 pt-16 pb-20">
-        <div className="max-w-6xl w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-28">
-            {/* Left — CTA */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-[#EEEDEB] rounded-full mb-8">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22A168] animate-pulse" />
-                <span className="text-[11px] font-medium text-[#504F4A]">Gratuit — aucune carte requise</span>
-              </div>
+      {/* ═══ HERO ═══ */}
+      <section className="text-center pt-16 pb-0 px-6 lg:px-12">
+        {/* Eyebrow */}
+        <div className="inline-flex items-center gap-1.5 border border-neutral-300 rounded-full px-4 py-1 mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#E05A2B]" />
+          <span className="text-[12px] text-neutral-500">Pensé pour les freelances et indépendants</span>
+        </div>
 
-              <h1 className="text-[40px] lg:text-[52px] font-semibold text-[#1A1A18] mb-6 leading-[1.06] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
-                Votre site attire-t-il vraiment vos futurs&nbsp;clients&nbsp;?
-              </h1>
-              <p className="text-[16px] text-[#504F4A] leading-relaxed mb-10 max-w-lg">
-                Analyse SEO, copywriting et design en 60&nbsp;secondes.
-                Pensé pour les freelances et indépendants.
-              </p>
+        {/* H1 */}
+        <h1 className="font-display text-[clamp(38px,5vw,58px)] leading-[1.1] tracking-tight max-w-2xl mx-auto mb-5">
+          Votre site attire-t-il vraiment<br />
+          <em className="text-[#E05A2B]">vos futurs clients</em> ?
+        </h1>
 
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div className="relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder={animatedPlaceholder || 'https://votre-site.fr'}
-                    className={`w-full px-5 py-4.5 bg-white border rounded-[14px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none transition-all shadow-sm ${
-                      urlValid === false && url
-                        ? 'border-[#E05252] focus:border-[#E05252]'
-                        : urlValid === true
-                        ? 'border-[#22A168] focus:border-[#22A168]'
-                        : 'border-[#EEEDEB] focus:border-[#1A1A18]'
-                    }`}
-                  />
-                  {urlValid === true && url && (
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                      <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="8" fill="#22A168" />
-                        <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                {error && <p className="text-[11px] text-[#E05252] px-1">{error}</p>}
-                <button
-                  type="submit"
-                  disabled={!url || urlValid === false}
-                  className="cta-accent w-full py-4.5 text-[15px] flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  Analyser mon site gratuitement
-                  <IconArrowRight size={16} />
-                </button>
-              </form>
+        {/* Subtitle */}
+        <p className="text-[16px] text-neutral-500 max-w-md mx-auto mb-10 leading-relaxed">
+          Analyse SEO, copywriting et design en 60&nbsp;secondes. Un rapport concret, pas du jargon.
+        </p>
 
-              {/* Trust badges */}
-              <div className="flex items-center gap-6 mt-6">
-                <div className="flex items-center gap-1.5 text-[12px] text-[#9C9A91]">
-                  <IconCheck size={14} className="text-[#22A168]" />
-                  <span>Gratuit</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[12px] text-[#9C9A91]">
-                  <IconZap size={14} className="text-[#F0C744]" />
-                  <span>Résultat en 60s</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[12px] text-[#9C9A91]">
-                  <IconShield size={14} />
-                  <span>Sans installation</span>
-                </div>
-              </div>
-
-              {/* Social proof */}
-              <SocialProof />
-            </div>
-
-            {/* Right — Visual asset */}
-            <div className="hidden lg:block">
-              <div className="card-elevated p-8 space-y-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-[#EEEDEB]">
-                  <div className="w-2 h-2 rounded-full bg-[#22A168]" />
-                  <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
-                    Exemple de rapport
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
-                  <PreviewGauge />
-                  <PreviewBars />
-                </div>
-
-                <div className="bg-[#F8F8F7] rounded-[10px] p-5">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Analyse IA</p>
-                  <p className="text-[14px] text-[#504F4A] leading-relaxed italic">
-                    &ldquo;On comprend immédiatement que vous êtes coach pour dirigeants.
-                    Votre H1 manque de mots-clés — essayez &apos;Coach certifié pour dirigeants&apos;.&rdquo;
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">coaching</span>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">dirigeant</span>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">+ coach certifié</span>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">+ burnout</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ════════ Stats counter bar ════════ */}
-          <div className="mb-28">
-            <StatsBar />
-          </div>
-
-          {/* ════════ Features grid ════════ */}
-          <div className="mb-28">
-            <div className="text-center mb-14">
-              <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-3">
-                Ce que vous obtenez gratuitement
-              </h2>
-              <p className="text-[16px] text-[#504F4A] max-w-lg mx-auto">
-                Un audit SEO complet, normalement facturé 200&nbsp;EUR par une agence.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {FEATURES.map((f, i) => (
-                <div
-                  key={i}
-                  className="card p-6 hover:border-[#9C9A91]"
-                >
-                  <span className="text-[#9C9A91] block mb-4">{f.icon}</span>
-                  <h3 className="text-[15px] font-medium text-[#1A1A18] mb-1.5">{f.title}</h3>
-                  <p className="text-[14px] text-[#504F4A] leading-relaxed">{f.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ════════ Testimonials ════════ */}
-          <div className="mb-28">
-            <div className="text-center mb-14">
-              <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-3">
-                Ils ont déjà analysé leur site
-              </h2>
-              <p className="text-[16px] text-[#504F4A]">
-                Des freelances et indépendants comme vous.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {TESTIMONIALS.map((t, i) => (
-                <div key={i} className="card p-6">
-                  <div className="flex items-center gap-1 mb-4">
-                    {[...Array(5)].map((_, j) => (
-                      <svg key={j} width="14" height="14" viewBox="0 0 16 16" fill="#F0C744">
-                        <path d="M8 1l2.2 4.5 5 .7-3.6 3.5.9 5L8 12.4 3.5 14.7l.9-5L.8 6.2l5-.7L8 1z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <p className="text-[14px] text-[#504F4A] leading-relaxed mb-5 italic">
-                    &ldquo;{t.text}&rdquo;
-                  </p>
-                  <div className="flex items-center gap-3 pt-4 border-t border-[#EEEDEB]">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                      style={{ backgroundColor: ['#7F77DD', '#22A168', '#F27A2A'][i] }}
-                    >
-                      {t.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div>
-                      <p className="text-[13px] font-medium text-[#1A1A18]">{t.name}</p>
-                      <p className="text-[11px] text-[#9C9A91]">{t.role}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* ════════ Pricing ════════ */}
-          <div id="pricing" className="mb-28">
-            <div className="text-center mb-14">
-              <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-3">
-                Allez plus loin avec l&apos;analyse de page
-              </h2>
-              <p className="text-[16px] text-[#504F4A] max-w-lg mx-auto">
-                L&apos;audit SEO est gratuit. Pour une analyse UI, copywriting et conversion page par page, passez en Pro.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              {/* Free plan */}
-              <div className="card p-7">
-                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Gratuit</p>
-                <p className="text-[32px] font-semibold text-[#1A1A18] tabular-nums mb-1">0 EUR</p>
-                <p className="text-[14px] text-[#504F4A] mb-6">Audit SEO complet par site</p>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    'Crawl de 60 pages max',
-                    'Score technique sur 100',
-                    'Analyse éditoriale par IA',
-                    'Plan d\'action prioritaire',
-                    'Mots-clés manquants',
-                    'Rapport sauvegardé',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2.5 text-[14px] text-[#504F4A]">
-                      <IconCheck size={14} className="text-[#22A168] shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={scrollToTop}
-                  className="w-full py-3.5 bg-[#1A1A18] text-white text-[14px] font-medium rounded-[10px] hover:bg-[#333] transition-colors flex items-center justify-center gap-2"
-                >
-                  Analyser gratuitement
-                  <IconArrowRight size={16} />
-                </button>
-              </div>
-
-              {/* Pro plan */}
-              <div className="card p-7 relative border-2 border-[#1A1A18]" style={{ borderRadius: '14px' }}>
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="px-3 py-1 bg-[#1A1A18] text-white text-[10px] font-medium uppercase tracking-wider rounded-full">
-                    Recommandé
-                  </span>
-                </div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-1">Pro</p>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[32px] font-semibold text-[#1A1A18] tabular-nums">4,90</span>
-                  <span className="text-[14px] text-[#504F4A]">EUR</span>
-                </div>
-                <p className="text-[14px] text-[#504F4A] mb-6">3 analyses de page approfondies</p>
-                <ul className="space-y-3 mb-8">
-                  {[
-                    'Tout le plan gratuit inclus',
-                    'Analyse UI & première impression',
-                    'Audit copywriting détaillé',
-                    'Évaluation des CTA',
-                    'Analyse confiance & preuve sociale',
-                    'Recommandations actionnables',
-                  ].map((item) => (
-                    <li key={item} className="flex items-center gap-2.5 text-[14px] text-[#504F4A]">
-                      <IconCheck size={14} className="text-[#22A168] shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={scrollToTop}
-                  className="cta-accent w-full py-3.5 text-[14px] flex items-center justify-center gap-2"
-                >
-                  Acheter le pack Pro — 4,90 EUR
-                  <IconArrowRight size={16} />
-                </button>
-                <p className="text-[11px] text-[#9C9A91] text-center mt-3">
-                  Lancez d&apos;abord une analyse gratuite, puis achetez le pack Pro depuis votre rapport.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* ════════ Final CTA ════════ */}
-          <div className="text-center py-16 border-t border-[#EEEDEB]">
-            <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-4">
-              Prêt à améliorer votre visibilité ?
-            </h2>
-            <p className="text-[16px] text-[#504F4A] mb-8 max-w-md mx-auto">
-              Lancez votre première analyse — c&apos;est gratuit et ça prend 60&nbsp;secondes.
-            </p>
+        {/* URL input bar */}
+        <form onSubmit={handleSubmit} className="max-w-xl mx-auto">
+          <div className="flex items-center border border-neutral-300 rounded-xl pl-4 pr-2 py-2">
+            <Globe size={16} className="text-neutral-400 mr-2 shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder={animatedPlaceholder || 'https://votre-site.fr'}
+              className="flex-1 text-[15px] placeholder-neutral-400 bg-transparent outline-none"
+            />
             <button
-              onClick={scrollToTop}
-              className="cta-accent px-10 py-4 text-[15px] inline-flex items-center gap-2"
+              type="submit"
+              className="bg-neutral-900 text-white rounded-lg px-6 py-3 text-[14px] font-medium hover:bg-neutral-800 transition-colors shrink-0"
             >
               Analyser mon site
-              <IconArrowRight size={16} />
             </button>
+          </div>
+          {error && <p className="text-[12px] text-[#C03030] mt-2">{error}</p>}
+        </form>
+
+        {/* Meta badges */}
+        <div className="flex items-center justify-center gap-4 mt-3">
+          {['Gratuit', 'Résultat en 60s', 'Sans installation'].map((t) => (
+            <span key={t} className="flex items-center gap-1 text-[12px] text-neutral-400">
+              <Check size={12} /> {t}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ REPORT PREVIEW ═══ */}
+      <section id="preview" className="max-w-4xl mx-auto mt-12 px-6">
+        <div className="border border-neutral-200 rounded-2xl bg-neutral-50 p-6">
+          {/* Title bar */}
+          <div className="flex items-center gap-2 mb-5">
+            <span className="w-2 h-2 rounded-full bg-[#C03030]" />
+            <span className="w-2 h-2 rounded-full bg-[#E05A2B]" />
+            <span className="w-2 h-2 rounded-full bg-[#2D8A5E]" />
+            <span className="text-[12px] text-neutral-400 ml-2">marie-coach.fr — Rapport d&apos;analyse</span>
+          </div>
+
+          {/* Score cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            {[
+              { label: 'Score global', value: '58', suffix: '/100', color: '#E05A2B' },
+              { label: 'Technique', value: '52', suffix: '/100', color: '#E05A2B' },
+              { label: 'Éditorial', value: '64', suffix: '/100', color: '#E05A2B' },
+              { label: 'Pages crawlées', value: '18', suffix: '', color: '#2D8A5E' },
+            ].map((s) => (
+              <div key={s.label} className="bg-white border border-neutral-200 rounded-xl p-3.5">
+                <p className="text-[11px] uppercase tracking-wide text-neutral-400 mb-1.5">{s.label}</p>
+                <p className="text-[22px] font-medium" style={{ color: s.color }}>
+                  {s.value}<span className="text-[13px] text-neutral-400">{s.suffix}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Grid: bars + problems */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Left — progress bars */}
+            <div className="space-y-4">
+              {[
+                { label: 'Méta-titres', value: '4/18 pages', pct: 22, color: '#E05A2B' },
+                { label: 'Balises H1', value: '15/18 pages', pct: 83, color: '#2D8A5E' },
+                { label: 'Images avec alt', value: '40%', pct: 40, color: '#E05A2B' },
+                { label: 'Maillage interne', value: 'faible', pct: 25, color: '#C03030' },
+              ].map((b) => (
+                <div key={b.label}>
+                  <div className="flex justify-between text-xs text-neutral-500 mb-1.5">
+                    <span>{b.label}</span><span>{b.value}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-neutral-200">
+                    <div className="h-full rounded-full" style={{ width: `${b.pct}%`, backgroundColor: b.color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Right — problem cards */}
+            <div className="flex flex-col gap-2">
+              {[
+                { type: 'danger' as const, title: 'H1 trop vague', desc: '« Accompagnons-nous vers votre mieux-être » — Google ne comprend pas votre métier.' },
+                { type: 'danger' as const, title: '12 pages sans méta-description', desc: 'Google choisit lui-même votre texte dans les résultats de recherche.' },
+                { type: 'warning' as const, title: 'CTA invisible sur mobile', desc: 'Contraste insuffisant (2.1:1). Minimum requis : 4.5:1.' },
+              ].map((p) => (
+                <div key={p.title} className="flex items-start gap-2.5 bg-white border border-neutral-200 rounded-lg p-3 text-sm">
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${p.type === 'danger' ? 'bg-[#FCEBEB]' : 'bg-[#FDF3ED]'}`}>
+                    {p.type === 'danger'
+                      ? <AlertCircle size={11} className="text-[#C03030]" />
+                      : <TriangleAlert size={11} className="text-[#E05A2B]" />}
+                  </span>
+                  <div>
+                    <p className="font-medium text-sm">{p.title}</p>
+                    <p className="text-xs text-neutral-500 leading-relaxed mt-0.5">{p.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
+
+      {/* ═══ STATS BAR ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-4 border-t border-b border-neutral-200 mt-14">
+        {[
+          { value: '1 200+', label: 'Analyses ce mois' },
+          { value: '47 s', label: "Temps moyen d'analyse" },
+          { value: '12', label: 'Critères vérifiés' },
+          { value: '100%', label: 'Pensé pour les indépendants' },
+        ].map((s, i) => (
+          <div
+            key={s.label}
+            className={`py-7 px-8 ${i < 3 ? 'border-r border-neutral-200' : ''}`}
+          >
+            <p className="font-display text-[32px] mb-1">{s.value}</p>
+            <p className="text-[12px] uppercase tracking-wide text-neutral-400">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ═══ FEATURES ("Pourquoi choisir") ═══ */}
+      <section id="features" className="grid grid-cols-1 lg:grid-cols-2 gap-16 px-6 lg:px-12 py-18 items-start max-w-7xl mx-auto">
+        {/* Left */}
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-[#E05A2B] mb-5">
+            Pourquoi choisir Audit.fr
+          </p>
+          <h2 className="font-display text-[38px] leading-[1.15] tracking-tight mb-5">
+            Découvrez ce qui freine vraiment votre site
+          </h2>
+          <p className="text-[15px] text-neutral-500 leading-relaxed mb-8">
+            Les outils SEO classiques sont faits pour des équipes marketing. Celui-ci est fait pour vous : un freelance qui veut être trouvé par ses futurs clients, sans passer des heures à apprendre le jargon.
+          </p>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="bg-neutral-900 text-white rounded-full px-6 py-3 text-sm font-medium flex items-center gap-1.5 hover:bg-neutral-800 transition-colors"
+            >
+              Analyser mon site <ArrowRight size={14} />
+            </button>
+            <a href="#preview" className="text-sm text-neutral-400 underline underline-offset-2">
+              Voir un exemple de rapport
+            </a>
+          </div>
+        </div>
+
+        {/* Right — feature cards */}
+        <div className="flex flex-col gap-3">
+          {/* Card 1 */}
+          <div className="flex items-start gap-3.5 bg-neutral-50 border border-neutral-200 rounded-xl p-4.5">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#FDF3ED] shrink-0">
+              <BarChart2 size={16} className="text-[#E05A2B]" />
+            </div>
+            <div>
+              <p className="font-medium text-sm mb-1">Analyse SEO complète en 60 secondes</p>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Méta-titres, structure H1-H6, sitemap, maillage interne — 12 critères vérifiés automatiquement sur toutes vos pages.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="flex items-start gap-3.5 bg-neutral-50 border border-neutral-200 rounded-xl p-4.5">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-[#FDF3ED] shrink-0">
+              <PenLine size={16} className="text-[#E05A2B]" />
+            </div>
+            <div>
+              <p className="font-medium text-sm mb-1">Analyse éditoriale par Claude</p>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Est-ce qu&apos;on comprend ce que vous faites ? Vos offres sont-elles claires ? Un regard expert sur votre copywriting, avec des exemples concrets pour votre métier.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3 — split */}
+          <div className="grid grid-cols-2 bg-neutral-50 border border-neutral-200 rounded-xl overflow-hidden">
+            <div className="p-5">
+              <p className="font-medium text-sm mb-1.5">Analyse UI annotée</p>
+              <p className="text-xs text-neutral-500 leading-relaxed">
+                Screenshot de votre page avec des annotations visuelles sur chaque section. Design, lisibilité, CTA, mobile.
+              </p>
+              <p className="mt-2.5 text-xs font-medium text-[#E05A2B]">Pro · 1 crédit / page</p>
+            </div>
+            <div className="bg-neutral-900 flex items-center justify-center p-4">
+              <div className="w-full rounded-md overflow-hidden border border-white/10 bg-white/[0.08] p-2 relative">
+                <div className="h-1 rounded bg-white/25 mb-1.5 w-[80%]" />
+                <div className="h-1 rounded bg-white/25 mb-1.5 w-[60%]" />
+                <div className="h-1 rounded bg-white/25 mb-1.5 w-[80%]" />
+                <div className="h-1 rounded bg-white/25 w-[50%]" />
+                <span className="absolute top-1 left-1 w-4 h-4 rounded-full bg-[#E05A2B] text-white flex items-center justify-center text-[8px] font-bold">1</span>
+                <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-[#E05A2B] text-white flex items-center justify-center text-[8px] font-bold">2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PRICING ═══ */}
+      <section id="pricing" className="px-6 lg:px-12 py-18 max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <p className="text-xs font-medium uppercase tracking-wide text-[#E05A2B] mb-4">Tarifs</p>
+          <h2 className="font-display text-[32px] tracking-tight mb-3">Simple et transparent</h2>
+          <p className="text-[15px] text-neutral-500">L&apos;audit SEO est gratuit. Les analyses de page sont en crédits.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Free */}
+          <div className="border border-neutral-200 rounded-xl p-6">
+            <p className="text-[12px] uppercase tracking-wide text-neutral-400 mb-1">Gratuit</p>
+            <p className="text-[32px] font-medium text-neutral-900 mb-1">0 €</p>
+            <p className="text-[14px] text-neutral-500 mb-6">Audit SEO complet par site</p>
+            <ul className="space-y-2.5 mb-6">
+              {['Crawl de 60 pages max', 'Score technique sur 100', 'Analyse éditoriale par IA', 'Plan d\'action priorisé', 'Mots-clés manquants', 'Rapport sauvegardé'].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-[14px] text-neutral-600">
+                  <Check size={14} className="text-[#2D8A5E] shrink-0" /> {item}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="w-full py-3 border border-neutral-300 rounded-full text-[14px] font-medium text-neutral-900 hover:bg-neutral-50 transition-colors"
+            >
+              Analyser gratuitement
+            </button>
+          </div>
+
+          {/* Pro */}
+          <div className="border-2 border-neutral-900 rounded-xl p-6 relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="px-3 py-1 bg-neutral-900 text-white text-[10px] font-medium uppercase tracking-wider rounded-full">
+                Recommandé
+              </span>
+            </div>
+            <p className="text-[12px] uppercase tracking-wide text-[#E05A2B] mb-1">Pro</p>
+            <div className="flex items-baseline gap-1 mb-1">
+              <span className="text-[32px] font-medium text-neutral-900">4,90</span>
+              <span className="text-[14px] text-neutral-500">€</span>
+            </div>
+            <p className="text-[14px] text-neutral-500 mb-6">3 analyses de page approfondies</p>
+            <ul className="space-y-2.5 mb-6">
+              {['Tout le plan gratuit inclus', 'Analyse UI & première impression', 'Audit copywriting détaillé', 'Évaluation des CTA', 'Analyse confiance & preuve sociale', 'Recommandations actionnables'].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-[14px] text-neutral-600">
+                  <Check size={14} className="text-[#2D8A5E] shrink-0" /> {item}
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="cta-accent w-full py-3 text-[14px] flex items-center justify-center gap-1.5"
+            >
+              Commencer une analyse <ArrowRight size={14} />
+            </button>
+            <p className="text-[11px] text-neutral-400 text-center mt-2">Achetez vos crédits depuis votre rapport</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FINAL CTA ═══ */}
+      <div className="text-center py-16 border-t border-neutral-200">
+        <h2 className="font-display text-[28px] tracking-tight mb-3">Prêt à améliorer votre visibilité ?</h2>
+        <p className="text-[15px] text-neutral-500 mb-6">60 secondes pour tout comprendre.</p>
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="bg-neutral-900 text-white rounded-full px-8 py-3.5 text-[14px] font-medium inline-flex items-center gap-1.5 hover:bg-neutral-800 transition-colors"
+        >
+          Analyser mon site <ArrowRight size={14} />
+        </button>
+      </div>
     </div>
   );
 }

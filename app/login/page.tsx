@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import { IconArrowRight } from '@/components/Icons';
+import { ArrowRight } from 'lucide-react';
+const IconArrowRight = ArrowRight;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,8 +55,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-6 py-4 flex items-center justify-between">
-        <a href="/" className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</a>
-        <a href="/signup" className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
+        <a href="/" className="text-[14px] font-medium text-[#171717]">Mamie SEO</a>
+        <a href="/signup" className="text-[13px] text-[#525252] hover:text-[#171717] transition-colors">
           Créer un compte
         </a>
       </header>
@@ -63,8 +64,8 @@ export default function LoginPage() {
       <main className="flex-1 flex items-center justify-center px-6 pb-16">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <h1 className="text-[24px] font-medium text-[#1A1A18] mb-2">Connexion</h1>
-            <p className="text-[15px] text-[#504F4A]">Retrouvez vos rapports et vos crédits.</p>
+            <h1 className="text-[24px] font-medium text-[#171717] mb-2">Connexion</h1>
+            <p className="text-[15px] text-[#525252]">Retrouvez vos rapports et vos crédits.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
@@ -73,7 +74,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="vous@exemple.com"
-              className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e5e5e5] rounded-[8px] text-[15px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors"
               required
             />
             <input
@@ -81,22 +82,22 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mot de passe"
-              className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
+              className="w-full px-4 py-3 bg-white border border-[#e5e5e5] rounded-[8px] text-[15px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors"
               required
             />
-            {error && <p className="text-[11px] text-[#E05252] px-1">{error}</p>}
+            {error && <p className="text-[11px] text-[#C03030] px-1">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#171717] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {loading ? 'Connexion...' : 'Se connecter'}
               {!loading && <IconArrowRight size={14} />}
             </button>
           </form>
 
-          <p className="text-center mt-6 text-[12px] text-[#9C9A91]">
-            Pas encore de compte ? <a href="/signup" className="text-[#1A1A18] font-medium hover:underline">Créer un compte</a>
+          <p className="text-center mt-6 text-[12px] text-[#a3a3a3]">
+            Pas encore de compte ? <a href="/signup" className="text-[#171717] font-medium hover:underline">Créer un compte</a>
           </p>
         </div>
       </main>

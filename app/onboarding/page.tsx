@@ -115,17 +115,17 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="px-6 py-4 flex items-center justify-between">
-        <span className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</span>
-        <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
+        <span className="text-[14px] font-medium text-[#171717]">Mamie SEO</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3]">
           {step + 1} / {QUESTIONS.length}
         </span>
       </header>
 
       {/* Progress bar */}
       <div className="px-6">
-        <div className="h-1 bg-[#EEEDEB] rounded-full overflow-hidden">
+        <div className="h-1 bg-[#e5e5e5] rounded-full overflow-hidden">
           <div
-            className="h-full bg-[#1A1A18] rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-[#171717] rounded-full transition-all duration-500 ease-out"
             style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }}
           />
         </div>
@@ -134,7 +134,7 @@ export default function OnboardingPage() {
       {/* Question */}
       <main className="flex-1 flex items-center justify-center px-6 pb-16">
         <div className="w-full max-w-md animate-fade-in-up" key={step}>
-          <h2 className="text-[18px] font-medium text-[#1A1A18] mb-8 text-center">
+          <h2 className="text-[18px] font-medium text-[#171717] mb-8 text-center">
             {current.question}
           </h2>
 
@@ -147,8 +147,8 @@ export default function OnboardingPage() {
                   onClick={() => handleSelect(opt.value)}
                   className={`px-4 py-2.5 rounded-[8px] text-[13px] font-medium transition-all ${
                     isSelected
-                      ? 'bg-[#1A1A18] text-white'
-                      : 'bg-white border border-[#EEEDEB] text-[#504F4A] hover:border-[#9C9A91] hover:text-[#1A1A18]'
+                      ? 'bg-[#171717] text-white'
+                      : 'bg-white border border-[#e5e5e5] text-[#525252] hover:border-[#a3a3a3] hover:text-[#171717]'
                   }`}
                 >
                   {opt.label}
@@ -167,7 +167,7 @@ export default function OnboardingPage() {
                   setFreeFields((prev) => ({ ...prev, [current.key]: e.target.value }))
                 }
                 placeholder="Précisez..."
-                className="w-full px-4 py-3 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
+                className="w-full px-4 py-3 bg-white border border-[#e5e5e5] rounded-[8px] text-[15px] text-[#171717] placeholder:text-[#a3a3a3] outline-none focus:border-[#171717] transition-colors"
                 autoFocus
               />
             </div>
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
           <div className="flex items-center justify-between mt-8">
             <button
               onClick={() => step > 0 && setStep(step - 1)}
-              className={`text-[15px] text-[#504F4A] hover:text-[#1A1A18] transition-colors ${
+              className={`text-[15px] text-[#525252] hover:text-[#171717] transition-colors ${
                 step === 0 ? 'invisible' : ''
               }`}
             >
@@ -186,7 +186,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleNext}
               disabled={!answers[current.key]}
-              className="px-6 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-6 py-2.5 bg-[#171717] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {step === QUESTIONS.length - 1 ? 'Lancer l\'analyse' : 'Suivant'}
             </button>

@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import { IconBarChart, IconCreditCard, IconArrowRight, IconTarget, IconCheck } from '@/components/Icons';
+import { BarChart2, CreditCard, ArrowRight, Target, Check } from 'lucide-react';
+const IconBarChart = BarChart2; const IconCreditCard = CreditCard; const IconArrowRight = ArrowRight; const IconTarget = Target; const IconCheck = Check;
 import type { User } from '@supabase/supabase-js';
 
 interface ReportSummary {
@@ -14,10 +15,10 @@ interface ReportSummary {
 }
 
 function getScoreColor(score: number): string {
-  if (score < 40) return '#E05252';
-  if (score < 65) return '#F27A2A';
-  if (score < 85) return '#F0C744';
-  return '#22A168';
+  if (score < 40) return '#C03030';
+  if (score < 65) return '#E05A2B';
+  if (score < 85) return '#E05A2B';
+  return '#2D8A5E';
 }
 
 // Group reports by domain and find score evolution
@@ -91,7 +92,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[15px] text-[#504F4A]">Chargement...</p>
+        <p className="text-[15px] text-[#525252]">Chargement...</p>
       </div>
     );
   }
@@ -104,10 +105,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="px-6 py-4 flex items-center justify-between border-b border-[#EEEDEB] bg-white">
-        <a href="/" className="text-[14px] font-medium text-[#1A1A18]">Mamie SEO</a>
+      <header className="px-6 py-4 flex items-center justify-between border-b border-[#e5e5e5] bg-white">
+        <a href="/" className="text-[14px] font-medium text-[#171717]">Mamie SEO</a>
         <div className="flex items-center gap-4">
-          <button onClick={handleLogout} className="text-[12px] text-[#9C9A91] hover:text-[#1A1A18] transition-colors">
+          <button onClick={handleLogout} className="text-[12px] text-[#a3a3a3] hover:text-[#171717] transition-colors">
             Déconnexion
           </button>
         </div>
@@ -117,12 +118,12 @@ export default function DashboardPage() {
         {/* Profile header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-[24px] font-medium text-[#1A1A18]">Mon espace</h1>
-            <p className="text-[14px] text-[#504F4A] mt-0.5">{user?.email}</p>
+            <h1 className="text-[24px] font-medium text-[#171717]">Mon espace</h1>
+            <p className="text-[14px] text-[#525252] mt-0.5">{user?.email}</p>
           </div>
           <button
             onClick={() => router.push('/')}
-            className="px-4 py-2 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#171717] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors flex items-center gap-1.5"
           >
             Nouvelle analyse <IconArrowRight size={12} />
           </button>
@@ -130,21 +131,21 @@ export default function DashboardPage() {
 
         {/* Stats cards */}
         <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-4">
-            <div className="text-[#9C9A91] mb-2"><IconBarChart size={16} /></div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Analyses SEO</p>
-            <p className="font-display text-[28px] text-[#1A1A18]">{reports.length}</p>
+          <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-4">
+            <div className="text-[#a3a3a3] mb-2"><IconBarChart size={16} /></div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-1">Analyses SEO</p>
+            <p className="font-display text-[28px] text-[#171717]">{reports.length}</p>
           </div>
-          <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-4">
-            <div className="text-[#9C9A91] mb-2"><IconCreditCard size={16} /></div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Crédits Pro</p>
-            <p className="font-display text-[28px] text-[#1A1A18]">{credits}</p>
+          <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-4">
+            <div className="text-[#a3a3a3] mb-2"><IconCreditCard size={16} /></div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-1">Crédits Pro</p>
+            <p className="font-display text-[28px] text-[#171717]">{credits}</p>
           </div>
-          <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-4">
-            <div className="text-[#9C9A91] mb-2"><IconTarget size={16} /></div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Score moyen</p>
+          <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-4">
+            <div className="text-[#a3a3a3] mb-2"><IconTarget size={16} /></div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-1">Score moyen</p>
             <p className="font-display text-[28px]" style={{
-              color: reports.length > 0 ? getScoreColor(avgScore) : '#9C9A91'
+              color: reports.length > 0 ? getScoreColor(avgScore) : '#a3a3a3'
             }}>
               {reports.length > 0 ? avgScore : '—'}
             </p>
@@ -152,11 +153,11 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[#EEEDEB] mb-6">
+        <div className="flex border-b border-[#e5e5e5] mb-6">
           <button
             onClick={() => setActiveTab('reports')}
             className={`px-4 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-              activeTab === 'reports' ? 'border-[#1A1A18] text-[#1A1A18]' : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'
+              activeTab === 'reports' ? 'border-[#171717] text-[#171717]' : 'border-transparent text-[#a3a3a3] hover:text-[#525252]'
             }`}
           >
             Mes rapports
@@ -164,7 +165,7 @@ export default function DashboardPage() {
           <button
             onClick={() => setActiveTab('profile')}
             className={`px-4 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-              activeTab === 'profile' ? 'border-[#1A1A18] text-[#1A1A18]' : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'
+              activeTab === 'profile' ? 'border-[#171717] text-[#171717]' : 'border-transparent text-[#a3a3a3] hover:text-[#525252]'
             }`}
           >
             Profil
@@ -175,11 +176,11 @@ export default function DashboardPage() {
         {activeTab === 'reports' && (
           <>
             {reports.length === 0 ? (
-              <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-12 text-center">
-                <IconBarChart size={32} className="text-[#9C9A91] mx-auto mb-4" />
-                <p className="text-[14px] font-medium text-[#1A1A18] mb-2">Aucun rapport</p>
-                <p className="text-[15px] text-[#504F4A] mb-6">Lancez votre première analyse SEO.</p>
-                <button onClick={() => router.push('/')} className="px-6 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors">
+              <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-12 text-center">
+                <IconBarChart size={32} className="text-[#a3a3a3] mx-auto mb-4" />
+                <p className="text-[14px] font-medium text-[#171717] mb-2">Aucun rapport</p>
+                <p className="text-[15px] text-[#525252] mb-6">Lancez votre première analyse SEO.</p>
+                <button onClick={() => router.push('/')} className="px-6 py-2.5 bg-[#171717] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors">
                   Analyser un site
                 </button>
               </div>
@@ -193,7 +194,7 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={report.id}
-                      className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 hover:border-[#9C9A91] transition-colors group"
+                      className="bg-white border border-[#e5e5e5] rounded-[12px] p-5 hover:border-[#a3a3a3] transition-colors group"
                     >
                       <div className="flex items-center gap-4">
                         <a href={`/report/${report.id}`} className="flex items-center gap-4 flex-1 min-w-0">
@@ -201,9 +202,9 @@ export default function DashboardPage() {
                             {report.score}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-medium text-[#1A1A18] truncate">{report.url}</p>
+                            <p className="text-[14px] font-medium text-[#171717] truncate">{report.url}</p>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <p className="text-[12px] text-[#9C9A91]">
+                              <p className="text-[12px] text-[#a3a3a3]">
                                 {new Date(report.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                               </p>
                               {/* Score evolution badge */}
@@ -220,18 +221,18 @@ export default function DashboardPage() {
                               )}
                             </div>
                           </div>
-                          <IconArrowRight size={16} className="text-[#9C9A91] group-hover:text-[#1A1A18] transition-colors shrink-0" />
+                          <IconArrowRight size={16} className="text-[#a3a3a3] group-hover:text-[#171717] transition-colors shrink-0" />
                         </a>
                       </div>
 
                       {/* Re-analyze button */}
-                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dashed border-[#EEEDEB]">
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dashed border-[#e5e5e5]">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleReanalyze(report.url);
                           }}
-                          className="text-[11px] text-[#504F4A] hover:text-[#1A1A18] transition-colors flex items-center gap-1"
+                          className="text-[11px] text-[#525252] hover:text-[#171717] transition-colors flex items-center gap-1"
                         >
                           <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
                             <path d="M2 8a6 6 0 0110.89-3.48M14 8a6 6 0 01-10.89 3.48" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -241,7 +242,7 @@ export default function DashboardPage() {
                         </button>
                         <a
                           href={`/report/${report.id}`}
-                          className="text-[11px] text-[#504F4A] hover:text-[#1A1A18] transition-colors ml-auto"
+                          className="text-[11px] text-[#525252] hover:text-[#171717] transition-colors ml-auto"
                         >
                           Voir le rapport
                         </a>
@@ -254,11 +255,11 @@ export default function DashboardPage() {
 
             {/* Buy credits CTA */}
             {credits === 0 && reports.length > 0 && (
-              <div className="mt-6 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[12px] p-5 text-center">
-                <p className="text-[15px] text-[#504F4A] mb-3">
+              <div className="mt-6 bg-[#fafafa] border border-[#e5e5e5] rounded-[12px] p-5 text-center">
+                <p className="text-[15px] text-[#525252] mb-3">
                   Allez plus loin avec l&apos;analyse de page approfondie
                 </p>
-                <a href="/#pricing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors">
+                <a href="/#pricing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#171717] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors">
                   <IconCreditCard size={14} /> Obtenir des crédits
                 </a>
               </div>
@@ -269,39 +270,39 @@ export default function DashboardPage() {
         {/* Profile tab */}
         {activeTab === 'profile' && (
           <div className="space-y-4">
-            <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-              <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">Informations</h3>
+            <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-5">
+              <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-4">Informations</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-[10px] text-[#9C9A91] mb-0.5">Email</p>
-                  <p className="text-[14px] text-[#1A1A18]">{user?.email}</p>
+                  <p className="text-[10px] text-[#a3a3a3] mb-0.5">Email</p>
+                  <p className="text-[14px] text-[#171717]">{user?.email}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-[#9C9A91] mb-0.5">Membre depuis</p>
-                  <p className="text-[14px] text-[#1A1A18]">
+                  <p className="text-[10px] text-[#a3a3a3] mb-0.5">Membre depuis</p>
+                  <p className="text-[14px] text-[#171717]">
                     {user?.created_at && new Date(user.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-              <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">Crédits d&apos;analyse Pro</h3>
+            <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-5">
+              <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#a3a3a3] mb-4">Crédits d&apos;analyse Pro</h3>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[14px] text-[#1A1A18]">Solde actuel</span>
-                <span className="tabular-nums text-[18px] font-medium text-[#1A1A18]">{credits}</span>
+                <span className="text-[14px] text-[#171717]">Solde actuel</span>
+                <span className="tabular-nums text-[18px] font-medium text-[#171717]">{credits}</span>
               </div>
-              <div className="h-2 bg-[#EEEDEB] rounded-full overflow-hidden mb-3">
-                <div className="h-full bg-[#1A1A18] rounded-full" style={{ width: `${Math.min(100, (credits / 3) * 100)}%` }} />
+              <div className="h-2 bg-[#e5e5e5] rounded-full overflow-hidden mb-3">
+                <div className="h-full bg-[#171717] rounded-full" style={{ width: `${Math.min(100, (credits / 3) * 100)}%` }} />
               </div>
-              <a href="/#pricing" className="text-[14px] text-[#504F4A] hover:text-[#1A1A18] transition-colors flex items-center gap-1">
+              <a href="/#pricing" className="text-[14px] text-[#525252] hover:text-[#171717] transition-colors flex items-center gap-1">
                 Acheter plus de crédits <IconArrowRight size={12} />
               </a>
             </div>
 
             <button
               onClick={handleLogout}
-              className="w-full py-3 text-[13px] text-[#E05252] font-medium rounded-[8px] border border-[#E05252]/20 hover:bg-[#E05252]/5 transition-colors"
+              className="w-full py-3 text-[13px] text-[#C03030] font-medium rounded-[8px] border border-[#C03030]/20 hover:bg-[#C03030]/5 transition-colors"
             >
               Se déconnecter
             </button>
