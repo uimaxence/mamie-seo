@@ -36,22 +36,9 @@ export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{
 
   const supabase = getSupabase();
   const normalizedEmail = email.toLowerCase().trim();
+  const isAnonymous = normalizedEmail.includes('@mamie-seo.local');
 
-  // Count analyses by email
-  const { data: emailData, error: emailErr } = await supabase
-    .from('analyses')
-    .select('id')
-    .eq('email', normalizedEmail);
-
-  if (emailErr) {
-    console.error('Supabase email check error:', emailErr);
-    // Fail open — allow analysis if DB is unreachable
-    return { limited: false };
-  }
-
-  const emailCount = emailData?.length ?? 0;
-
-  // Count analyses by IP
+  // Count analyses by IP (primary rate limit — works for anonymous users too)
   const { data: ipData, error: ipErr } = await supabase
     .from('analyses')
     .select('id')
@@ -63,6 +50,19 @@ export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{
   }
 
   const ipCount = ipData?.length ?? 0;
+
+  // Also check email if user is logged in (not anonymous)
+  let emailCount = 0;
+  if (!isAnonymous) {
+    const { data: emailData, error: emailErr } = await supabase
+      .from('analyses')
+      .select('id')
+      .eq('email', normalizedEmail);
+
+    if (!emailErr) {
+      emailCount = emailData?.length ?? 0;
+    }
+  }
 
   const maxCount = Math.max(emailCount, ipCount);
 
@@ -76,10 +76,10 @@ export async function hasAlreadyAnalyzed(email: string, ip: string): Promise<{
     return { limited: false, luckyDay: true };
   }
 
-  // 2+ analyses: blocked, must go Pro
+  // 2+ analyses: blocked
   return {
     limited: true,
-    reason: 'Vous avez utilisé vos 2 analyses gratuites. Passez en Pro pour continuer !',
+    reason: 'Vous avez déjà lancé une analyse aujourd\'hui. Créez un compte gratuit pour analyser autant de sites que vous voulez.',
   };
 }
 

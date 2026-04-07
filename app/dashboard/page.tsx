@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getSupabaseBrowser } from '@/lib/supabase-browser';
-import { IconBarChart, IconCreditCard, IconArrowRight, IconTarget } from '@/components/Icons';
+import { IconBarChart, IconCreditCard, IconArrowRight, IconTarget, IconCheck } from '@/components/Icons';
 import type { User } from '@supabase/supabase-js';
 
 interface ReportSummary {
@@ -18,6 +18,34 @@ function getScoreColor(score: number): string {
   if (score < 65) return '#F27A2A';
   if (score < 85) return '#F0C744';
   return '#22A168';
+}
+
+// Group reports by domain and find score evolution
+function getScoreEvolution(reports: ReportSummary[]): Map<string, { latest: number; previous: number | null; diff: number | null }> {
+  const byDomain = new Map<string, ReportSummary[]>();
+
+  for (const r of reports) {
+    try {
+      const domain = new URL(r.url).hostname;
+      const existing = byDomain.get(domain) || [];
+      existing.push(r);
+      byDomain.set(domain, existing);
+    } catch { /* skip invalid URLs */ }
+  }
+
+  const evolution = new Map<string, { latest: number; previous: number | null; diff: number | null }>();
+  for (const [domain, domainReports] of byDomain) {
+    const sorted = domainReports.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const latest = sorted[0].score;
+    const previous = sorted.length > 1 ? sorted[1].score : null;
+    evolution.set(domain, {
+      latest,
+      previous,
+      diff: previous !== null ? latest - previous : null,
+    });
+  }
+
+  return evolution;
 }
 
 export default function DashboardPage() {
@@ -54,6 +82,12 @@ export default function DashboardPage() {
     router.push('/');
   };
 
+  const handleReanalyze = (url: string) => {
+    sessionStorage.setItem('mamie_url', url);
+    if (user?.email) sessionStorage.setItem('mamie_email', user.email);
+    router.push('/analyzing');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -61,6 +95,12 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  const avgScore = reports.length > 0
+    ? Math.round(reports.reduce((s, r) => s + r.score, 0) / reports.length)
+    : 0;
+
+  const scoreEvolution = getScoreEvolution(reports);
 
   return (
     <div className="min-h-screen">
@@ -104,9 +144,9 @@ export default function DashboardPage() {
             <div className="text-[#9C9A91] mb-2"><IconTarget size={16} /></div>
             <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Score moyen</p>
             <p className="font-display text-[28px]" style={{
-              color: reports.length > 0 ? getScoreColor(Math.round(reports.reduce((s, r) => s + r.score, 0) / reports.length)) : '#9C9A91'
+              color: reports.length > 0 ? getScoreColor(avgScore) : '#9C9A91'
             }}>
-              {reports.length > 0 ? Math.round(reports.reduce((s, r) => s + r.score, 0) / reports.length) : '—'}
+              {reports.length > 0 ? avgScore : '—'}
             </p>
           </div>
         </div>
@@ -145,21 +185,70 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {reports.map((report) => (
-                  <a key={report.id} href={`/report/${report.id}`}
-                    className="flex items-center gap-4 bg-white border border-[#EEEDEB] rounded-[12px] p-5 hover:border-[#9C9A91] transition-colors group">
-                    <span className="tabular-nums text-[24px] font-medium shrink-0 w-14 text-center" style={{ color: getScoreColor(report.score) }}>
-                      {report.score}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-medium text-[#1A1A18] truncate">{report.url}</p>
-                      <p className="text-[12px] text-[#9C9A91]">
-                        {new Date(report.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
+                {reports.map((report) => {
+                  let domain = report.url;
+                  try { domain = new URL(report.url).hostname; } catch {}
+                  const evo = scoreEvolution.get(domain);
+
+                  return (
+                    <div
+                      key={report.id}
+                      className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 hover:border-[#9C9A91] transition-colors group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <a href={`/report/${report.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                          <span className="tabular-nums text-[24px] font-medium shrink-0 w-14 text-center" style={{ color: getScoreColor(report.score) }}>
+                            {report.score}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-medium text-[#1A1A18] truncate">{report.url}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <p className="text-[12px] text-[#9C9A91]">
+                                {new Date(report.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </p>
+                              {/* Score evolution badge */}
+                              {evo?.diff !== null && evo?.diff !== undefined && evo.diff !== 0 && (
+                                <span
+                                  className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                                    evo.diff > 0
+                                      ? 'bg-[#EAF3DE] text-[#3B6D11]'
+                                      : 'bg-[#FAEEDA] text-[#854F0B]'
+                                  }`}
+                                >
+                                  {evo.diff > 0 ? '+' : ''}{evo.diff} pts
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <IconArrowRight size={16} className="text-[#9C9A91] group-hover:text-[#1A1A18] transition-colors shrink-0" />
+                        </a>
+                      </div>
+
+                      {/* Re-analyze button */}
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-dashed border-[#EEEDEB]">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReanalyze(report.url);
+                          }}
+                          className="text-[11px] text-[#504F4A] hover:text-[#1A1A18] transition-colors flex items-center gap-1"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                            <path d="M2 8a6 6 0 0110.89-3.48M14 8a6 6 0 01-10.89 3.48" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                            <path d="M14 2v4h-4M2 14v-4h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          Relancer l&apos;analyse
+                        </button>
+                        <a
+                          href={`/report/${report.id}`}
+                          className="text-[11px] text-[#504F4A] hover:text-[#1A1A18] transition-colors ml-auto"
+                        >
+                          Voir le rapport
+                        </a>
+                      </div>
                     </div>
-                    <IconArrowRight size={16} className="text-[#9C9A91] group-hover:text-[#1A1A18] transition-colors shrink-0" />
-                  </a>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -197,9 +286,9 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-              <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">Abonnement</h3>
+              <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">Crédits d&apos;analyse Pro</h3>
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[14px] text-[#1A1A18]">Crédits d&apos;analyse Pro</span>
+                <span className="text-[14px] text-[#1A1A18]">Solde actuel</span>
                 <span className="tabular-nums text-[18px] font-medium text-[#1A1A18]">{credits}</span>
               </div>
               <div className="h-2 bg-[#EEEDEB] rounded-full overflow-hidden mb-3">

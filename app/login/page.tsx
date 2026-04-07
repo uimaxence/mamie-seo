@@ -17,19 +17,33 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const { error } = await getSupabaseBrowser().auth.signInWithPassword({ email, password });
+    const { data, error: loginError } = await getSupabaseBrowser().auth.signInWithPassword({ email, password });
 
-    if (error) {
-      setError(error.message === 'Invalid login credentials'
+    if (loginError) {
+      setError(loginError.message === 'Invalid login credentials'
         ? 'Email ou mot de passe incorrect.'
-        : error.message);
+        : loginError.message);
       setLoading(false);
       return;
     }
 
-    // Check if there's a pending report to link
+    // Sync email to sessionStorage
+    sessionStorage.setItem('mamie_email', email.toLowerCase().trim());
+
+    // Link any pending report to this user
     const pendingReportId = sessionStorage.getItem('mamie_pending_report');
-    if (pendingReportId) {
+    if (pendingReportId && data.user) {
+      try {
+        await fetch('/api/link-reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.toLowerCase().trim(),
+            reportId: pendingReportId,
+            userId: data.user.id,
+          }),
+        });
+      } catch { /* non-blocking */ }
       sessionStorage.removeItem('mamie_pending_report');
       router.push(`/report/${pendingReportId}`);
     } else {

@@ -52,11 +52,28 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     try {
       const supabase = getSupabaseBrowser();
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         const u = session?.user ?? null;
         setUser(u);
         if (u?.email) {
           sessionStorage.setItem('mamie_email', u.email);
+
+          // On sign-in or email confirmation, link any pending reports
+          if (event === 'SIGNED_IN' && u.id) {
+            const pendingReportId = sessionStorage.getItem('mamie_pending_report');
+            if (pendingReportId) {
+              fetch('/api/link-reports', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: u.email,
+                  reportId: pendingReportId,
+                  userId: u.id,
+                }),
+              }).catch(() => { /* non-blocking */ });
+              sessionStorage.removeItem('mamie_pending_report');
+            }
+          }
         }
       });
 
@@ -77,7 +94,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
     } catch { /* */ }
     setUser(null);
-    sessionStorage.clear();
+    // Only clear auth-related keys, preserve mamie_url for re-analysis
+    sessionStorage.removeItem('mamie_email');
+    sessionStorage.removeItem('mamie_onboarding');
+    sessionStorage.removeItem('mamie_pending_report');
   };
 
   return (

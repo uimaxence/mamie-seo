@@ -13,6 +13,10 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const pendingReportId = typeof window !== 'undefined'
+    ? sessionStorage.getItem('mamie_pending_report')
+    : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -24,20 +28,48 @@ export default function SignupPage() {
       return;
     }
 
-    const { error } = await getSupabaseBrowser().auth.signUp({
+    const supabase = getSupabaseBrowser();
+
+    // Determine redirect URL: if pending report, go there after confirmation
+    const redirectTo = pendingReportId
+      ? `${window.location.origin}/report/${pendingReportId}`
+      : `${window.location.origin}/dashboard`;
+
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-      },
+      options: { emailRedirectTo: redirectTo },
     });
 
-    if (error) {
-      setError(error.message);
+    if (signUpError) {
+      setError(signUpError.message);
       setLoading(false);
       return;
     }
 
+    // Sync email to sessionStorage for AuthProvider
+    sessionStorage.setItem('mamie_email', email.toLowerCase().trim());
+
+    // If user was auto-confirmed (some Supabase configs), link reports immediately
+    if (data.user?.id && data.session) {
+      try {
+        await fetch('/api/link-reports', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.toLowerCase().trim(),
+            reportId: pendingReportId,
+            userId: data.user.id,
+          }),
+        });
+      } catch { /* non-blocking */ }
+
+      sessionStorage.removeItem('mamie_pending_report');
+      router.push(pendingReportId ? `/report/${pendingReportId}` : '/dashboard');
+      return;
+    }
+
+    // Otherwise show email confirmation message
     setSuccess(true);
     setLoading(false);
   };
@@ -60,6 +92,11 @@ export default function SignupPage() {
               Un lien de confirmation a été envoyé à <strong className="text-[#1A1A18]">{email}</strong>.
               Cliquez dessus pour activer votre compte.
             </p>
+            {pendingReportId && (
+              <p className="text-[13px] text-[#9C9A91] mt-4">
+                Votre rapport sera accessible après confirmation.
+              </p>
+            )}
           </div>
         </main>
       </div>
@@ -79,7 +116,11 @@ export default function SignupPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <h1 className="text-[24px] font-medium text-[#1A1A18] mb-2">Créer un compte</h1>
-            <p className="text-[15px] text-[#504F4A]">Sauvegardez vos rapports et gérez vos crédits.</p>
+            <p className="text-[15px] text-[#504F4A]">
+              {pendingReportId
+                ? 'Créez votre compte pour accéder au rapport complet.'
+                : 'Sauvegardez vos rapports et gérez vos crédits.'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">

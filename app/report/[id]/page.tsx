@@ -31,7 +31,8 @@ export default function ReportPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { email: authEmail } = useAuth();
+  const { email: authEmail, user } = useAuth();
+  const isAuthenticated = !!user;
   const [report, setReport] = useState<Report | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -313,7 +314,66 @@ export default function ReportPage() {
               )}
             </div>
 
-            {/* Full technical details */}
+            {/* ═══ BLUR GATE — visible only with account ═══ */}
+            {!isAuthenticated && (
+              <div className="relative mb-8">
+                {/* Blurred preview */}
+                <div className="blur-gate pointer-events-none select-none" aria-hidden="true">
+                  <div className="mb-6">
+                    <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">Analyse éditoriale</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 h-32" />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-6">
+                    <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">Mots-clés manquants</h2>
+                    <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 h-40" />
+                  </div>
+                </div>
+
+                {/* Gate overlay */}
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="bg-white border border-[#EEEDEB] rounded-[16px] p-8 shadow-lg max-w-md mx-6 text-center">
+                    <div className="w-12 h-12 rounded-full bg-[#EEEDFE] flex items-center justify-center mx-auto mb-4">
+                      <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                        <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#7F77DD" strokeWidth="1.5" />
+                        <path d="M5 7V5a3 3 0 016 0v2" stroke="#7F77DD" strokeWidth="1.5" strokeLinecap="round" />
+                      </svg>
+                    </div>
+                    <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">
+                      Voir le rapport complet
+                    </h3>
+                    <p className="text-[14px] text-[#504F4A] leading-relaxed mb-6">
+                      Votre rapport complet inclut l&apos;analyse éditoriale page par page, les mots-clés manquants pour votre secteur, et un plan d&apos;action priorisé.
+                    </p>
+                    <button
+                      onClick={() => {
+                        sessionStorage.setItem('mamie_pending_report', id);
+                        window.location.href = '/signup';
+                      }}
+                      className="inline-flex items-center justify-center gap-2 w-full py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors mb-3"
+                    >
+                      Créer mon compte gratuit
+                      <IconArrowRight size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        sessionStorage.setItem('mamie_pending_report', id);
+                        window.location.href = '/login';
+                      }}
+                      className="block w-full text-[12px] text-[#9C9A91] hover:text-[#504F4A] transition-colors"
+                    >
+                      Déjà un compte ? Se connecter
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Full technical details — only for authenticated users */}
+            {isAuthenticated && (<>
             <div className="mb-8">
               <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
                 Tous les critères techniques
@@ -390,6 +450,71 @@ export default function ReportPage() {
                 </div>
               </div>
             )}
+
+            </>)}
+
+            {/* ═══ CTA CONTACT — contextual, soft (visible to everyone) ═══ */}
+            <div className="bg-white border border-[#EEEDEB] rounded-[16px] p-8 mb-8">
+              <div className="max-w-lg mx-auto text-center">
+                <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">
+                  Ces résultats vous semblent complexes à implémenter seul(e) ?
+                </h3>
+                <p className="text-[14px] text-[#504F4A] leading-relaxed mb-6">
+                  Je peux analyser votre situation en détail et vous proposer une feuille de route personnalisée — ou prendre en charge les corrections si vous préférez déléguer.
+                </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                  {process.env.NEXT_PUBLIC_CAL_LINK ? (
+                    <a
+                      href={process.env.NEXT_PUBLIC_CAL_LINK}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
+                    >
+                      Réserver un appel gratuit de 30 min
+                      <IconArrowRight size={14} />
+                    </a>
+                  ) : (
+                    <a
+                      href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
+                    >
+                      Me décrire votre projet
+                      <IconArrowRight size={14} />
+                    </a>
+                  )}
+                  <a
+                    href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                    className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors"
+                  >
+                    Ou m&apos;écrire directement
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* ═══ UPSELL — Analyse UI Pro ═══ */}
+            <div className="bg-[#F8F8F7] border border-[#EEEDEB] rounded-[16px] p-8 mb-8">
+              <div className="max-w-lg mx-auto text-center">
+                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-2">Aller plus loin</p>
+                <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">
+                  Analyse UI avancée — votre page en détail
+                </h3>
+                <p className="text-[14px] text-[#504F4A] leading-relaxed mb-5">
+                  Screenshot annoté, analyse design & UX, copywriting section par section, recommandations mobile.
+                </p>
+                <button
+                  onClick={() => setActiveTab('page')}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
+                >
+                  Analyser ma homepage — 1 crédit
+                  <IconArrowRight size={14} />
+                </button>
+                <p className="text-[11px] text-[#9C9A91] mt-3">
+                  1 crédit = 1 page analysée &middot; 3 crédits pour 4,90 EUR
+                </p>
+              </div>
+            </div>
+
           </div>
         )}
 

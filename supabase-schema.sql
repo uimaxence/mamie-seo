@@ -111,4 +111,34 @@ CREATE TABLE IF NOT EXISTS promo_uses (
 ALTER TABLE promo_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE promo_uses ENABLE ROW LEVEL SECURITY;
 
+-- ═══════════════════════════════════════════════════
+-- Nouvelles tables — Product Spec v2
+-- ═══════════════════════════════════════════════════
+
+-- Table des demandes de contact (depuis les CTAs dans les rapports)
+CREATE TABLE IF NOT EXISTS contact_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT,
+  subject TEXT,
+  message TEXT NOT NULL,
+  report_id TEXT,
+  report_url TEXT,
+  report_score INTEGER,
+  status TEXT DEFAULT 'new' NOT NULL, -- new | read | replied
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_contact_requests_email ON contact_requests (email);
+CREATE INDEX IF NOT EXISTS idx_contact_requests_status ON contact_requests (status);
+
+ALTER TABLE contact_requests ENABLE ROW LEVEL SECURITY;
+
+-- Table de rate limiting par IP (pour analyses sans compte)
+CREATE TABLE IF NOT EXISTS ip_rate_limits (
+  ip TEXT PRIMARY KEY,
+  last_analysis TIMESTAMPTZ DEFAULT now(),
+  analysis_count INTEGER DEFAULT 0 NOT NULL
+);
+
 -- Pas de policy publique : seul le service_role key peut lire/écrire

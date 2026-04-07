@@ -16,21 +16,27 @@ export async function POST(request: NextRequest) {
     || request.headers.get('x-real-ip')
     || 'unknown';
 
-  let body: { url: string; email: string; onboarding: OnboardingAnswers };
+  let body: { url: string; email?: string; onboarding?: OnboardingAnswers };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: 'Requête invalide.' }, { status: 400 });
   }
 
-  const { url, email, onboarding } = body;
+  const { url } = body;
+  // Email is optional — use placeholder for anonymous analyses
+  const email = body.email?.trim().toLowerCase() || `anon_${ip.replace(/[.:]/g, '_')}@mamie-seo.local`;
+  // Onboarding is optional — use sensible defaults
+  const onboarding: OnboardingAnswers = body.onboarding || {
+    metier: 'autre',
+    objectif: 'leads',
+    audience: 'particuliers',
+    niveauSEO: 'jamais',
+    anciennete: '6_mois_2_ans',
+  };
 
-  if (!url || !email || !onboarding) {
-    return Response.json({ error: 'URL, email et réponses onboarding requis.' }, { status: 400 });
-  }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return Response.json({ error: 'Adresse email invalide.' }, { status: 400 });
+  if (!url) {
+    return Response.json({ error: 'URL requise.' }, { status: 400 });
   }
 
   try {
