@@ -142,3 +142,35 @@ CREATE TABLE IF NOT EXISTS ip_rate_limits (
 );
 
 -- Pas de policy publique : seul le service_role key peut lire/écrire
+
+-- ═══════════════════════════════════════════════════
+-- Admin outreach — Dashboard d'envoi de rapports
+-- ═══════════════════════════════════════════════════
+
+-- Table des envois outreach
+CREATE TABLE IF NOT EXISTS email_outreach (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  report_id TEXT REFERENCES reports(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  domain TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'queued',
+    -- queued | sent | opened | clicked | claimed | bounced | unsubscribed
+  brevo_message_id TEXT,
+  sent_at TIMESTAMPTZ,
+  opened_at TIMESTAMPTZ,
+  clicked_at TIMESTAMPTZ,
+  claimed_at TIMESTAMPTZ,
+  bounce_type TEXT, -- hard | soft
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_outreach_email ON email_outreach (email);
+CREATE INDEX IF NOT EXISTS idx_outreach_status ON email_outreach (status);
+CREATE INDEX IF NOT EXISTS idx_outreach_brevo_id ON email_outreach (brevo_message_id);
+
+ALTER TABLE email_outreach ENABLE ROW LEVEL SECURITY;
+
+-- Colonnes additionnelles sur reports pour l'outreach
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS email_sent_to TEXT;
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS claimed_by_user_id UUID REFERENCES auth.users(id);
