@@ -47,7 +47,7 @@ class PdfBuilder {
 
   // Get line height for a given font size (in mm)
   lineH(size: number): number {
-    return size * 0.38;
+    return size * 0.42;
   }
 
   // Calculate wrapped text height before drawing
@@ -65,10 +65,11 @@ class PdfBuilder {
     this.doc.setFontSize(size);
     this.doc.setTextColor(...hexToRgb(color));
     this.doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    this.doc.setCharSpace(0);
 
     if (maxWidth) {
       const lines = this.doc.splitTextToSize(text, maxWidth) as string[];
-      const lh = this.lineH(size) + 0.5;
+      const lh = this.lineH(size) + 0.8;
       for (const line of lines) {
         this.doc.text(line, x, this.y);
         this.y += lh;
@@ -160,46 +161,54 @@ export function generateSeoReportPdf(report: Report): void {
 
   // ─── Header ───
   b.text('Mamie SEO', b.margin, { size: 14, bold: true });
-  b.y += 5;
+  b.y += 6;
   b.text('Rapport d\'analyse SEO', b.margin, { size: 8, color: MUTED });
-  b.y += 5;
-  b.text(report.url, b.margin, { size: 9, color: SECONDARY });
+  b.y += 6;
+  b.text(report.url, b.margin, { size: 9, color: SECONDARY, maxWidth: b.contentWidth - 40 });
   b.y += 1;
   b.text(new Date(report.createdAt).toLocaleDateString('fr-FR', {
     day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
   }), b.pageWidth - b.margin, { size: 8, color: MUTED, align: 'right' });
-  b.y += 3;
+  b.y += 4;
   b.separator();
-  b.gap(2);
+  b.gap(3);
 
   // ─── Score global ───
+  const scoreBoxH = 24;
   b.doc.setFillColor(...hexToRgb(WHITE));
-  b.doc.roundedRect(b.margin, b.y, b.contentWidth, 22, 3, 3, 'FD');
+  b.doc.roundedRect(b.margin, b.y, b.contentWidth, scoreBoxH, 3, 3, 'FD');
   b.doc.setDrawColor(...hexToRgb(BORDER));
-  b.doc.roundedRect(b.margin, b.y, b.contentWidth, 22, 3, 3, 'S');
+  b.doc.roundedRect(b.margin, b.y, b.contentWidth, scoreBoxH, 3, 3, 'S');
 
+  // Centered score
   const scoreCenterX = b.margin + b.contentWidth / 2;
-  b.doc.setFontSize(8);
+  b.doc.setFontSize(7);
   b.doc.setTextColor(...hexToRgb(MUTED));
   b.doc.setFont('helvetica', 'bold');
+  b.doc.setCharSpace(0.5);
   b.doc.text('SCORE GLOBAL', scoreCenterX, b.y + 7, { align: 'center' });
+  b.doc.setCharSpace(0);
 
-  b.doc.setFontSize(20);
+  b.doc.setFontSize(22);
   b.doc.setTextColor(...hexToRgb(scoreColor(combinedScore)));
   b.doc.setFont('helvetica', 'bold');
-  b.doc.text(`${combinedScore}`, scoreCenterX - 4, b.y + 16);
+  const scoreStr = `${combinedScore}`;
+  const scoreW = b.doc.getTextWidth(scoreStr);
+  b.doc.text(scoreStr, scoreCenterX - scoreW / 2 - 3, b.y + 17);
   b.doc.setFontSize(9);
   b.doc.setTextColor(...hexToRgb(MUTED));
-  b.doc.text('/100', scoreCenterX + 9, b.y + 16);
+  b.doc.setFont('helvetica', 'normal');
+  b.doc.text('/100', scoreCenterX + scoreW / 2 - 1, b.y + 17);
 
   if (editorialAnalysis) {
     b.doc.setFontSize(8);
+    b.doc.setFont('helvetica', 'normal');
     b.doc.setTextColor(...hexToRgb(SECONDARY));
-    b.doc.text(`Technique: ${technicalScore.total}`, b.margin + 8, b.y + 16);
-    b.doc.text(`Editorial: ${editorialScore}`, b.pageWidth - b.margin - 32, b.y + 16);
+    b.doc.text(`Technique: ${technicalScore.total}`, b.margin + 8, b.y + 17);
+    b.doc.text(`Editorial: ${editorialScore}`, b.pageWidth - b.margin - 8, b.y + 17, { align: 'right' });
   }
 
-  b.y += 28;
+  b.y += scoreBoxH + 6;
 
   // ─── Détection technique ───
   b.sectionHeader('CE QU\'ON A DETECTE');
@@ -214,10 +223,10 @@ export function generateSeoReportPdf(report: Report): void {
   ].filter(Boolean) as string[];
 
   for (const item of items) {
-    b.text(`  •  ${item}`, b.margin + 2, { size: 8.5, color: SECONDARY });
-    b.y += 1;
+    b.text(`  •  ${item}`, b.margin + 4, { size: 8.5, color: SECONDARY });
+    b.y += 2;
   }
-  b.gap(2);
+  b.gap(3);
 
   // ─── Critères techniques ───
   b.sectionHeader('SCORE TECHNIQUE DETAILLE');

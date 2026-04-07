@@ -153,34 +153,40 @@ export default function ReportPage() {
           {/* ═══ Score dashboard cards ═══ */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
             {/* Global score */}
-            <div className="card-elevated p-5 flex flex-col items-center justify-center">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Score global</p>
-              <ScoreGauge score={combinedScore} size={100} />
+            <div className="card-elevated p-4 flex flex-col items-center">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Score global</p>
+              <ScoreGauge score={combinedScore} size={90} />
             </div>
             {/* Tech score */}
-            <div className="card p-5">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Technique</p>
-              <p className="font-display text-[32px] text-[#1A1A18] leading-none">{technicalScore.total}</p>
-              <p className="text-[11px] text-[#9C9A91]">/100</p>
-              <div className="mt-3 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
+            <div className="card p-4 flex flex-col">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Technique</p>
+              <div className="flex items-baseline gap-1">
+                <span className="font-display text-[28px] text-[#1A1A18] leading-none">{technicalScore.total}</span>
+                <span className="text-[11px] text-[#9C9A91]">/100</span>
+              </div>
+              <div className="mt-auto pt-3 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${technicalScore.total}%`, backgroundColor: technicalScore.total < 40 ? '#E05252' : technicalScore.total < 65 ? '#F27A2A' : technicalScore.total < 85 ? '#F0C744' : '#22A168' }} />
               </div>
             </div>
             {/* Editorial score */}
-            <div className="card p-5">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Éditorial</p>
-              <p className="font-display text-[32px] text-[#1A1A18] leading-none">{editorialAnalysis ? editorialScore : '—'}</p>
-              <p className="text-[11px] text-[#9C9A91]">{editorialAnalysis ? '/100' : 'Non disponible'}</p>
-              {editorialAnalysis && (
-                <div className="mt-3 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
+            <div className="card p-4 flex flex-col">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Éditorial</p>
+              <div className="flex items-baseline gap-1">
+                <span className="font-display text-[28px] text-[#1A1A18] leading-none">{editorialAnalysis ? editorialScore : '—'}</span>
+                <span className="text-[11px] text-[#9C9A91]">{editorialAnalysis ? '/100' : ''}</span>
+              </div>
+              {editorialAnalysis ? (
+                <div className="mt-auto pt-3 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${editorialScore}%`, backgroundColor: editorialScore < 40 ? '#E05252' : editorialScore < 65 ? '#F27A2A' : editorialScore < 85 ? '#F0C744' : '#22A168' }} />
                 </div>
+              ) : (
+                <p className="text-[10px] text-[#9C9A91] mt-1">Non disponible</p>
               )}
             </div>
             {/* Tech detection */}
-            <div className="card p-5">
-              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Détecté</p>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+            <div className="card p-4 flex flex-col">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Détecté</p>
+              <div className="flex flex-wrap gap-1.5">
                 {crawlResult.isHttps && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">HTTPS</span>}
                 {crawlResult.sitemapFound && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">Sitemap</span>}
                 {crawlResult.technologies.filter(t => t.category === 'cms').map(t => (
@@ -190,7 +196,7 @@ export default function ReportPage() {
                   <span key={t.name} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">{t.name}</span>
                 ))}
               </div>
-              <p className="text-[11px] text-[#9C9A91] mt-2">{(crawlResult.homepageResponseTimeMs / 1000).toFixed(1)}s de chargement</p>
+              <p className="text-[10px] text-[#9C9A91] mt-auto pt-2">{(crawlResult.homepageResponseTimeMs / 1000).toFixed(1)}s de chargement</p>
             </div>
           </div>
 
