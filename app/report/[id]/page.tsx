@@ -25,7 +25,14 @@ const EDITORIAL_TITLES: Record<string, string> = {
   coherence_tonale: 'Cohérence tonale',
 };
 
-// Deep section titles removed — now using ScoreRadar + AnnotationCard
+type SeoSection = 'overview' | 'technical' | 'editorial' | 'actions';
+
+const SEO_SECTIONS: { key: SeoSection; label: string }[] = [
+  { key: 'overview', label: "Vue d'ensemble" },
+  { key: 'technical', label: 'Technique' },
+  { key: 'editorial', label: 'Éditorial' },
+  { key: 'actions', label: 'Actions' },
+];
 
 export default function ReportPage() {
   const params = useParams();
@@ -37,6 +44,7 @@ export default function ReportPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'seo' | 'page'>('seo');
+  const [activeSection, setActiveSection] = useState<SeoSection>('overview');
 
   // Deep page analysis state
   const [customUrl, setCustomUrl] = useState('');
@@ -65,7 +73,6 @@ export default function ReportPage() {
       .then((data: Report) => {
         setReport(data);
         setLoading(false);
-        // Pre-fill suggested page URL
         if (data.editorialAnalysis?.page_recommandee?.url) {
           setCustomUrl(data.editorialAnalysis.page_recommandee.url);
         }
@@ -76,416 +83,314 @@ export default function ReportPage() {
       });
   }, [id]);
 
-  // Check if returned from Stripe payment
   useEffect(() => {
-    if (searchParams.get('paid') === 'true') {
-      setActiveTab('page');
-    }
+    if (searchParams.get('paid') === 'true') setActiveTab('page');
   }, [searchParams]);
 
   const handleDeepAnalysis = async (url: string) => {
     const email = authEmail || sessionStorage.getItem('mamie_email');
-    if (!email) {
-      setDeepError('Session expirée. Veuillez relancer une analyse.');
-      return;
-    }
-
-    setDeepLoading(true);
-    setDeepError('');
-    setDeepResult(null);
-
+    if (!email) { setDeepError('Session expirée.'); return; }
+    setDeepLoading(true); setDeepError(''); setDeepResult(null);
     try {
       const res = await fetch('/api/deep-analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportId: id, email, pageUrl: url }),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         if (data.needsPayment) {
-          // Redirect to Stripe
-          const checkoutRes = await fetch('/api/create-checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          const cr = await fetch('/api/create-checkout', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, reportId: id }),
           });
-          const checkoutData = await checkoutRes.json();
-          if (checkoutData.url) {
-            window.location.href = checkoutData.url;
-            return;
-          }
-          setDeepError(checkoutData.error || 'Erreur Stripe.');
-        } else {
-          setDeepError(data.error);
-        }
+          const cd = await cr.json();
+          if (cd.url) { window.location.href = cd.url; return; }
+          setDeepError(cd.error || 'Erreur Stripe.');
+        } else { setDeepError(data.error); }
         return;
       }
-
-      setDeepResult({
-        analysis: data.analysis,
-        desktopScreenshot: data.desktopScreenshot,
-        mobileScreenshot: data.mobileScreenshot,
-        desktopWidth: data.desktopWidth,
-        desktopHeight: data.desktopHeight,
-        remainingCredits: data.remainingCredits,
-      });
+      setDeepResult({ analysis: data.analysis, desktopScreenshot: data.desktopScreenshot, mobileScreenshot: data.mobileScreenshot, desktopWidth: data.desktopWidth, desktopHeight: data.desktopHeight, remainingCredits: data.remainingCredits });
       setCredits(data.remainingCredits);
-    } catch {
-      setDeepError('Erreur de connexion.');
-    } finally {
-      setDeepLoading(false);
-    }
+    } catch { setDeepError('Erreur de connexion.'); }
+    finally { setDeepLoading(false); }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-[15px] text-[#504F4A]">Chargement du rapport...</p>
-      </div>
-    );
-  }
-
-  if (error || !report) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="text-center">
-          <p className="text-[13px] text-[#E05252] mb-4">{error || 'Rapport introuvable.'}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="px-6 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
-          >
-            Nouvelle analyse
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><p className="text-[15px] text-[#504F4A]">Chargement du rapport...</p></div>;
+  if (error || !report) return <div className="min-h-screen flex items-center justify-center px-6"><div className="text-center"><p className="text-[13px] text-[#E05252] mb-4">{error || 'Rapport introuvable.'}</p><button onClick={() => router.push('/')} className="px-6 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[10px] hover:bg-[#333] transition-colors">Nouvelle analyse</button></div></div>;
 
   const { crawlResult, technicalScore, editorialAnalysis } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
-  const combinedScore = editorialAnalysis
-    ? Math.round((technicalScore.total + editorialScore) / 2)
-    : technicalScore.total;
-
+  const combinedScore = editorialAnalysis ? Math.round((technicalScore.total + editorialScore) / 2) : technicalScore.total;
   const suggestedPage = editorialAnalysis?.page_recommandee;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#FAFAF9]">
       <AuthHeader showNewAnalysis />
 
-      {/* Report header */}
-      <div className="bg-white border-b border-[#EEEDEB] px-6 pt-6 pb-0">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-6">
-            <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">
-              Rapport d&apos;analyse
-            </p>
-            <h1 className="text-[18px] font-medium text-[#1A1A18]">{report.url}</h1>
-            <p className="text-[12px] text-[#9C9A91] mt-1">
-              {new Date(report.createdAt).toLocaleDateString('fr-FR', {
-                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
-              })}
-            </p>
+      {/* ═══════════ REPORT HEADER ═══════════ */}
+      <div className="bg-white border-b border-[#EEEDEB]">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-8 pb-0">
+
+          {/* URL + date + PDF */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Rapport d&apos;analyse</p>
+              <h1 className="text-[20px] lg:text-[24px] font-medium text-[#1A1A18]">{report.url}</h1>
+              <p className="text-[12px] text-[#9C9A91] mt-1">
+                {new Date(report.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {' · '}{crawlResult.totalUrlsCrawled} pages crawlées
+              </p>
+            </div>
+            <button
+              onClick={() => generateSeoReportPdf(report)}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEDEB] rounded-[10px] text-[12px] font-medium text-[#504F4A] hover:text-[#1A1A18] hover:border-[#9C9A91] transition-colors shrink-0"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              PDF
+            </button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-transparent">
+          {/* ═══ Score dashboard cards ═══ */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+            {/* Global score */}
+            <div className="card-elevated p-5 flex flex-col items-center justify-center">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Score global</p>
+              <ScoreGauge score={combinedScore} size={100} />
+            </div>
+            {/* Tech score */}
+            <div className="card p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Technique</p>
+              <p className="font-display text-[32px] text-[#1A1A18] leading-none">{technicalScore.total}</p>
+              <p className="text-[11px] text-[#9C9A91]">/100</p>
+              <div className="mt-3 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${technicalScore.total}%`, backgroundColor: technicalScore.total < 40 ? '#E05252' : technicalScore.total < 65 ? '#F27A2A' : technicalScore.total < 85 ? '#F0C744' : '#22A168' }} />
+              </div>
+            </div>
+            {/* Editorial score */}
+            <div className="card p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Éditorial</p>
+              <p className="font-display text-[32px] text-[#1A1A18] leading-none">{editorialAnalysis ? editorialScore : '—'}</p>
+              <p className="text-[11px] text-[#9C9A91]">{editorialAnalysis ? '/100' : 'Non disponible'}</p>
+              {editorialAnalysis && (
+                <div className="mt-3 h-1.5 bg-[#EEEDEB] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${editorialScore}%`, backgroundColor: editorialScore < 40 ? '#E05252' : editorialScore < 65 ? '#F27A2A' : editorialScore < 85 ? '#F0C744' : '#22A168' }} />
+                </div>
+              )}
+            </div>
+            {/* Tech detection */}
+            <div className="card p-5">
+              <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Détecté</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {crawlResult.isHttps && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">HTTPS</span>}
+                {crawlResult.sitemapFound && <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">Sitemap</span>}
+                {crawlResult.technologies.filter(t => t.category === 'cms').map(t => (
+                  <span key={t.name} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#EEEDFE] text-[#3C3489]">{t.name}</span>
+                ))}
+                {crawlResult.technologies.filter(t => t.category === 'analytics').map(t => (
+                  <span key={t.name} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">{t.name}</span>
+                ))}
+              </div>
+              <p className="text-[11px] text-[#9C9A91] mt-2">{(crawlResult.homepageResponseTimeMs / 1000).toFixed(1)}s de chargement</p>
+            </div>
+          </div>
+
+          {/* ═══ Centered main tabs ═══ */}
+          <div className="flex justify-center border-b border-transparent -mb-px">
             <button
               onClick={() => setActiveTab('seo')}
-              className={`px-5 py-3 text-[13px] font-medium border-b-2 transition-colors ${
-                activeTab === 'seo'
-                  ? 'border-[#1A1A18] text-[#1A1A18]'
-                  : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'
-              }`}
+              className={`px-6 py-3 text-[14px] font-medium border-b-2 transition-colors ${activeTab === 'seo' ? 'border-[#1A1A18] text-[#1A1A18]' : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'}`}
             >
               Audit SEO
             </button>
             <button
               onClick={() => setActiveTab('page')}
-              className={`px-5 py-3 text-[13px] font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                activeTab === 'page'
-                  ? 'border-[#1A1A18] text-[#1A1A18]'
-                  : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'
-              }`}
+              className={`px-6 py-3 text-[14px] font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'page' ? 'border-[#1A1A18] text-[#1A1A18]' : 'border-transparent text-[#9C9A91] hover:text-[#504F4A]'}`}
             >
               Analyse de page
-              <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#F27A2A]/10 text-[#F27A2A]">
-                Pro
-              </span>
+              <span className="text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#F27A2A]/10 text-[#F27A2A]">Pro</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* TAB CONTENT */}
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        {/* ════════════════════════════ TAB: AUDIT SEO ════════════════════════════ */}
+      {/* ═══════════ CONTENT ═══════════ */}
+      <main className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
+
+        {/* ════════ TAB: AUDIT SEO ════════ */}
         {activeTab === 'seo' && (
           <div className="animate-fade-in-up">
-            {/* Download PDF */}
-            <div className="flex justify-end mb-4">
-              <button
-                onClick={() => generateSeoReportPdf(report)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EEEDEB] rounded-[8px] text-[12px] font-medium text-[#504F4A] hover:text-[#1A1A18] hover:border-[#9C9A91] transition-colors"
-              >
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Télécharger le PDF
-              </button>
+
+            {/* Section navigation */}
+            <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-px border-b border-[#EEEDEB]">
+              {SEO_SECTIONS.map((s) => (
+                <button
+                  key={s.key}
+                  onClick={() => setActiveSection(s.key)}
+                  className={`section-tab ${activeSection === s.key ? 'section-tab-active' : ''}`}
+                >
+                  {s.label}
+                </button>
+              ))}
             </div>
 
-            {/* Bento row 1: Score + Tech metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-              {/* Score card — spans 1 col */}
-              <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6 flex flex-col items-center justify-center">
-                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">
-                  Score global
-                </p>
-                <ScoreGauge score={combinedScore} size={140} />
-                {editorialAnalysis && (
-                  <div className="flex items-center gap-5 mt-5">
-                    <div className="text-center">
-                      <p className="font-display text-[22px] text-[#1A1A18]">{technicalScore.total}</p>
-                      <p className="text-[11px] text-[#9C9A91] uppercase tracking-wider">Tech</p>
-                    </div>
-                    <div className="w-px h-6 bg-[#EEEDEB]" />
-                    <div className="text-center">
-                      <p className="font-display text-[22px] text-[#1A1A18]">{editorialScore}</p>
-                      <p className="text-[11px] text-[#9C9A91] uppercase tracking-wider">Éditorial</p>
-                    </div>
+            {/* ──── SECTION: Vue d'ensemble ──── */}
+            {activeSection === 'overview' && (
+              <div className="animate-fade-in-up space-y-6">
+                {/* Top 3 critical + editorial summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="lg:col-span-2 space-y-3">
+                    <h2 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] px-1">
+                      Points critiques
+                    </h2>
+                    {[...technicalScore.criteria]
+                      .sort((a, b) => a.score / a.maxScore - b.score / b.maxScore)
+                      .slice(0, 3)
+                      .map((c, i) => <CriteriaCard key={c.key} criterion={c} index={i} />)}
                   </div>
-                )}
-              </div>
 
-              {/* Tech metrics — spans 2 cols */}
-              <div className="lg:col-span-2">
-                <TechBlock crawl={crawlResult} />
-              </div>
-            </div>
-
-            {/* Bento row 2: Top criteria (2 cols) + editorial summary (1 col) */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-              {/* Worst 3 criteria */}
-              <div className="lg:col-span-2 space-y-3">
-                <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] px-1">
-                  Points critiques
-                </h2>
-                {[...technicalScore.criteria]
-                  .sort((a, b) => a.score / a.maxScore - b.score / b.maxScore)
-                  .slice(0, 3)
-                  .map((c, i) => (
-                    <CriteriaCard key={c.key} criterion={c} index={i} />
-                  ))}
-              </div>
-
-              {/* Editorial summary */}
-              {editorialAnalysis && (
-                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 self-start">
-                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">
-                    Résumé éditorial
-                  </h3>
-                  <p className="text-[15px] text-[#1A1A18] leading-relaxed mb-3">
-                    {editorialAnalysis.comprehension_activite.resume}
-                  </p>
-                  <p className="text-[15px] text-[#504F4A] leading-relaxed">
-                    {editorialAnalysis.coherence_offres?.resume}
-                  </p>
-                  {suggestedPage && (
-                    <div className="mt-4 pt-4 border-t border-dashed border-[#EEEDEB]">
-                      <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-1">
-                        Page recommandée
-                      </p>
-                      <p className="text-[14px] text-[#504F4A] leading-relaxed">
-                        {suggestedPage.raison}
-                      </p>
-                      <button
-                        onClick={() => {
-                          setActiveTab('page');
-                          setCustomUrl(suggestedPage.url);
-                        }}
-                        className="mt-2 text-[11px] text-[#1A1A18] font-medium hover:underline flex items-center gap-1"
-                      >
-                        Analyser cette page <IconArrowRight size={12} />
-                      </button>
+                  {editorialAnalysis && (
+                    <div className="card p-6 self-start">
+                      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Résumé éditorial</h3>
+                      <p className="text-[15px] text-[#1A1A18] leading-relaxed mb-3">{editorialAnalysis.comprehension_activite.resume}</p>
+                      <p className="text-[14px] text-[#504F4A] leading-relaxed">{editorialAnalysis.coherence_offres?.resume}</p>
+                      {suggestedPage && (
+                        <div className="mt-4 pt-4 border-t border-dashed border-[#EEEDEB]">
+                          <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-1">Page recommandée</p>
+                          <p className="text-[13px] text-[#504F4A] leading-relaxed">{suggestedPage.raison}</p>
+                          <button onClick={() => { setActiveTab('page'); setCustomUrl(suggestedPage.url); }} className="mt-2 text-[11px] text-[#F27A2A] font-medium hover:underline flex items-center gap-1">
+                            Analyser cette page <IconArrowRight size={12} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* ═══ BLUR GATE — visible only with account ═══ */}
-            {!isAuthenticated && (
-              <div className="relative mb-8">
-                {/* Blurred preview */}
-                <div className="blur-gate pointer-events-none select-none" aria-hidden="true">
-                  <div className="mb-6">
-                    <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">Analyse éditoriale</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 h-32" />
-                      ))}
+                {/* Tech metrics */}
+                <TechBlock crawl={crawlResult} />
+
+                {/* Quick-win action items (top 3) */}
+                {(editorialAnalysis?.plan_action_prioritaire?.length ?? 0) > 0 && (
+                  <div className="card p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Quick wins</h3>
+                      <button onClick={() => setActiveSection('actions')} className="text-[11px] text-[#F27A2A] font-medium hover:underline">
+                        Voir tout le plan
+                      </button>
                     </div>
-                  </div>
-                  <div className="mb-6">
-                    <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">Mots-clés manquants</h2>
-                    <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 h-40" />
-                  </div>
-                </div>
-
-                {/* Gate overlay */}
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="bg-white border border-[#EEEDEB] rounded-[16px] p-8 shadow-lg max-w-md mx-6 text-center">
-                    <div className="w-12 h-12 rounded-full bg-[#EEEDFE] flex items-center justify-center mx-auto mb-4">
-                      <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
-                        <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#7F77DD" strokeWidth="1.5" />
-                        <path d="M5 7V5a3 3 0 016 0v2" stroke="#7F77DD" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                    <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">
-                      Voir le rapport complet
-                    </h3>
-                    <p className="text-[14px] text-[#504F4A] leading-relaxed mb-6">
-                      Votre rapport complet inclut l&apos;analyse éditoriale page par page, les mots-clés manquants pour votre secteur, et un plan d&apos;action priorisé.
-                    </p>
-                    <button
-                      onClick={() => {
-                        sessionStorage.setItem('mamie_pending_report', id);
-                        window.location.href = '/signup';
-                      }}
-                      className="inline-flex items-center justify-center gap-2 w-full py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors mb-3"
-                    >
-                      Créer mon compte gratuit
-                      <IconArrowRight size={14} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        sessionStorage.setItem('mamie_pending_report', id);
-                        window.location.href = '/login';
-                      }}
-                      className="block w-full text-[12px] text-[#9C9A91] hover:text-[#504F4A] transition-colors"
-                    >
-                      Déjà un compte ? Se connecter
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Full technical details — only for authenticated users */}
-            {isAuthenticated && (<>
-            <div className="mb-8">
-              <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
-                Tous les critères techniques
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {technicalScore.criteria.map((c, i) => (
-                  <CriteriaCard key={c.key} criterion={c} index={i} />
-                ))}
-              </div>
-            </div>
-
-            {/* Editorial dimensions */}
-            {editorialAnalysis && (
-              <div className="mb-8">
-                <h2 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
-                  Analyse éditoriale
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {(Object.keys(EDITORIAL_TITLES) as string[]).map((key, i) => {
-                    const dimension = editorialAnalysis[key as keyof typeof editorialAnalysis];
-                    if (!dimension || typeof dimension !== 'object' || !('score' in dimension)) return null;
-                    return (
-                      <EditorialSection
-                        key={key}
-                        title={EDITORIAL_TITLES[key]}
-                        dimension={dimension as { score: number; resume: string; point_fort: string; point_amelioration: string; exemple_concret?: string }}
-                        index={i}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Keywords + Action plan — side by side */}
-            {editorialAnalysis && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-                {editorialAnalysis.mots_cles_metier && (
-                  <KeywordsSection keywords={editorialAnalysis.mots_cles_metier} />
-                )}
-                {editorialAnalysis.plan_action_prioritaire?.length > 0 && (
-                  <ActionPlan actions={editorialAnalysis.plan_action_prioritaire} />
-                )}
-              </div>
-            )}
-
-            {/* Pages with warnings */}
-            {crawlResult.pages.some((p) => p.h1Count !== 1 || !p.title || !p.metaDescription) && (
-              <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 mb-8">
-                <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">
-                  Pages à corriger
-                </h3>
-                <div className="space-y-0">
-                  {crawlResult.pages
-                    .filter((p) => p.h1Count !== 1 || !p.title || !p.metaDescription)
-                    .slice(0, 10)
-                    .map((page, i) => {
-                      const issues: string[] = [];
-                      if (!page.title) issues.push('Titre manquant');
-                      if (!page.metaDescription) issues.push('Description manquante');
-                      if (page.h1Count === 0) issues.push('Pas de H1');
-                      if (page.h1Count > 1) issues.push(`${page.h1Count} H1`);
-                      return (
-                        <div key={page.url} className={`py-3 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
-                          <p className="text-[15px] text-[#1A1A18] truncate mb-1">{new URL(page.url).pathname || '/'}</p>
+                    {editorialAnalysis!.plan_action_prioritaire.slice(0, 3).map((action, i) => (
+                      <div key={i} className={`flex items-start gap-4 py-3 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
+                        <span className="w-7 h-7 shrink-0 rounded-full bg-[#FAFAF9] flex items-center justify-center text-[13px] font-medium text-[#1A1A18]">{action.priorite}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-medium text-[#1A1A18] mb-1">{action.titre}</p>
                           <div className="flex flex-wrap gap-1.5">
-                            {issues.map((issue, j) => (
-                              <span key={j} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">{issue}</span>
-                            ))}
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#FAFAF9] text-[#504F4A] border border-[#EEEDEB]">Impact {action.impact}</span>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#FAFAF9] text-[#504F4A] border border-[#EEEDEB]">{action.difficulte}</span>
+                            {action.temps_estime && <span className="text-[10px] text-[#9C9A91]">~{action.temps_estime}</span>}
                           </div>
                         </div>
-                      );
-                    })}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            </>)}
+            {/* ──── SECTION: Technique ──── */}
+            {activeSection === 'technical' && (
+              <div className="animate-fade-in-up space-y-6">
+                {!isAuthenticated ? (
+                  <BlurGate id={id} />
+                ) : (<>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {technicalScore.criteria.map((c, i) => <CriteriaCard key={c.key} criterion={c} index={i} />)}
+                  </div>
+                  {crawlResult.pages.some((p) => p.h1Count !== 1 || !p.title || !p.metaDescription) && (
+                    <div className="card p-6">
+                      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">Pages à corriger</h3>
+                      {crawlResult.pages.filter((p) => p.h1Count !== 1 || !p.title || !p.metaDescription).slice(0, 10).map((page, i) => {
+                        const issues: string[] = [];
+                        if (!page.title) issues.push('Titre manquant');
+                        if (!page.metaDescription) issues.push('Description manquante');
+                        if (page.h1Count === 0) issues.push('Pas de H1');
+                        if (page.h1Count > 1) issues.push(`${page.h1Count} H1`);
+                        return (
+                          <div key={page.url} className={`py-3 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
+                            <p className="text-[14px] text-[#1A1A18] truncate mb-1">{new URL(page.url).pathname || '/'}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {issues.map((issue, j) => <span key={j} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">{issue}</span>)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>)}
+              </div>
+            )}
 
-            {/* ═══ CTA CONTACT — contextual, soft (visible to everyone) ═══ */}
-            <div className="bg-white border border-[#EEEDEB] rounded-[16px] p-8 mb-8">
-              <div className="max-w-lg mx-auto text-center">
-                <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">
-                  Ces résultats vous semblent complexes à implémenter seul(e) ?
+            {/* ──── SECTION: Éditorial ──── */}
+            {activeSection === 'editorial' && (
+              <div className="animate-fade-in-up space-y-6">
+                {!isAuthenticated ? (
+                  <BlurGate id={id} />
+                ) : editorialAnalysis ? (<>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(Object.keys(EDITORIAL_TITLES) as string[]).map((key, i) => {
+                      const dim = editorialAnalysis[key as keyof typeof editorialAnalysis];
+                      if (!dim || typeof dim !== 'object' || !('score' in dim)) return null;
+                      return <EditorialSection key={key} title={EDITORIAL_TITLES[key]} dimension={dim as { score: number; resume: string; point_fort: string; point_amelioration: string; exemple_concret?: string }} index={i} />;
+                    })}
+                  </div>
+                  {editorialAnalysis.mots_cles_metier && <KeywordsSection keywords={editorialAnalysis.mots_cles_metier} />}
+                </>) : (
+                  <div className="card p-12 text-center">
+                    <p className="text-[14px] text-[#504F4A]">Analyse éditoriale non disponible pour ce rapport.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ──── SECTION: Actions ──── */}
+            {activeSection === 'actions' && (
+              <div className="animate-fade-in-up space-y-6">
+                {!isAuthenticated ? (
+                  <BlurGate id={id} />
+                ) : (<>
+                  {(editorialAnalysis?.plan_action_prioritaire?.length ?? 0) > 0 && <ActionPlan actions={editorialAnalysis!.plan_action_prioritaire} />}
+                  {editorialAnalysis?.mots_cles_metier && <KeywordsSection keywords={editorialAnalysis!.mots_cles_metier} />}
+                  {!editorialAnalysis?.plan_action_prioritaire?.length && (
+                    <div className="card p-12 text-center">
+                      <p className="text-[14px] text-[#504F4A]">Plan d&apos;action non disponible pour ce rapport.</p>
+                    </div>
+                  )}
+                </>)}
+              </div>
+            )}
+
+            {/* ═══ CTA CONTACT — accent color, prominent ═══ */}
+            <div className="card-elevated p-8 mt-10">
+              <div className="max-w-xl mx-auto text-center">
+                <h3 className="text-[20px] font-medium text-[#1A1A18] mb-2">
+                  Ces résultats vous semblent complexes ?
                 </h3>
                 <p className="text-[14px] text-[#504F4A] leading-relaxed mb-6">
-                  Je peux analyser votre situation en détail et vous proposer une feuille de route personnalisée — ou prendre en charge les corrections si vous préférez déléguer.
+                  Je peux analyser votre situation en détail et vous proposer une feuille de route personnalisée — ou prendre en charge les corrections.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                   {process.env.NEXT_PUBLIC_CAL_LINK ? (
-                    <a
-                      href={process.env.NEXT_PUBLIC_CAL_LINK}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
-                    >
-                      Réserver un appel gratuit de 30 min
-                      <IconArrowRight size={14} />
+                    <a href={process.env.NEXT_PUBLIC_CAL_LINK} target="_blank" rel="noopener noreferrer"
+                      className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2">
+                      Réserver un appel gratuit <IconArrowRight size={14} />
                     </a>
                   ) : (
-                    <a
-                      href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
-                    >
-                      Me décrire votre projet
-                      <IconArrowRight size={14} />
+                    <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                      className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2">
+                      Me décrire votre projet <IconArrowRight size={14} />
                     </a>
                   )}
-                  <a
-                    href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
-                    className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors"
-                  >
+                  <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                    className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors underline underline-offset-2">
                     Ou m&apos;écrire directement
                   </a>
                 </div>
@@ -493,162 +398,81 @@ export default function ReportPage() {
             </div>
 
             {/* ═══ UPSELL — Analyse UI Pro ═══ */}
-            <div className="bg-[#F8F8F7] border border-[#EEEDEB] rounded-[16px] p-8 mb-8">
-              <div className="max-w-lg mx-auto text-center">
-                <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-2">Aller plus loin</p>
-                <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">
-                  Analyse UI avancée — votre page en détail
-                </h3>
+            <div className="card border-2 border-[#F27A2A]/20 p-8 mt-6">
+              <div className="max-w-xl mx-auto text-center">
+                <span className="inline-block px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-wider bg-[#F27A2A]/10 text-[#F27A2A] mb-3">Aller plus loin</span>
+                <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">Analyse UI avancée — votre page en détail</h3>
                 <p className="text-[14px] text-[#504F4A] leading-relaxed mb-5">
                   Screenshot annoté, analyse design & UX, copywriting section par section, recommandations mobile.
                 </p>
-                <button
-                  onClick={() => setActiveTab('page')}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
-                >
-                  Analyser ma homepage — 1 crédit
-                  <IconArrowRight size={14} />
+                <button onClick={() => setActiveTab('page')} className="cta-accent px-7 py-3 text-[13px] inline-flex items-center gap-2">
+                  Analyser ma homepage — 1 crédit <IconArrowRight size={14} />
                 </button>
-                <p className="text-[11px] text-[#9C9A91] mt-3">
-                  1 crédit = 1 page analysée &middot; 3 crédits pour 4,90 EUR
-                </p>
+                <p className="text-[11px] text-[#9C9A91] mt-3">1 crédit = 1 page &middot; 3 crédits pour 4,90 EUR</p>
               </div>
             </div>
-
           </div>
         )}
 
-        {/* ════════════════════════════ TAB: ANALYSE DE PAGE ════════════════════════════ */}
+        {/* ════════ TAB: ANALYSE DE PAGE (Pro) ════════ */}
         {activeTab === 'page' && (
-          <div className="animate-fade-in-up max-w-2xl mx-auto">
+          <div className="animate-fade-in-up max-w-3xl mx-auto">
             {/* Page selector */}
             {!deepResult && !deepLoading && (
               <div className="space-y-6">
                 <div className="text-center mb-2">
-                  <h2 className="text-[18px] font-medium text-[#1A1A18] mb-2">
-                    Analyse approfondie d&apos;une page
-                  </h2>
-                  <p className="text-[15px] text-[#504F4A] leading-relaxed">
-                    Analyse UI, copywriting et conversion d&apos;une page spécifique.
-                    Chaque analyse utilise 1 crédit.
-                  </p>
+                  <h2 className="text-[20px] font-medium text-[#1A1A18] mb-2">Analyse approfondie d&apos;une page</h2>
+                  <p className="text-[15px] text-[#504F4A]">Analyse UI, copywriting et conversion. Chaque analyse utilise 1 crédit.</p>
                 </div>
-
-                {/* Suggested page */}
                 {suggestedPage && (
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-2">
-                      Page recommandée par l&apos;analyse SEO
-                    </p>
-                    <p className="text-[14px] font-medium text-[#1A1A18] mb-1 truncate">
-                      {new URL(suggestedPage.url).pathname}
-                    </p>
-                    <p className="text-[14px] text-[#504F4A] mb-4 leading-relaxed">
-                      {suggestedPage.raison}
-                    </p>
-                    <button
-                      onClick={() => handleDeepAnalysis(suggestedPage.url)}
-                      className="w-full py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors flex items-center justify-center gap-2"
-                    >
-                      Analyser cette page
-                      <IconArrowRight size={14} />
+                  <div className="card p-6">
+                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-2">Page recommandée par l&apos;analyse SEO</p>
+                    <p className="text-[14px] font-medium text-[#1A1A18] mb-1 truncate">{(() => { try { return new URL(suggestedPage.url).pathname; } catch { return suggestedPage.url; } })()}</p>
+                    <p className="text-[13px] text-[#504F4A] mb-4 leading-relaxed">{suggestedPage.raison}</p>
+                    <button onClick={() => handleDeepAnalysis(suggestedPage.url)} className="w-full cta-accent py-3 text-[13px] flex items-center justify-center gap-2">
+                      Analyser cette page <IconArrowRight size={14} />
                     </button>
                   </div>
                 )}
-
-                {/* Separator */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-[#EEEDEB]" />
-                  <span className="text-[12px] text-[#9C9A91]">ou</span>
-                  <div className="flex-1 h-px bg-[#EEEDEB]" />
-                </div>
-
-                {/* Custom URL */}
-                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#504F4A] mb-3">
-                    Analyser une page de votre choix
-                  </p>
+                <div className="flex items-center gap-3"><div className="flex-1 h-px bg-[#EEEDEB]" /><span className="text-[12px] text-[#9C9A91]">ou</span><div className="flex-1 h-px bg-[#EEEDEB]" /></div>
+                <div className="card p-6">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#504F4A] mb-3">Analyser une page de votre choix</p>
                   <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={customUrl}
-                      onChange={(e) => setCustomUrl(e.target.value)}
-                      placeholder="https://monsite.fr/ma-page"
-                      className="flex-1 px-4 py-3 bg-[#F8F8F7] border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors"
-                    />
-                    <button
-                      onClick={() => customUrl && handleDeepAnalysis(customUrl)}
-                      disabled={!customUrl}
-                      className="px-5 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 shrink-0"
-                    >
-                      Analyser
-                    </button>
+                    <input type="url" value={customUrl} onChange={(e) => setCustomUrl(e.target.value)} placeholder="https://monsite.fr/ma-page" className="flex-1 px-4 py-3 bg-[#FAFAF9] border border-[#EEEDEB] rounded-[10px] text-[14px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors" />
+                    <button onClick={() => customUrl && handleDeepAnalysis(customUrl)} disabled={!customUrl} className="px-5 py-3 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[10px] hover:bg-[#333] transition-colors disabled:opacity-30 shrink-0">Analyser</button>
                   </div>
                 </div>
-
                 {/* Pricing + Promo */}
-                <div className="bg-[#F8F8F7] border border-[#EEEDEB] rounded-[12px] p-5">
+                <div className="card bg-[#FAFAF9] p-6">
                   <div className="text-center mb-4">
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <IconCreditCard size={16} className="text-[#504F4A]" />
                       <span className="text-[14px] font-medium text-[#1A1A18]">3 analyses pour 4,90 EUR</span>
                     </div>
-                    <p className="text-[14px] text-[#504F4A] leading-relaxed">
-                      Analyse UI, copywriting, conversion et recommandations actionnables par IA pour chaque page.
-                    </p>
-                    {credits !== null && credits > 0 && (
-                      <p className="text-[11px] text-[#22A168] mt-2 font-medium">
-                        Vous avez {credits} crédit{credits > 1 ? 's' : ''} restant{credits > 1 ? 's' : ''}
-                      </p>
-                    )}
+                    <p className="text-[13px] text-[#504F4A]">Analyse UI, copywriting, conversion et recommandations par IA.</p>
+                    {credits !== null && credits > 0 && <p className="text-[11px] text-[#22A168] mt-2 font-medium">{credits} crédit{credits > 1 ? 's' : ''} restant{credits > 1 ? 's' : ''}</p>}
                   </div>
-
-                  {/* Promo code */}
                   <div className="pt-4 border-t border-dashed border-[#EEEDEB]">
-                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2 text-center">
-                      Code promo
-                    </p>
+                    <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2 text-center">Code promo</p>
                     <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoMessage(''); }}
-                        placeholder="VOTRECODE"
-                        className="flex-1 px-3 py-2.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors text-center uppercase tracking-wider"
-                      />
+                      <input type="text" value={promoCode} onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); setPromoMessage(''); }} placeholder="VOTRECODE" className="flex-1 px-3 py-2.5 bg-white border border-[#EEEDEB] rounded-[8px] text-[14px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none focus:border-[#1A1A18] transition-colors text-center uppercase tracking-wider" />
                       <button
                         onClick={async () => {
                           if (!promoCode.trim()) return;
                           const email = authEmail || sessionStorage.getItem('mamie_email');
                           if (!email) { setPromoError('Session expirée.'); return; }
-                          setPromoLoading(true);
-                          setPromoError('');
-                          setPromoMessage('');
+                          setPromoLoading(true); setPromoError(''); setPromoMessage('');
                           try {
-                            const res = await fetch('/api/promo', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ code: promoCode.trim(), email }),
-                            });
+                            const res = await fetch('/api/promo', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: promoCode.trim(), email }) });
                             const data = await res.json();
-                            if (res.ok) {
-                              setPromoMessage(data.message);
-                              setCredits((prev) => (prev ?? 0) + data.credits);
-                              setPromoCode('');
-                            } else {
-                              setPromoError(data.error);
-                            }
-                          } catch {
-                            setPromoError('Erreur de connexion.');
-                          } finally {
-                            setPromoLoading(false);
-                          }
+                            if (res.ok) { setPromoMessage(data.message); setCredits((prev) => (prev ?? 0) + data.credits); setPromoCode(''); }
+                            else { setPromoError(data.error); }
+                          } catch { setPromoError('Erreur de connexion.'); }
+                          finally { setPromoLoading(false); }
                         }}
                         disabled={promoLoading || !promoCode.trim()}
                         className="px-4 py-2.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors disabled:opacity-30 shrink-0"
-                      >
-                        {promoLoading ? '...' : 'Appliquer'}
-                      </button>
+                      >{promoLoading ? '...' : 'Appliquer'}</button>
                     </div>
                     {promoError && <p className="text-[11px] text-[#E05252] mt-2 text-center">{promoError}</p>}
                     {promoMessage && <p className="text-[11px] text-[#22A168] mt-2 text-center font-medium">{promoMessage}</p>}
@@ -657,298 +481,123 @@ export default function ReportPage() {
               </div>
             )}
 
-            {/* Loading */}
+            {/* Deep loading */}
             {deepLoading && (
-              <div className="py-12">
-                {/* Animated visual */}
-                <div className="flex justify-center mb-8">
-                  <div className="relative w-24 h-24">
-                    <div className="absolute inset-0 border-[3px] border-[#EEEDEB] rounded-full" />
-                    <div className="absolute inset-0 border-[3px] border-t-[#1A1A18] border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
-                    <div className="absolute inset-2 border-[2px] border-[#EEEDEB] rounded-full" />
-                    <div className="absolute inset-2 border-[2px] border-t-transparent border-r-[#F27A2A] border-b-transparent border-l-transparent rounded-full animate-spin-slow" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" className="text-[#1A1A18]">
-                        <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.5" />
-                        <path d="M10.5 10.5l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </div>
+              <div className="py-12 text-center">
+                <div className="relative w-24 h-24 mx-auto mb-8">
+                  <div className="absolute inset-0 border-[3px] border-[#EEEDEB] rounded-full" />
+                  <div className="absolute inset-0 border-[3px] border-t-[#1A1A18] border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin" />
+                  <div className="absolute inset-2 border-[2px] border-[#EEEDEB] rounded-full" />
+                  <div className="absolute inset-2 border-[2px] border-t-transparent border-r-[#F27A2A] border-b-transparent border-l-transparent rounded-full animate-spin-slow" />
+                  <div className="absolute inset-0 flex items-center justify-center"><IconSearch size={20} /></div>
                 </div>
-
-                <h3 className="font-display text-[20px] text-[#1A1A18] text-center mb-2">
-                  Analyse en cours
-                </h3>
-                <p className="text-[14px] text-[#504F4A] text-center mb-8 max-w-sm mx-auto leading-relaxed">
-                  Claude examine votre page comme un expert UX — section par section, du header au footer.
-                </p>
-
-                {/* Steps */}
-                <div className="max-w-xs mx-auto bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Capture de la page', done: true },
-                      { label: 'Extraction du contenu', done: true },
-                      { label: 'Analyse visuelle par IA', done: false, active: true },
-                      { label: 'Génération des annotations', done: false },
-                      { label: 'Calcul des scores', done: false },
-                    ].map((step, i) => (
-                      <div key={i} className={`flex items-center gap-3 ${!step.done && !step.active ? 'opacity-40' : ''}`}>
-                        <span className="w-5 h-5 flex items-center justify-center shrink-0">
-                          {step.done ? (
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                              <circle cx="8" cy="8" r="8" fill="#22A168" />
-                              <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          ) : step.active ? (
-                            <span className="relative flex h-4 w-4">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F27A2A] opacity-30" />
-                              <span className="relative inline-flex rounded-full h-4 w-4 border-2 border-[#F27A2A] bg-white" />
-                            </span>
-                          ) : (
-                            <span className="w-4 h-4 rounded-full border border-[#EEEDEB]" />
-                          )}
-                        </span>
-                        <span className={`text-[13px] ${step.active ? 'text-[#1A1A18] font-medium' : step.done ? 'text-[#1A1A18]' : 'text-[#9C9A91]'}`}>
-                          {step.label}
-                        </span>
-                        {step.active && (
-                          <span className="ml-auto flex gap-0.5">
-                            <span className="w-1 h-1 rounded-full bg-[#F27A2A] animate-[bounce_1s_infinite_0ms]" />
-                            <span className="w-1 h-1 rounded-full bg-[#F27A2A] animate-[bounce_1s_infinite_150ms]" />
-                            <span className="w-1 h-1 rounded-full bg-[#F27A2A] animate-[bounce_1s_infinite_300ms]" />
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">Analyse en cours</h3>
+                <p className="text-[14px] text-[#504F4A] max-w-sm mx-auto">Claude examine votre page section par section.</p>
               </div>
             )}
 
-            {/* Error */}
+            {/* Deep error */}
             {deepError && !deepLoading && (
-              <div className="bg-white border border-[#E05252]/20 rounded-[12px] p-5 text-center my-8">
+              <div className="card border-[#E05252]/20 p-6 text-center my-8">
                 <p className="text-[13px] text-[#E05252] mb-4">{deepError}</p>
-                <button
-                  onClick={() => setDeepError('')}
-                  className="px-6 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
-                >
-                  Réessayer
-                </button>
+                <button onClick={() => setDeepError('')} className="px-6 py-2.5 bg-[#1A1A18] text-white text-[13px] font-medium rounded-[10px] hover:bg-[#333] transition-colors">Réessayer</button>
               </div>
             )}
 
-            {/* Deep analysis results */}
+            {/* Deep results */}
             {deepResult && (
-              <div className="space-y-6 max-w-none">
+              <div className="space-y-6 max-w-none" style={{ maxWidth: '100%' }}>
                 <div className="flex items-center justify-between">
                   <h2 className="text-[18px] font-medium text-[#1A1A18]">Analyse approfondie</h2>
-                  <button
-                    onClick={() => { setDeepResult(null); setDeepError(''); setActiveAnnotation(null); }}
-                    className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors"
-                  >
-                    Analyser une autre page
-                  </button>
+                  <button onClick={() => { setDeepResult(null); setDeepError(''); setActiveAnnotation(null); }} className="text-[13px] text-[#504F4A] hover:text-[#1A1A18]">Autre page</button>
                 </div>
-
-                {/* Row 1: Score + Radar + Executive summary */}
+                {/* Score + Radar + Summary */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6 flex flex-col items-center justify-center">
-                    <ScoreGauge score={deepResult.analysis.score_global} size={140} label="Score page" />
-                  </div>
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 flex items-center justify-center">
-                    <ScoreRadar scores={deepResult.analysis.scores_par_dimension} />
-                  </div>
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Diagnostic</h3>
-                    <p className="text-[15px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.resume_executif}</p>
-                    {/* Legend */}
+                  <div className="card p-6 flex flex-col items-center justify-center"><ScoreGauge score={deepResult.analysis.score_global} size={140} label="Score page" /></div>
+                  <div className="card p-5 flex items-center justify-center"><ScoreRadar scores={deepResult.analysis.scores_par_dimension} /></div>
+                  <div className="card p-5">
+                    <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Diagnostic</h3>
+                    <p className="text-[14px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.resume_executif}</p>
                     <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-dashed border-[#EEEDEB]">
-                      {[
-                        { color: '#E05252', label: 'Critique' },
-                        { color: '#F27A2A', label: 'Avertissement' },
-                        { color: '#22A168', label: 'Positif' },
-                        { color: '#3B82F6', label: 'Info' },
-                      ].map((l) => (
-                        <span key={l.label} className="flex items-center gap-1.5 text-[10px] text-[#504F4A]">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color }} />
-                          {l.label}
-                        </span>
+                      {[{ color: '#E05252', label: 'Critique' }, { color: '#F27A2A', label: 'Avertissement' }, { color: '#22A168', label: 'Positif' }, { color: '#3B82F6', label: 'Info' }].map((l) => (
+                        <span key={l.label} className="flex items-center gap-1.5 text-[10px] text-[#504F4A]"><span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: l.color }} />{l.label}</span>
                       ))}
                     </div>
                   </div>
                 </div>
-
-                {/* Row 2: Annotated screenshot (only if screenshot is available) */}
-                {deepResult.desktopScreenshot && <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
-                      Capture annotée
-                    </h3>
-                    {deepResult.mobileScreenshot && (
-                      <div className="flex bg-[#F8F8F7] rounded-[8px] p-0.5">
-                        <button
-                          onClick={() => setScreenshotView('desktop')}
-                          className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
-                            screenshotView === 'desktop' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#504F4A]'
-                          }`}
-                        >
-                          Desktop
-                        </button>
-                        <button
-                          onClick={() => setScreenshotView('mobile')}
-                          className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${
-                            screenshotView === 'mobile' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#504F4A]'
-                          }`}
-                        >
-                          Mobile
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className={`${screenshotView === 'mobile' ? 'max-w-[240px] mx-auto' : ''}`}>
-                    <AnnotatedScreenshot
-                      screenshot={screenshotView === 'mobile' && deepResult.mobileScreenshot
-                        ? deepResult.mobileScreenshot
-                        : deepResult.desktopScreenshot}
-                      annotations={deepResult.analysis.annotations}
-                      activeAnnotation={activeAnnotation}
-                      onAnnotationClick={(id) => {
-                        setActiveAnnotation(id);
-                        if (id !== null) {
-                          document.getElementById(`annotation-card-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }
-                      }}
-                      isMobile={screenshotView === 'mobile'}
-                    />
-                  </div>
-                </div>}
-
-                {/* Row 3: Annotation cards */}
-                <div>
-                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">
-                    Annotations ({deepResult.analysis.annotations.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {deepResult.analysis.annotations.map((ann) => (
-                      <AnnotationCard
-                        key={ann.id}
-                        annotation={ann}
-                        isActive={activeAnnotation === ann.id}
-                        onMouseEnter={() => setActiveAnnotation(ann.id)}
-                        onMouseLeave={() => setActiveAnnotation(null)}
-                        onClick={() => setActiveAnnotation(activeAnnotation === ann.id ? null : ann.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Row 4: Mobile + Coherence side by side */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {/* Mobile analysis */}
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Expérience mobile</h3>
-                      <span className="font-display text-[22px]" style={{
-                        color: deepResult.analysis.analyse_mobile.score < 40 ? '#E05252' : deepResult.analysis.analyse_mobile.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_mobile.score < 85 ? '#F0C744' : '#22A168'
-                      }}>{deepResult.analysis.analyse_mobile.score}</span>
-                    </div>
-                    {deepResult.analysis.analyse_mobile.problemes_critiques.length > 0 && (
-                      <div className="mb-3">
-                        <p className="text-[10px] font-medium text-[#E05252] uppercase tracking-wider mb-1">Problèmes</p>
-                        <ul className="space-y-1">
-                          {deepResult.analysis.analyse_mobile.problemes_critiques.map((p, i) => (
-                            <li key={i} className="flex items-start gap-2 text-[14px] text-[#504F4A]">
-                              <span className="w-1 h-1 rounded-full bg-[#E05252] mt-1.5 shrink-0" />
-                              {p}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {deepResult.analysis.analyse_mobile.points_positifs.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-medium text-[#22A168] uppercase tracking-wider mb-1">Points positifs</p>
-                        <ul className="space-y-1">
-                          {deepResult.analysis.analyse_mobile.points_positifs.map((p, i) => (
-                            <li key={i} className="flex items-start gap-2 text-[14px] text-[#504F4A]">
-                              <span className="w-1 h-1 rounded-full bg-[#22A168] mt-1.5 shrink-0" />
-                              {p}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Visual coherence */}
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Cohérence visuelle</h3>
-                      <span className="font-display text-[22px]" style={{
-                        color: deepResult.analysis.analyse_coherence_visuelle.score < 40 ? '#E05252' : deepResult.analysis.analyse_coherence_visuelle.score < 65 ? '#F27A2A' : deepResult.analysis.analyse_coherence_visuelle.score < 85 ? '#F0C744' : '#22A168'
-                      }}>{deepResult.analysis.analyse_coherence_visuelle.score}</span>
-                    </div>
-                    <div className="space-y-2 text-[14px] text-[#504F4A]">
-                      <p><span className="text-[#1A1A18] font-medium">Palette :</span> {deepResult.analysis.analyse_coherence_visuelle.palette_detectee}</p>
-                      <p><span className="text-[#1A1A18] font-medium">Couleurs :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_couleurs}</p>
-                      <p><span className="text-[#1A1A18] font-medium">Typo :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_typographie}</p>
-                      {deepResult.analysis.analyse_coherence_visuelle.problemes_detectes.length > 0 && (
-                        <ul className="mt-2 space-y-1">
-                          {deepResult.analysis.analyse_coherence_visuelle.problemes_detectes.map((p, i) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="w-1 h-1 rounded-full bg-[#F27A2A] mt-1.5 shrink-0" />
-                              {p}
-                            </li>
-                          ))}
-                        </ul>
+                {/* Screenshot */}
+                {deepResult.desktopScreenshot && (
+                  <div className="card p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Capture annotée</h3>
+                      {deepResult.mobileScreenshot && (
+                        <div className="flex bg-[#FAFAF9] rounded-[8px] p-0.5">
+                          <button onClick={() => setScreenshotView('desktop')} className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${screenshotView === 'desktop' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#504F4A]'}`}>Desktop</button>
+                          <button onClick={() => setScreenshotView('mobile')} className={`px-3 py-1 rounded-[6px] text-[11px] font-medium transition-colors ${screenshotView === 'mobile' ? 'bg-white text-[#1A1A18] shadow-sm' : 'text-[#504F4A]'}`}>Mobile</button>
+                        </div>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Row 5: Action plan */}
-                {deepResult.analysis.plan_action?.length > 0 && (
-                  <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                    <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">
-                      Plan d&apos;action priorisé
-                    </h3>
-                    <div className="space-y-0">
-                      {deepResult.analysis.plan_action.map((action, i) => (
-                        <div key={i} className={`flex items-start gap-4 py-4 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
-                          <span className="w-7 h-7 shrink-0 rounded-full bg-[#F8F8F7] flex items-center justify-center text-[13px] font-medium text-[#1A1A18]">
-                            {action.priorite}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-medium text-[#1A1A18] mb-1">{action.action}</p>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#504F4A] border border-[#EEEDEB]">{action.categorie}</span>
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#504F4A] border border-[#EEEDEB]">Impact {action.impact}</span>
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#F8F8F7] text-[#504F4A] border border-[#EEEDEB]">{action.difficulte}</span>
-                              {action.temps_estime && <span className="text-[10px] text-[#9C9A91]">~{action.temps_estime}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                    <div className={screenshotView === 'mobile' ? 'max-w-[240px] mx-auto' : ''}>
+                      <AnnotatedScreenshot screenshot={screenshotView === 'mobile' && deepResult.mobileScreenshot ? deepResult.mobileScreenshot : deepResult.desktopScreenshot} annotations={deepResult.analysis.annotations} activeAnnotation={activeAnnotation} onAnnotationClick={(anId) => { setActiveAnnotation(anId); if (anId !== null) document.getElementById(`annotation-card-${anId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} isMobile={screenshotView === 'mobile'} />
                     </div>
                   </div>
                 )}
-
+                {/* Annotations */}
+                <div>
+                  <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3 px-1">Annotations ({deepResult.analysis.annotations.length})</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {deepResult.analysis.annotations.map((ann) => <AnnotationCard key={ann.id} annotation={ann} isActive={activeAnnotation === ann.id} onMouseEnter={() => setActiveAnnotation(ann.id)} onMouseLeave={() => setActiveAnnotation(null)} onClick={() => setActiveAnnotation(activeAnnotation === ann.id ? null : ann.id)} />)}
+                  </div>
+                </div>
+                {/* Mobile + Coherence */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="card p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Expérience mobile</h3>
+                      <span className="font-display text-[22px]" style={{ color: deepResult.analysis.analyse_mobile.score < 40 ? '#E05252' : deepResult.analysis.analyse_mobile.score < 65 ? '#F27A2A' : '#22A168' }}>{deepResult.analysis.analyse_mobile.score}</span>
+                    </div>
+                    {deepResult.analysis.analyse_mobile.problemes_critiques.length > 0 && <div className="mb-3"><p className="text-[10px] font-medium text-[#E05252] uppercase tracking-wider mb-1">Problèmes</p><ul className="space-y-1">{deepResult.analysis.analyse_mobile.problemes_critiques.map((p, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-[#504F4A]"><span className="w-1 h-1 rounded-full bg-[#E05252] mt-1.5 shrink-0" />{p}</li>)}</ul></div>}
+                    {deepResult.analysis.analyse_mobile.points_positifs.length > 0 && <div><p className="text-[10px] font-medium text-[#22A168] uppercase tracking-wider mb-1">Points positifs</p><ul className="space-y-1">{deepResult.analysis.analyse_mobile.points_positifs.map((p, i) => <li key={i} className="flex items-start gap-2 text-[13px] text-[#504F4A]"><span className="w-1 h-1 rounded-full bg-[#22A168] mt-1.5 shrink-0" />{p}</li>)}</ul></div>}
+                  </div>
+                  <div className="card p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">Cohérence visuelle</h3>
+                      <span className="font-display text-[22px]" style={{ color: deepResult.analysis.analyse_coherence_visuelle.score < 40 ? '#E05252' : deepResult.analysis.analyse_coherence_visuelle.score < 65 ? '#F27A2A' : '#22A168' }}>{deepResult.analysis.analyse_coherence_visuelle.score}</span>
+                    </div>
+                    <div className="space-y-2 text-[13px] text-[#504F4A]">
+                      <p><span className="text-[#1A1A18] font-medium">Palette :</span> {deepResult.analysis.analyse_coherence_visuelle.palette_detectee}</p>
+                      <p><span className="text-[#1A1A18] font-medium">Couleurs :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_couleurs}</p>
+                      <p><span className="text-[#1A1A18] font-medium">Typo :</span> {deepResult.analysis.analyse_coherence_visuelle.coherence_typographie}</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Action plan */}
+                {deepResult.analysis.plan_action?.length > 0 && (
+                  <div className="card p-6">
+                    <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-4">Plan d&apos;action</h3>
+                    {deepResult.analysis.plan_action.map((action, i) => (
+                      <div key={i} className={`flex items-start gap-4 py-4 ${i > 0 ? 'border-t border-dashed border-[#EEEDEB]' : ''}`}>
+                        <span className="w-7 h-7 shrink-0 rounded-full bg-[#FAFAF9] flex items-center justify-center text-[13px] font-medium text-[#1A1A18]">{action.priorite}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-medium text-[#1A1A18] mb-1">{action.action}</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#FAFAF9] text-[#504F4A] border border-[#EEEDEB]">{action.categorie}</span>
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-[#FAFAF9] text-[#504F4A] border border-[#EEEDEB]">Impact {action.impact}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 {/* Verdict */}
-                <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <h3 className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Verdict</h3>
+                <div className="card p-6">
+                  <h3 className="text-[11px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-3">Verdict</h3>
                   <p className="text-[15px] text-[#1A1A18] leading-relaxed">{deepResult.analysis.verdict_final}</p>
                 </div>
-
-                {/* Download deep analysis PDF */}
                 <div className="flex justify-center">
-                  <button
-                    onClick={() => generateDeepAnalysisPdf(deepResult.analysis, customUrl || '', report.url)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[8px] hover:bg-[#333] transition-colors"
-                  >
+                  <button onClick={() => generateDeepAnalysisPdf(deepResult.analysis, customUrl || '', report.url)} className="flex items-center gap-2 px-5 py-2.5 bg-[#1A1A18] text-white text-[12px] font-medium rounded-[10px] hover:bg-[#333] transition-colors">
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 2v8m0 0l-3-3m3 3l3-3M3 12h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    Télécharger l&apos;analyse en PDF
+                    Télécharger en PDF
                   </button>
                 </div>
               </div>
@@ -957,15 +606,45 @@ export default function ReportPage() {
         )}
 
         {/* Footer */}
-        <div className="text-center py-8 mt-4 border-t border-[#EEEDEB]">
-          <button
-            onClick={() => router.push('/')}
-            className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors"
-          >
+        <div className="text-center py-8 mt-6 border-t border-[#EEEDEB]">
+          <button onClick={() => router.push('/')} className="text-[13px] text-[#504F4A] hover:text-[#1A1A18] transition-colors">
             Analyser un autre site
           </button>
         </div>
       </main>
+    </div>
+  );
+}
+
+/* ═══ Blur Gate Component ═══ */
+function BlurGate({ id }: { id: string }) {
+  return (
+    <div className="relative">
+      <div className="blur-gate pointer-events-none select-none" aria-hidden="true">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => <div key={i} className="card p-6 h-36" />)}
+        </div>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="card-elevated p-8 max-w-md mx-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-[#EEEDFE] flex items-center justify-center mx-auto mb-4">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <rect x="3" y="7" width="10" height="7" rx="1.5" stroke="#7F77DD" strokeWidth="1.5" />
+              <path d="M5 7V5a3 3 0 016 0v2" stroke="#7F77DD" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          <h3 className="text-[18px] font-medium text-[#1A1A18] mb-2">Voir le rapport complet</h3>
+          <p className="text-[13px] text-[#504F4A] leading-relaxed mb-6">
+            Créez un compte gratuit pour accéder à l&apos;analyse complète, les mots-clés manquants et le plan d&apos;action.
+          </p>
+          <button onClick={() => { sessionStorage.setItem('mamie_pending_report', id); window.location.href = '/signup'; }} className="cta-accent w-full py-3 text-[13px] flex items-center justify-center gap-2 mb-3">
+            Créer mon compte gratuit <IconArrowRight size={14} />
+          </button>
+          <button onClick={() => { sessionStorage.setItem('mamie_pending_report', id); window.location.href = '/login'; }} className="block w-full text-[12px] text-[#9C9A91] hover:text-[#504F4A] transition-colors">
+            Déjà un compte ? Se connecter
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

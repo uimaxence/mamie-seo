@@ -12,7 +12,7 @@
 :root {
   /* Neutrals — backbone */
   --color-white: #FFFFFF;
-  --color-surface: #F8F8F7;
+  --color-surface: #FAFAF9;
   --color-border-light: #EEEDEB;
   --color-muted: #9C9A91;
   --color-secondary: #504F4A;
@@ -35,15 +35,6 @@
   --color-purple-dark: #3C3489;
   --color-green-dark: #3B6D11;
   --color-amber-dark: #854F0B;
-
-  /* Spacing scale (4px base) */
-  --spacing-1: 4px;
-  --spacing-2: 8px;
-  --spacing-3: 12px;
-  --spacing-4: 16px;
-  --spacing-5: 20px;
-  --spacing-6: 24px;
-  --spacing-8: 32px;
 
   /* Fonts */
   --font-display: 'Boldonse', system-ui, sans-serif;
@@ -81,7 +72,60 @@ body {
   color: var(--color-secondary);
 }
 
-/* Gauge animation */
+/* ─── Cards ─── */
+.card {
+  background: white;
+  border: 1px solid var(--color-border-light);
+  border-radius: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: #D5D4D0;
+}
+
+.card-elevated {
+  background: white;
+  border: 1px solid var(--color-border-light);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+}
+
+/* ─── CTA accent — stands out from dark buttons ─── */
+.cta-accent {
+  background: var(--color-orange);
+  color: white;
+  font-weight: 500;
+  border-radius: 10px;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.cta-accent:hover {
+  background: #E06A1A;
+  transform: translateY(-1px);
+}
+
+/* ─── Section nav tabs ─── */
+.section-tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-muted);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+
+.section-tab:hover {
+  color: var(--color-secondary);
+}
+
+.section-tab-active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ─── Gauge animation ─── */
 @keyframes gauge-fill {
   from { stroke-dashoffset: 251; }
 }
@@ -138,4 +182,14 @@ body {
 
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
+}
+
+/* ─── Stat counter animation ─── */
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: count-up 0.6s ease-out both;
 }

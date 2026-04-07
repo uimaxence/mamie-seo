@@ -118,7 +118,7 @@ function SocialProof() {
   const initials = ['MC', 'TD', 'SB', 'LR', 'AP'];
 
   return (
-    <div className="flex items-center gap-3 mt-6">
+    <div className="flex items-center gap-3 mt-8">
       <div className="flex -space-x-2">
         {colors.map((bg, i) => (
           <div
@@ -137,35 +137,63 @@ function SocialProof() {
   );
 }
 
+// ─── Stats counter bar ───
+function StatsBar() {
+  const stats = [
+    { value: '1 200+', label: 'Sites', sublabel: 'analysés' },
+    { value: '10', label: 'Critères', sublabel: 'SEO vérifiés' },
+    { value: '60s', label: "D'analyse", sublabel: '' },
+    { value: '100%', label: 'Gratuit', sublabel: '' },
+  ];
+
+  return (
+    <div className="card-elevated p-8 md:p-10">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+        {stats.map((s, i) => (
+          <div key={i} className="text-center">
+            <p className="text-[32px] md:text-[36px] font-semibold text-[#1A1A18] tabular-nums leading-tight animate-count-up">
+              {s.value}
+            </p>
+            <p className="text-[13px] text-[#504F4A] mt-1 font-medium">{s.label}</p>
+            {s.sublabel && (
+              <p className="text-[12px] text-[#9C9A91]">{s.sublabel}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const FEATURES = [
   {
     icon: <IconSearch size={20} />,
     title: 'Crawl intelligent',
-    desc: 'Sitemap, BFS, d\u00e9tection CMS. On lit votre site comme Google le fait.',
+    desc: 'Sitemap, BFS, détection CMS. On lit votre site comme Google le fait.',
   },
   {
     icon: <IconBarChart size={20} />,
     title: 'Score technique sur 100',
-    desc: '10 crit\u00e8res SEO analys\u00e9s automatiquement avec explications accessibles.',
+    desc: '10 critères SEO analysés automatiquement avec explications accessibles.',
   },
   {
     icon: <IconStar size={20} />,
-    title: 'Analyse \u00e9ditoriale par IA',
+    title: 'Analyse éditoriale par IA',
     desc: 'Claude analyse votre copywriting, offres, CTA et signaux de confiance.',
   },
   {
     icon: <IconTarget size={20} />,
     title: 'Plan d\'action prioritaire',
-    desc: 'Des actions concr\u00e8tes class\u00e9es par impact et difficult\u00e9.',
+    desc: 'Des actions concrètes classées par impact et difficulté.',
   },
   {
     icon: <IconType size={20} />,
-    title: 'Mots-cl\u00e9s manquants',
-    desc: 'D\u00e9couvrez les termes que vos clients tapent et que vous n\'utilisez pas.',
+    title: 'Mots-clés manquants',
+    desc: 'Découvrez les termes que vos clients tapent et que vous n\'utilisez pas.',
   },
   {
     icon: <IconZap size={20} />,
-    title: 'R\u00e9sultats en 60 secondes',
+    title: 'Résultats en 60 secondes',
     desc: 'Pas de setup, pas de compte obligatoire. Entrez votre URL, c\'est tout.',
   },
 ];
@@ -174,17 +202,17 @@ const TESTIMONIALS = [
   {
     name: 'Marie L.',
     role: 'Coach de vie',
-    text: 'J\'ai enfin compris pourquoi mon site n\'apparaissait pas sur Google. Les recommandations \u00e9taient claires et actionnables.',
+    text: 'J\'ai enfin compris pourquoi mon site n\'apparaissait pas sur Google. Les recommandations étaient claires et actionnables.',
   },
   {
     name: 'Thomas R.',
-    role: 'D\u00e9veloppeur freelance',
-    text: 'L\'analyse \u00e9ditoriale par IA m\'a ouvert les yeux sur mon copywriting. Mon taux de conversion a augment\u00e9 de 30%.',
+    role: 'Développeur freelance',
+    text: 'L\'analyse éditoriale par IA m\'a ouvert les yeux sur mon copywriting. Mon taux de conversion a augmenté de 30%.',
   },
   {
     name: 'Sophie M.',
     role: 'Naturopathe',
-    text: 'Simple, rapide, et les conseils sont adapt\u00e9s \u00e0 mon m\u00e9tier. Bien plus utile qu\'un audit g\u00e9n\u00e9rique.',
+    text: 'Simple, rapide, et les conseils sont adaptés à mon métier. Bien plus utile qu\'un audit générique.',
   },
 ];
 
@@ -241,26 +269,31 @@ export default function LandingPage() {
     router.push('/analyzing');
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#FAFAF9]">
       <AuthHeader />
 
       {/* ════════ Hero ════════ */}
-      <section className="flex-1 flex flex-col items-center px-6 pt-12 pb-16">
-        <div className="max-w-5xl w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-24">
+      <section className="flex-1 flex flex-col items-center px-6 pt-16 pb-20">
+        <div className="max-w-6xl w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-28">
             {/* Left — CTA */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-[#EEEDEB] rounded-full mb-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-[#EEEDEB] rounded-full mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22A168] animate-pulse" />
                 <span className="text-[11px] font-medium text-[#504F4A]">Gratuit — aucune carte requise</span>
               </div>
 
-              <h1 className="text-[36px] lg:text-[44px] font-medium text-[#1A1A18] mb-4 leading-[1.08] tracking-tight">
+              <h1 className="text-[40px] lg:text-[52px] font-semibold text-[#1A1A18] mb-6 leading-[1.06] tracking-tight" style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}>
                 Votre site attire-t-il vraiment vos futurs&nbsp;clients&nbsp;?
               </h1>
-              <p className="text-[15px] text-[#504F4A] leading-relaxed mb-8 max-w-md">
-                Analyse SEO, copywriting et design en 60&nbsp;secondes. Pens&eacute; pour les freelances et ind&eacute;pendants.
+              <p className="text-[16px] text-[#504F4A] leading-relaxed mb-10 max-w-lg">
+                Analyse SEO, copywriting et design en 60&nbsp;secondes.
+                Pensé pour les freelances et indépendants.
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-3">
@@ -271,7 +304,7 @@ export default function LandingPage() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder={animatedPlaceholder || 'https://votre-site.fr'}
-                    className={`w-full px-4 py-4 bg-white border rounded-[10px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none transition-all ${
+                    className={`w-full px-5 py-4.5 bg-white border rounded-[14px] text-[15px] text-[#1A1A18] placeholder:text-[#9C9A91] outline-none transition-all shadow-sm ${
                       urlValid === false && url
                         ? 'border-[#E05252] focus:border-[#E05252]'
                         : urlValid === true
@@ -280,7 +313,7 @@ export default function LandingPage() {
                     }`}
                   />
                   {urlValid === true && url && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
                       <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
                         <circle cx="8" cy="8" r="8" fill="#22A168" />
                         <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -292,7 +325,7 @@ export default function LandingPage() {
                 <button
                   type="submit"
                   disabled={!url || urlValid === false}
-                  className="w-full py-4 bg-[#1A1A18] text-white text-[14px] font-medium rounded-[10px] hover:bg-[#333] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="cta-accent w-full py-4.5 text-[15px] flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Analyser mon site gratuitement
                   <IconArrowRight size={16} />
@@ -300,14 +333,14 @@ export default function LandingPage() {
               </form>
 
               {/* Trust badges */}
-              <div className="flex items-center gap-5 mt-5">
+              <div className="flex items-center gap-6 mt-6">
                 <div className="flex items-center gap-1.5 text-[12px] text-[#9C9A91]">
                   <IconCheck size={14} className="text-[#22A168]" />
                   <span>Gratuit</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[12px] text-[#9C9A91]">
                   <IconZap size={14} className="text-[#F0C744]" />
-                  <span>R&eacute;sultat en 60s</span>
+                  <span>Résultat en 60s</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[12px] text-[#9C9A91]">
                   <IconShield size={14} />
@@ -321,7 +354,7 @@ export default function LandingPage() {
 
             {/* Right — Visual asset */}
             <div className="hidden lg:block">
-              <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6 space-y-6 shadow-[0_2px_24px_rgba(0,0,0,0.04)]">
+              <div className="card-elevated p-8 space-y-6">
                 <div className="flex items-center gap-3 pb-4 border-b border-[#EEEDEB]">
                   <div className="w-2 h-2 rounded-full bg-[#22A168]" />
                   <span className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91]">
@@ -334,42 +367,47 @@ export default function LandingPage() {
                   <PreviewBars />
                 </div>
 
-                <div className="bg-[#F8F8F7] rounded-[8px] p-4">
+                <div className="bg-[#F8F8F7] rounded-[10px] p-5">
                   <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-2">Analyse IA</p>
                   <p className="text-[14px] text-[#504F4A] leading-relaxed italic">
-                    &ldquo;On comprend imm&eacute;diatement que vous &ecirc;tes coach pour dirigeants.
-                    Votre H1 manque de mots-cl&eacute;s — essayez &apos;Coach certifi&eacute; pour dirigeants&apos;.&rdquo;
+                    &ldquo;On comprend immédiatement que vous êtes coach pour dirigeants.
+                    Votre H1 manque de mots-clés — essayez &apos;Coach certifié pour dirigeants&apos;.&rdquo;
                   </p>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">coaching</span>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#EAF3DE] text-[#3B6D11]">dirigeant</span>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">+ coach certifi&eacute;</span>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">+ coach certifié</span>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-[#FAEEDA] text-[#854F0B]">+ burnout</span>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* ════════ Stats counter bar ════════ */}
+          <div className="mb-28">
+            <StatsBar />
+          </div>
+
           {/* ════════ Features grid ════════ */}
-          <div className="mb-24">
-            <div className="text-center mb-10">
-              <h2 className="text-[24px] font-medium text-[#1A1A18] mb-2">
+          <div className="mb-28">
+            <div className="text-center mb-14">
+              <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-3">
                 Ce que vous obtenez gratuitement
               </h2>
-              <p className="text-[15px] text-[#504F4A]">
-                Un audit SEO complet, normalement factur&eacute; 200&nbsp;EUR par une agence.
+              <p className="text-[16px] text-[#504F4A] max-w-lg mx-auto">
+                Un audit SEO complet, normalement facturé 200&nbsp;EUR par une agence.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {FEATURES.map((f, i) => (
                 <div
                   key={i}
-                  className="bg-white border border-[#EEEDEB] rounded-[12px] p-5 hover:border-[#9C9A91] transition-colors"
+                  className="card p-6 hover:border-[#9C9A91]"
                 >
-                  <span className="text-[#9C9A91] block mb-3">{f.icon}</span>
-                  <h3 className="text-[14px] font-medium text-[#1A1A18] mb-1">{f.title}</h3>
+                  <span className="text-[#9C9A91] block mb-4">{f.icon}</span>
+                  <h3 className="text-[15px] font-medium text-[#1A1A18] mb-1.5">{f.title}</h3>
                   <p className="text-[14px] text-[#504F4A] leading-relaxed">{f.desc}</p>
                 </div>
               ))}
@@ -377,37 +415,37 @@ export default function LandingPage() {
           </div>
 
           {/* ════════ Testimonials ════════ */}
-          <div className="mb-24">
-            <div className="text-center mb-10">
-              <h2 className="text-[24px] font-medium text-[#1A1A18] mb-2">
-                Ils ont d&eacute;j&agrave; analys&eacute; leur site
+          <div className="mb-28">
+            <div className="text-center mb-14">
+              <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-3">
+                Ils ont déjà analysé leur site
               </h2>
-              <p className="text-[15px] text-[#504F4A]">
-                Des freelances et ind&eacute;pendants comme vous.
+              <p className="text-[16px] text-[#504F4A]">
+                Des freelances et indépendants comme vous.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {TESTIMONIALS.map((t, i) => (
-                <div key={i} className="bg-white border border-[#EEEDEB] rounded-[12px] p-5">
-                  <div className="flex items-center gap-1 mb-3">
+                <div key={i} className="card p-6">
+                  <div className="flex items-center gap-1 mb-4">
                     {[...Array(5)].map((_, j) => (
-                      <svg key={j} width="12" height="12" viewBox="0 0 16 16" fill="#F0C744">
+                      <svg key={j} width="14" height="14" viewBox="0 0 16 16" fill="#F0C744">
                         <path d="M8 1l2.2 4.5 5 .7-3.6 3.5.9 5L8 12.4 3.5 14.7l.9-5L.8 6.2l5-.7L8 1z" />
                       </svg>
                     ))}
                   </div>
-                  <p className="text-[14px] text-[#504F4A] leading-relaxed mb-4 italic">
+                  <p className="text-[14px] text-[#504F4A] leading-relaxed mb-5 italic">
                     &ldquo;{t.text}&rdquo;
                   </p>
-                  <div className="flex items-center gap-2 pt-3 border-t border-[#EEEDEB]">
+                  <div className="flex items-center gap-3 pt-4 border-t border-[#EEEDEB]">
                     <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
                       style={{ backgroundColor: ['#7F77DD', '#22A168', '#F27A2A'][i] }}
                     >
                       {t.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div>
-                      <p className="text-[12px] font-medium text-[#1A1A18]">{t.name}</p>
+                      <p className="text-[13px] font-medium text-[#1A1A18]">{t.name}</p>
                       <p className="text-[11px] text-[#9C9A91]">{t.role}</p>
                     </div>
                   </div>
@@ -417,82 +455,99 @@ export default function LandingPage() {
           </div>
 
           {/* ════════ Pricing ════════ */}
-          <div id="pricing" className="mb-24">
-            <div className="text-center mb-10">
-              <h2 className="text-[24px] font-medium text-[#1A1A18] mb-2">
+          <div id="pricing" className="mb-28">
+            <div className="text-center mb-14">
+              <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-3">
                 Allez plus loin avec l&apos;analyse de page
               </h2>
-              <p className="text-[15px] text-[#504F4A] max-w-md mx-auto">
+              <p className="text-[16px] text-[#504F4A] max-w-lg mx-auto">
                 L&apos;audit SEO est gratuit. Pour une analyse UI, copywriting et conversion page par page, passez en Pro.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
               {/* Free plan */}
-              <div className="bg-white border border-[#EEEDEB] rounded-[12px] p-6">
+              <div className="card p-7">
                 <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#9C9A91] mb-1">Gratuit</p>
-                <p className="text-[32px] font-medium text-[#1A1A18] tabular-nums mb-1">0 EUR</p>
-                <p className="text-[14px] text-[#504F4A] mb-5">Audit SEO complet par site</p>
-                <ul className="space-y-2.5">
+                <p className="text-[32px] font-semibold text-[#1A1A18] tabular-nums mb-1">0 EUR</p>
+                <p className="text-[14px] text-[#504F4A] mb-6">Audit SEO complet par site</p>
+                <ul className="space-y-3 mb-8">
                   {[
                     'Crawl de 60 pages max',
                     'Score technique sur 100',
-                    'Analyse \u00e9ditoriale par IA',
+                    'Analyse éditoriale par IA',
                     'Plan d\'action prioritaire',
-                    'Mots-cl\u00e9s manquants',
-                    'Rapport sauvegard\u00e9',
+                    'Mots-clés manquants',
+                    'Rapport sauvegardé',
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[14px] text-[#504F4A]">
+                    <li key={item} className="flex items-center gap-2.5 text-[14px] text-[#504F4A]">
                       <IconCheck size={14} className="text-[#22A168] shrink-0" />
                       {item}
                     </li>
                   ))}
                 </ul>
+                <button
+                  onClick={scrollToTop}
+                  className="w-full py-3.5 bg-[#1A1A18] text-white text-[14px] font-medium rounded-[10px] hover:bg-[#333] transition-colors flex items-center justify-center gap-2"
+                >
+                  Analyser gratuitement
+                  <IconArrowRight size={16} />
+                </button>
               </div>
 
               {/* Pro plan */}
-              <div className="bg-white border-2 border-[#1A1A18] rounded-[12px] p-6 relative">
+              <div className="card p-7 relative border-2 border-[#1A1A18]" style={{ borderRadius: '14px' }}>
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="px-3 py-1 bg-[#1A1A18] text-white text-[10px] font-medium uppercase tracking-wider rounded-full">
-                    Recommand&eacute;
+                    Recommandé
                   </span>
                 </div>
                 <p className="text-[10px] font-medium uppercase tracking-[0.07em] text-[#F27A2A] mb-1">Pro</p>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[32px] font-medium text-[#1A1A18] tabular-nums">4,90</span>
+                  <span className="text-[32px] font-semibold text-[#1A1A18] tabular-nums">4,90</span>
                   <span className="text-[14px] text-[#504F4A]">EUR</span>
                 </div>
-                <p className="text-[14px] text-[#504F4A] mb-5">3 analyses de page approfondies</p>
-                <ul className="space-y-2.5">
+                <p className="text-[14px] text-[#504F4A] mb-6">3 analyses de page approfondies</p>
+                <ul className="space-y-3 mb-8">
                   {[
                     'Tout le plan gratuit inclus',
-                    'Analyse UI & premi\u00e8re impression',
-                    'Audit copywriting d\u00e9taill\u00e9',
-                    '\u00c9valuation des CTA',
+                    'Analyse UI & première impression',
+                    'Audit copywriting détaillé',
+                    'Évaluation des CTA',
                     'Analyse confiance & preuve sociale',
                     'Recommandations actionnables',
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[14px] text-[#504F4A]">
+                    <li key={item} className="flex items-center gap-2.5 text-[14px] text-[#504F4A]">
                       <IconCheck size={14} className="text-[#22A168] shrink-0" />
                       {item}
                     </li>
                   ))}
                 </ul>
+                <button
+                  onClick={scrollToTop}
+                  className="cta-accent w-full py-3.5 text-[14px] flex items-center justify-center gap-2"
+                >
+                  Acheter le pack Pro — 4,90 EUR
+                  <IconArrowRight size={16} />
+                </button>
+                <p className="text-[11px] text-[#9C9A91] text-center mt-3">
+                  Lancez d&apos;abord une analyse gratuite, puis achetez le pack Pro depuis votre rapport.
+                </p>
               </div>
             </div>
           </div>
 
           {/* ════════ Final CTA ════════ */}
-          <div className="text-center py-12 border-t border-[#EEEDEB]">
-            <h2 className="text-[24px] font-medium text-[#1A1A18] mb-3">
-              Pr&ecirc;t &agrave; am&eacute;liorer votre visibilit&eacute; ?
+          <div className="text-center py-16 border-t border-[#EEEDEB]">
+            <h2 className="text-[28px] font-semibold text-[#1A1A18] mb-4">
+              Prêt à améliorer votre visibilité ?
             </h2>
-            <p className="text-[15px] text-[#504F4A] mb-6">
-              Lancez votre premi&egrave;re analyse — c&apos;est gratuit et &ccedil;a prend 60&nbsp;secondes.
+            <p className="text-[16px] text-[#504F4A] mb-8 max-w-md mx-auto">
+              Lancez votre première analyse — c&apos;est gratuit et ça prend 60&nbsp;secondes.
             </p>
             <button
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="px-8 py-3.5 bg-[#1A1A18] text-white text-[14px] font-medium rounded-[10px] hover:bg-[#333] transition-colors inline-flex items-center gap-2"
+              onClick={scrollToTop}
+              className="cta-accent px-10 py-4 text-[15px] inline-flex items-center gap-2"
             >
               Analyser mon site
               <IconArrowRight size={16} />
