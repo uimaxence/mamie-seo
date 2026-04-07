@@ -17,7 +17,7 @@ const dmSerif = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Audit.fr — Analyseur SEO pour freelances",
+  title: "Mamie SEO — Analyseur SEO pour freelances",
   description:
     "Analysez le SEO de votre site en 60 secondes. Audit technique automatisé + analyse éditoriale par IA, pensé pour les indépendants.",
 };

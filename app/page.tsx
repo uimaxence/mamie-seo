@@ -77,7 +77,7 @@ export default function LandingPage() {
       {/* ═══ NAV ═══ */}
       <nav className="flex items-center justify-between px-6 lg:px-12 py-4 border-b border-neutral-200">
         <a href="/" className="font-display text-[20px] text-neutral-900">
-          Audit<span className="text-[#E05A2B]">.</span>
+          Mamie SEO
         </a>
         <div className="hidden md:flex items-center gap-8">
           <a href="#features" className="text-[14px] text-neutral-500 hover:text-neutral-900 transition-colors">Fonctionnalités</a>
@@ -246,7 +246,7 @@ export default function LandingPage() {
         {/* Left */}
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-[#E05A2B] mb-5">
-            Pourquoi choisir Audit.fr
+            Pourquoi choisir Mamie SEO
           </p>
           <h2 className="font-display text-[38px] leading-[1.15] tracking-tight mb-5">
             Découvrez ce qui freine vraiment votre site

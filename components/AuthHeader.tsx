@@ -13,7 +13,7 @@ export default function AuthHeader({ showNewAnalysis = false }: AuthHeaderProps)
   return (
     <header className="flex items-center justify-between px-6 lg:px-12 py-4 border-b border-neutral-200 bg-white">
       <a href="/" className="font-display text-[20px] text-neutral-900">
-        Audit<span className="text-[#E05A2B]">.</span>
+        Mamie SEO
       </a>
       <nav className="flex items-center gap-5">
         {loading ? (
