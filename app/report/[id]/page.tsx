@@ -374,32 +374,36 @@ export default function ReportPage() {
               </div>
             )}
 
-            {/* ═══ CTA CONTACT — accent color, prominent ═══ */}
-            <div className="card-elevated p-8 mt-10">
-              <div className="max-w-xl mx-auto text-center">
-                <h3 className="text-[20px] font-medium text-[#171717] mb-2">
-                  Ces résultats vous semblent complexes ?
-                </h3>
-                <p className="text-[14px] text-[#525252] leading-relaxed mb-6">
-                  Je peux analyser votre situation en détail et vous proposer une feuille de route personnalisée — ou prendre en charge les corrections.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                  {process.env.NEXT_PUBLIC_CAL_LINK ? (
-                    <a href={process.env.NEXT_PUBLIC_CAL_LINK} target="_blank" rel="noopener noreferrer"
-                      className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2">
-                      Réserver un appel gratuit <ArrowRight size={14} />
-                    </a>
-                  ) : (
-                    <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
-                      className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2">
-                      Me décrire votre projet <ArrowRight size={14} />
-                    </a>
-                  )}
-                  <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
-                    className="text-[13px] text-[#525252] hover:text-[#171717] transition-colors underline underline-offset-2">
-                    Ou m&apos;écrire directement
-                  </a>
+            {/* ═══ CTA CONTACT — personal, prominent ═══ */}
+            <div className="mt-12 border-2 border-[#E05A2B] rounded-2xl overflow-hidden">
+              <div className="bg-neutral-900 px-8 py-6 text-white">
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-[#E05A2B] flex items-center justify-center text-white text-[16px] font-bold shrink-0">M</div>
+                  <div>
+                    <p className="text-[15px] font-medium">Maxence</p>
+                    <p className="text-[12px] text-neutral-400">Développeur & UI/UX Designer</p>
+                  </div>
                 </div>
+                <p className="text-[15px] text-neutral-300 leading-relaxed">
+                  Je conçois des sites qui convertissent. Si ces résultats vous semblent complexes à corriger seul, je peux vous proposer une feuille de route claire — ou m&apos;en occuper directement.
+                </p>
+              </div>
+              <div className="bg-white px-8 py-5 flex flex-col sm:flex-row items-center gap-3">
+                {process.env.NEXT_PUBLIC_CAL_LINK ? (
+                  <a href={process.env.NEXT_PUBLIC_CAL_LINK} target="_blank" rel="noopener noreferrer"
+                    className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2 w-full sm:w-auto justify-center">
+                    Réserver un appel gratuit de 30 min <ArrowRight size={14} />
+                  </a>
+                ) : (
+                  <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                    className="cta-accent px-7 py-3.5 text-[14px] inline-flex items-center gap-2 w-full sm:w-auto justify-center">
+                    Discuter de mon projet <ArrowRight size={14} />
+                  </a>
+                )}
+                <a href={`/contact?report=${id}&url=${encodeURIComponent(report.url)}&score=${combinedScore}`}
+                  className="text-[13px] text-neutral-500 hover:text-neutral-900 transition-colors">
+                  Ou m&apos;écrire directement
+                </a>
               </div>
             </div>
 
