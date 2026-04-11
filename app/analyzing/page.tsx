@@ -102,6 +102,7 @@ export default function AnalyzingPage() {
   const [accountLoading, setAccountLoading] = useState(false);
   const [accountError, setAccountError] = useState('');
   const [accountCreated, setAccountCreated] = useState(false);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
 
   // Timer — sunk cost bias (time invested)
   useEffect(() => {
@@ -307,12 +308,18 @@ export default function AnalyzingPage() {
     try {
       const supabase = getSupabaseBrowser();
       let userId: string | undefined;
+      let hasSession = false;
+
+      // Redirect URL for email confirmation links — go straight to the report
+      const emailRedirectTo = reportId
+        ? `${window.location.origin}/report/${reportId}`
+        : `${window.location.origin}/dashboard`;
 
       // Try signup first
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+        options: { emailRedirectTo },
       });
 
       if (signUpError) {
@@ -325,6 +332,7 @@ export default function AnalyzingPage() {
             return;
           }
           userId = loginData.user?.id;
+          hasSession = !!loginData.session;
         } else {
           setAccountError(signUpError.message);
           setAccountLoading(false);
@@ -332,14 +340,13 @@ export default function AnalyzingPage() {
         }
       } else {
         userId = signUpData.user?.id;
+        hasSession = !!signUpData.session;
       }
 
       // Sync email to sessionStorage for other components
       sessionStorage.setItem('mamie_email', email);
 
-      setAccountCreated(true);
-
-      // Link report by ID + email + userId
+      // Link report by ID + email + userId (works even without session — service role key)
       try {
         await fetch('/api/link-reports', {
           method: 'POST',
@@ -359,8 +366,17 @@ export default function AnalyzingPage() {
         }, 2000);
       }
 
-      sessionStorage.removeItem('mamie_pending_report');
-      setTimeout(() => router.push(`/report/${reportId}`), 1200);
+      // If user has an active session (auto-confirm enabled), redirect immediately
+      if (hasSession) {
+        setAccountCreated(true);
+        sessionStorage.removeItem('mamie_pending_report');
+        setTimeout(() => router.push(`/report/${reportId}`), 1000);
+        return;
+      }
+
+      // Otherwise, show the "check your email" state — keep report ID in storage
+      // so the user can still access it without losing context
+      setNeedsEmailConfirm(true);
     } catch {
       setAccountError('Erreur de connexion.');
     } finally {
@@ -391,7 +407,34 @@ export default function AnalyzingPage() {
         </header>
         <main className="flex-1 flex items-center justify-center px-6 pb-16">
           <div className="w-full max-w-sm animate-fade-in-up">
-            {accountCreated ? (
+            {needsEmailConfirm ? (
+              // ─── Email confirmation pending ───
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-full bg-[#FAEEDA] flex items-center justify-center mx-auto mb-4">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E05A2B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m3 7 9 6 9-6" />
+                  </svg>
+                </div>
+                <h2 className="text-[18px] font-medium text-[#171717] mb-2">
+                  Vérifiez votre boîte mail
+                </h2>
+                <p className="text-[14px] text-[#525252] mb-2 leading-relaxed">
+                  Nous venons d&apos;envoyer un lien de confirmation à
+                </p>
+                <p className="text-[14px] font-medium text-[#171717] mb-5">{signupEmail}</p>
+                <p className="text-[13px] text-[#a3a3a3] mb-6 leading-relaxed">
+                  Cliquez sur ce lien pour activer votre compte. Vous pouvez consulter votre rapport dès maintenant — il sera automatiquement lié à votre compte.
+                </p>
+                <button
+                  onClick={handleSkip}
+                  className="w-full py-3.5 bg-[#171717] text-white text-[13px] font-medium rounded-[8px] hover:bg-[#333] transition-colors flex items-center justify-center gap-2"
+                >
+                  Voir mon rapport maintenant
+                  <IconArrowRight size={14} />
+                </button>
+              </div>
+            ) : accountCreated ? (
               <div className="text-center">
                 <div className="w-14 h-14 rounded-full bg-[#EAF3DE] flex items-center justify-center mx-auto mb-4">
                   <IconCheck size={24} className="text-[#2D8A5E]" />
@@ -408,7 +451,7 @@ export default function AnalyzingPage() {
                   Votre rapport est prêt !
                 </h2>
                 <p className="text-[14px] text-[#525252] text-center mb-6 leading-relaxed">
-                  Votre rapport complet inclut l&apos;analyse éditoriale page par page, les mots-clés manquants pour votre secteur, et un plan d&apos;action priorisé. Créer un compte vous permet aussi de le sauvegarder.
+                  Créez un compte gratuit pour sauvegarder votre rapport et accéder à l&apos;analyse éditoriale page par page, aux mots-clés manquants et au plan d&apos;action priorisé.
                 </p>
 
                 <div className="bg-white border border-[#e5e5e5] rounded-[12px] p-5 mb-4">
@@ -431,6 +474,10 @@ export default function AnalyzingPage() {
                   />
                   {accountError && <p className="text-[11px] text-[#C03030] mt-2">{accountError}</p>}
                 </div>
+
+                <p className="text-[11px] text-[#a3a3a3] text-center mb-3 leading-relaxed">
+                  Un lien de confirmation vous sera envoyé par email pour valider votre compte.
+                </p>
 
                 <button
                   onClick={handleCreateAccount}

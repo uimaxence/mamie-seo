@@ -108,8 +108,21 @@ export async function POST(request: NextRequest) {
       };
 
       // Save report in memory + persist in Supabase
+      // CRITICAL: persist must complete before "done" — on serverless,
+      // the next request may hit a different instance with empty in-memory cache
       saveReport(report);
-      persistReport(report, undefined, email).catch(console.error);
+      try {
+        await persistReport(report, undefined, email);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('[crawl] persistReport failed:', message);
+        await sendEvent({
+          step: 'error',
+          message: `Sauvegarde du rapport impossible : ${message}`,
+        });
+        await writer.close();
+        return;
+      }
 
       // Record analysis in Supabase (non-blocking)
       recordAnalysis({ email, ip, url: crawlResult.finalUrl, reportId: report.id }).catch(console.error);

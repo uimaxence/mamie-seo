@@ -12,7 +12,15 @@ export async function persistReport(report: Report, userId?: string, email?: str
     created_at: report.createdAt,
   }, { onConflict: 'id' });
 
-  if (error) console.error('Report persist error:', error);
+  if (error) {
+    console.error('[persistReport] FAILED for id=%s email=%s', report.id, email, {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error(`persistReport failed: ${error.message}`);
+  }
 }
 
 // Get report from Supabase

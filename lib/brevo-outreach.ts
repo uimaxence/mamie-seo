@@ -1,9 +1,5 @@
 import type { Report } from './types';
 
-const BREVO_API_KEY = process.env.BREVO_API_KEY!;
-const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL!;
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://mamie-seo.fr';
-
 function getScoreVerdict(score: number): string {
   if (score < 40) return 'Votre site présente plusieurs lacunes importantes qui limitent fortement votre visibilité.';
   if (score < 65) return 'Votre site a des bases solides, mais des points critiques freinent votre visibilité.';
@@ -153,8 +149,12 @@ export async function sendOutreachEmail(
   report: Report,
   reportId: string,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  if (!BREVO_API_KEY) {
-    return { success: false, error: 'Clé API Brevo non configurée.' };
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://mamie-seo.fr';
+
+  if (!BREVO_API_KEY || !BREVO_SENDER_EMAIL) {
+    return { success: false, error: `Config Brevo manquante (key: ${!!BREVO_API_KEY}, sender: ${!!BREVO_SENDER_EMAIL})` };
   }
 
   let domain = report.url;
