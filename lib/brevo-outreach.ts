@@ -21,13 +21,22 @@ function getPainMessage(score: number): string {
   return "Votre site est d&eacute;j&agrave; bien construit. Mais quelques d&eacute;tails vous s&eacute;parent d'un site qui convertit vraiment &mdash; celui o&ugrave; chaque visiteur comprend imm&eacute;diatement pourquoi vous contacter.";
 }
 
-/** Replace jargon terms with plain language for non-technical audience */
+/** Replace jargon terms with plain-language definitions for non-technical audience */
 function dejargon(text: string): string {
   return text
-    .replace(/\bCTA\b/gi, 'bouton d\'action')
-    .replace(/\bmaillage interne\b/gi, 'liens entre vos pages')
-    .replace(/\bm&eacute;ta[- ]description\b/gi, 'texte de pr&eacute;sentation Google')
-    .replace(/\bmeta[- ]description\b/gi, 'texte de pr&eacute;sentation Google');
+    .replace(/\bCTA\b/g, 'bouton d\'action (le bouton qui incite vos visiteurs &agrave; vous contacter)')
+    .replace(/\bcta\b/g, 'bouton d\'action (le bouton qui incite vos visiteurs &agrave; vous contacter)')
+    .replace(/\bcall[- ]to[- ]action\b/gi, 'bouton d\'action (le bouton qui incite vos visiteurs &agrave; vous contacter)')
+    .replace(/\bmaillage interne\b/gi, 'liens entre vos pages (pour guider les visiteurs)')
+    .replace(/\bm&eacute;ta[- ]descriptions?\b/gi, 'texte de pr&eacute;sentation Google (le petit r&eacute;sum&eacute; sous le lien dans les r&eacute;sultats)')
+    .replace(/\bmeta[- ]descriptions?\b/gi, 'texte de pr&eacute;sentation Google (le petit r&eacute;sum&eacute; sous le lien dans les r&eacute;sultats)')
+    .replace(/\bbalises? H1\b/gi, 'titre principal de votre page')
+    .replace(/\bH1\b/g, 'titre principal')
+    .replace(/\bbalises? alt\b/gi, 'descriptions d\'images (pour Google et l\'accessibilit&eacute;)')
+    .replace(/\btaux de rebond\b/gi, 'taux de visiteurs qui quittent votre site imm&eacute;diatement')
+    .replace(/\bSEO\b/g, 'r&eacute;f&eacute;rencement (visibilit&eacute; sur Google)')
+    .replace(/\bUX\b/g, 'exp&eacute;rience utilisateur (facilit&eacute; de navigation)')
+    .replace(/\bresponsive\b/gi, 'adapt&eacute; au mobile');
 }
 
 export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubscribeUrl: string): string {
