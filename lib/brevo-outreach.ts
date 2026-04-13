@@ -65,14 +65,14 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
 
   // Bullet-point list with dejargoned text
   const suggestionsHtml = uxSuggestions.slice(0, 2).map(s =>
-    `<li style="margin-bottom:10px;color:#1A1A18;font-size:14px;line-height:1.6;">${dejargon(s)}</li>`
+    `<li style="margin-bottom:10px;color:#1A1A18;font-size:16px;line-height:1.6;">${dejargon(s)}</li>`
   ).join('');
 
   // Dynamic personalization
   const painMessage = getPainMessage(combinedScore);
   const contextParagraph = activiteResume
-    ? `<p style="font-size:14px;color:#73726C;line-height:1.6;margin:0 0 14px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong>. ${activiteResume}</p>`
-    : `<p style="font-size:14px;color:#73726C;line-height:1.6;margin:0 0 14px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong>.</p>`;
+    ? `<p style="font-size:16px;color:#73726C;line-height:1.6;margin:0 0 14px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong>. ${activiteResume}</p>`
+    : `<p style="font-size:16px;color:#73726C;line-height:1.6;margin:0 0 14px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong>.</p>`;
 
   // Top 3 criteria for the report preview
   const topCriteria = [...technicalScore.criteria]
@@ -86,8 +86,8 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     return `<tr>
       <td style="padding:10px 0;${!isLast ? 'border-bottom:1px solid #EEEDEB;' : ''}">
         <table style="width:100%;"><tr>
-          <td style="font-size:14px;color:#1A1A18;font-weight:500;">${c.name}</td>
-          <td style="text-align:right;font-size:14px;font-weight:500;color:${color};">${c.score}/${c.maxScore}</td>
+          <td style="font-size:15px;color:#1A1A18;font-weight:500;">${c.name}</td>
+          <td style="text-align:right;font-size:15px;font-weight:500;color:${color};">${c.score}/${c.maxScore}</td>
         </tr></table>
       </td>
     </tr>`;
@@ -106,16 +106,16 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#F8F8F7;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;color:#1A1A18;">
+<body style="margin:0;padding:0;background:#F8F8F7;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:16px;color:#1A1A18;">
   <div style="max-width:580px;margin:0 auto;padding:40px 24px;">
 
     <!-- Header -->
     <table style="width:100%;margin-bottom:32px;"><tr>
       <td>
-        <p style="font-size:18px;font-weight:500;color:#1A1A18;margin:0;">Mamie SEO</p>
+        <p style="font-size:20px;font-weight:500;color:#1A1A18;margin:0;">Mamie SEO</p>
       </td>
       <td style="text-align:right;">
-        <p style="font-size:11px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0;">Rapport pour ${domain}</p>
+        <p style="font-size:12px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0;">Rapport pour ${domain}</p>
       </td>
     </tr></table>
 
@@ -123,12 +123,12 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
 
     <!-- Personal intro -->
     <div style="margin-bottom:24px;">
-      <p style="font-size:14px;color:#1A1A18;line-height:1.6;margin:0 0 14px;">Bonjour,</p>
+      <p style="font-size:16px;color:#1A1A18;line-height:1.6;margin:0 0 14px;">Bonjour,</p>
       ${contextParagraph}
-      <p style="font-size:14px;color:#1A1A18;line-height:1.6;margin:0 0 14px;">
+      <p style="font-size:16px;color:#1A1A18;line-height:1.6;margin:0 0 14px;">
         ${painMessage}
       </p>
-      <p style="font-size:14px;color:#1A1A18;line-height:1.6;margin:0;font-weight:500;">
+      <p style="font-size:16px;color:#1A1A18;line-height:1.6;margin:0;font-weight:500;">
         Voici concr&egrave;tement ce que j'ai relev&eacute;&nbsp;:
       </p>
     </div>
@@ -140,7 +140,7 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
       </ul>
     </div>
 
-    <p style="font-size:14px;color:#73726C;line-height:1.6;margin:0 0 28px;">
+    <p style="font-size:16px;color:#73726C;line-height:1.6;margin:0 0 28px;">
       Ce ne sont que les points les plus visibles. J'ai compil&eacute; une analyse compl&egrave;te &mdash; votre score actuel est de <strong style="color:${scoreColor};">${combinedScore}/100</strong>. Il y a une vraie marge de progression, et les corrections prioritaires sont souvent rapides &agrave; mettre en place.
     </p>
 
@@ -148,13 +148,13 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;padding:24px;margin-bottom:20px;">
       <table style="width:100%;"><tr>
         <td style="text-align:center;width:120px;vertical-align:top;padding-right:20px;border-right:1px solid #EEEDEB;">
-          <p style="font-size:11px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 8px;">Score global</p>
+          <p style="font-size:12px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 8px;">Score global</p>
           <p style="font-size:36px;font-weight:500;color:${scoreColor};margin:0;line-height:1;">${combinedScore}</p>
-          <p style="font-size:11px;color:#C2C0B6;margin:2px 0 0;">/100</p>
+          <p style="font-size:12px;color:#C2C0B6;margin:2px 0 0;">/100</p>
           <p style="font-size:11px;font-weight:500;color:${scoreColor};margin:8px 0 0;">${getScoreLabel(combinedScore)}</p>
         </td>
         <td style="vertical-align:top;padding-left:20px;">
-          <p style="font-size:11px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;">Points critiques</p>
+          <p style="font-size:12px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;">Points critiques</p>
           <table style="width:100%;border-collapse:collapse;">
             ${criteriaHtml}
           </table>
@@ -181,17 +181,17 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     <div style="border-top:1px solid #EEEDEB;margin-bottom:28px;"></div>
 
     <!-- Transition text -->
-    <p style="font-size:14px;color:#1A1A18;line-height:1.6;margin:0 0 24px;text-align:center;">
+    <p style="font-size:16px;color:#1A1A18;line-height:1.6;margin:0 0 24px;text-align:center;">
       J'ai pr&eacute;par&eacute; un rapport complet avec un plan d'action prioris&eacute;<br>&mdash; les corrections les plus rentables en premier.
     </p>
 
     <!-- CTA -->
     <div style="text-align:center;margin-bottom:16px;">
-      <a href="${reportUrl}" style="display:inline-block;padding:14px 32px;background:#1A1A18;color:#FFFFFF;font-family:'DM Sans',-apple-system,sans-serif;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;">Voir mon rapport</a>
+      <a href="${reportUrl}" style="display:inline-block;padding:14px 32px;background:#1A1A18;color:#FFFFFF;font-family:'DM Sans',-apple-system,sans-serif;font-size:16px;font-weight:500;text-decoration:none;border-radius:8px;">Voir mon rapport</a>
       <p style="font-size:12px;color:#C2C0B6;margin:12px 0 0;">Disponible jusqu'au ${expirationDate}.</p>
     </div>
 
-    <p style="font-size:14px;color:#73726C;line-height:1.6;margin:0 0 28px;text-align:center;">
+    <p style="font-size:16px;color:#73726C;line-height:1.6;margin:0 0 28px;text-align:center;">
       Une question ? R&eacute;pondez simplement &agrave; cet email.
     </p>
 
@@ -199,13 +199,13 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
 
     <!-- Sign-off -->
     <div style="margin-bottom:20px;">
-      <p style="font-size:14px;color:#1A1A18;margin:0 0 4px;">Bonne journ&eacute;e,</p>
-      <p style="font-size:14px;font-weight:500;color:#1A1A18;margin:0 0 2px;">Maxence Cailleau</p>
-      <p style="font-size:13px;color:#73726C;margin:0;">Designer & D&eacute;veloppeur de sites web</p>
+      <p style="font-size:16px;color:#1A1A18;margin:0 0 4px;">Bonne journ&eacute;e,</p>
+      <p style="font-size:16px;font-weight:500;color:#1A1A18;margin:0 0 2px;">Maxence Cailleau</p>
+      <p style="font-size:14px;color:#73726C;margin:0;">Designer & D&eacute;veloppeur de sites web</p>
     </div>
 
     <div style="border-top:1px solid #EEEDEB;padding-top:12px;text-align:center;">
-      <p style="font-size:11px;color:#C2C0B6;margin:0;">
+      <p style="font-size:12px;color:#C2C0B6;margin:0;">
         <a href="${unsubscribeUrl}" style="color:#C2C0B6;text-decoration:underline;">Se d&eacute;sabonner</a>
       </p>
     </div>
