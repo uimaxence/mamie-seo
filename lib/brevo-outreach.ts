@@ -179,7 +179,7 @@ export async function sendOutreachEmail(
           email: BREVO_SENDER_EMAIL,
         },
         replyTo: {
-          email: 'maxence.cailleau1@gmail.com',
+          email: 'contact@maxence-cailleau.fr',
           name: 'Maxence Cailleau',
         },
         to: [{ email }],

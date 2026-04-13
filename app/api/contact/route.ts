@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            sender: { email: process.env.BREVO_SENDER_EMAIL || 'noreply@mamie-seo.fr', name: 'Mamie SEO' },
-            to: [{ email: process.env.BREVO_SENDER_EMAIL || 'maxencecailleau.pro@gmail.com' }],
+            sender: { email: process.env.BREVO_SENDER_EMAIL || 'contact@maxence-cailleau.fr', name: 'Mamie SEO' },
+            to: [{ email: process.env.ADMIN_EMAIL || 'contact@maxence-cailleau.fr' }],
             subject: `[Mamie SEO] Nouveau contact de ${body.name || email}`,
             htmlContent: `
               <h2>Nouveau message de contact</h2>
