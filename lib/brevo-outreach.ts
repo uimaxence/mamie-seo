@@ -14,6 +14,13 @@ function getScoreLabel(score: number): string {
   return 'Bon';
 }
 
+function getPainMessage(score: number): string {
+  if (score < 40) return "Aujourd'hui, la majorit&eacute; des gens qui cherchent vos services en ligne ne vous trouvent pas. Et ceux qui tombent sur votre site repartent sans vous contacter &mdash; pas parce que vous n'&ecirc;tes pas comp&eacute;tent, mais parce que votre site ne le montre pas assez vite.";
+  if (score < 65) return "Chaque jour, des visiteurs int&eacute;ress&eacute;s par vos services arrivent sur votre site et repartent sans vous contacter. Pas parce que votre offre ne les int&eacute;resse pas &mdash; mais parce que votre site ne les convainc pas assez vite de passer &agrave; l'action.";
+  if (score < 85) return "Votre site tourne, mais il laisse passer des opportunit&eacute;s. Des visiteurs qui cherchent exactement ce que vous proposez repartent sans vous contacter &mdash; quelques ajustements pourraient changer &ccedil;a.";
+  return "Votre site est d&eacute;j&agrave; bien construit. Mais quelques d&eacute;tails vous s&eacute;parent d'un site qui convertit vraiment &mdash; celui o&ugrave; chaque visiteur comprend imm&eacute;diatement pourquoi vous contacter.";
+}
+
 export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubscribeUrl: string): string {
   const { technicalScore, editorialAnalysis, crawlResult } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
@@ -49,16 +56,17 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
 
   const suggestionsHtml = uxSuggestions.slice(0, 2).map((s, i) =>
     `<tr>
-      <td style="padding:12px 16px;${i === 0 ? 'border-bottom:1px solid #EEEDEB;' : ''}">
-        <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0;">${s}</p>
+      <td style="padding:14px 16px;${i === 0 ? 'border-bottom:1px solid #EEEDEB;' : ''}">
+        <p style="font-size:13px;color:#1A1A18;line-height:1.6;margin:0;">${s}</p>
       </td>
     </tr>`
   ).join('');
 
-  // Context paragraph — reference their activity naturally
+  // Dynamic personalization
+  const painMessage = getPainMessage(combinedScore);
   const contextParagraph = activiteResume
-    ? `<p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 16px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong> en d&eacute;tail. ${activiteResume}</p>`
-    : `<p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 16px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong> en d&eacute;tail.</p>`;
+    ? `<p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 14px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong>. ${activiteResume}</p>`
+    : `<p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 14px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong>.</p>`;
 
   // Top 3 criteria for the report preview
   const topCriteria = [...technicalScore.criteria]
@@ -111,19 +119,24 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     <div style="margin-bottom:24px;">
       <p style="font-size:13px;color:#1A1A18;line-height:1.6;margin:0 0 16px;">Bonjour,</p>
       ${contextParagraph}
-      <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0;">
-        En le parcourant, deux choses m'ont saut&eacute; aux yeux&nbsp;:
+      <p style="font-size:13px;color:#1A1A18;line-height:1.6;margin:0 0 14px;">
+        ${painMessage}
+      </p>
+      <p style="font-size:13px;color:#1A1A18;line-height:1.6;margin:0;font-weight:500;">
+        Voici concr&egrave;tement ce qui vous co&ucirc;te des clients aujourd'hui&nbsp;:
       </p>
     </div>
 
-    <!-- UX Suggestions -->
+    <!-- Pain-point suggestions -->
     <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;margin-bottom:28px;">
       <table style="width:100%;border-collapse:collapse;">
         ${suggestionsHtml}
       </table>
     </div>
 
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:28px;"></div>
+    <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 28px;">
+      Ce ne sont que les probl&egrave;mes les plus visibles. Votre score actuel est de <strong style="color:${scoreColor};">${combinedScore}/100</strong> &mdash; chaque point en dessous de 80, c'est du chiffre d'affaires qui passe &agrave; c&ocirc;t&eacute;.
+    </p>
 
     <!-- Score card -->
     <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;padding:24px;margin-bottom:20px;">
@@ -162,8 +175,8 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     <div style="border-top:1px solid #EEEDEB;margin-bottom:28px;"></div>
 
     <!-- Transition text -->
-    <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 24px;text-align:center;">
-      Le rapport complet contient le d&eacute;tail de chaque crit&egrave;re,<br>l'analyse &eacute;ditoriale et un plan d'action prioris&eacute;.
+    <p style="font-size:13px;color:#1A1A18;line-height:1.6;margin:0 0 24px;text-align:center;">
+      J'ai pr&eacute;par&eacute; un rapport complet avec un plan d'action prioris&eacute;<br>&mdash; les corrections les plus rentables en premier.
     </p>
 
     <!-- Dual CTA -->
