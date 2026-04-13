@@ -121,10 +121,11 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     <!-- Header -->
     <table style="width:100%;margin-bottom:32px;"><tr>
       <td>
-        <p style="font-size:20px;font-weight:500;color:#1A1A18;margin:0;">Mamie SEO</p>
+        <p style="font-size:20px;font-weight:500;color:#1A1A18;margin:0;">Maxence Cailleau</p>
+        <p style="font-size:14px;color:#73726C;margin:2px 0 0;">Designer & D&eacute;veloppeur de sites web</p>
       </td>
-      <td style="text-align:right;">
-        <p style="font-size:12px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0;">Rapport pour ${domain}</p>
+      <td style="text-align:right;vertical-align:top;">
+        <p style="font-size:12px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0;">Analyse de ${domain}</p>
       </td>
     </tr></table>
 
@@ -209,8 +210,7 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     <!-- Sign-off -->
     <div style="margin-bottom:20px;">
       <p style="font-size:16px;color:#1A1A18;margin:0 0 4px;">Bonne journ&eacute;e,</p>
-      <p style="font-size:16px;font-weight:500;color:#1A1A18;margin:0 0 2px;">Maxence Cailleau</p>
-      <p style="font-size:14px;color:#73726C;margin:0;">Designer & D&eacute;veloppeur de sites web</p>
+      <p style="font-size:16px;font-weight:500;color:#1A1A18;margin:0;">Maxence</p>
     </div>
 
     <div style="border-top:1px solid #EEEDEB;padding-top:12px;text-align:center;">
