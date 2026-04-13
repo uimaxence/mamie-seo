@@ -1,12 +1,5 @@
 import type { Report } from './types';
 
-function getScoreVerdict(score: number): string {
-  if (score < 40) return 'Votre site présente plusieurs lacunes importantes qui limitent fortement votre visibilité.';
-  if (score < 65) return 'Votre site a des bases solides, mais des points critiques freinent votre visibilité.';
-  if (score < 80) return 'Votre site est bien structuré, quelques optimisations peuvent encore améliorer vos résultats.';
-  return 'Votre site est bien optimisé — quelques ajustements peuvent le rendre encore plus performant.';
-}
-
 function getScoreColor(score: number): string {
   if (score < 40) return '#E05252';
   if (score < 65) return '#F27A2A';
@@ -14,44 +7,48 @@ function getScoreColor(score: number): string {
   return '#22A168';
 }
 
-function getProgressBarHtml(score: number, color: string): string {
-  return `
-    <div style="background:#f0f0f0;border-radius:4px;height:8px;width:100%;max-width:300px;margin:12px auto;">
-      <div style="background:${color};border-radius:4px;height:8px;width:${score}%;"></div>
-    </div>`;
-}
-
 export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubscribeUrl: string): string {
-  const { technicalScore, editorialAnalysis, crawlResult } = report;
+  const { technicalScore, editorialAnalysis } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
   const combinedScore = editorialAnalysis
     ? Math.round((technicalScore.total + editorialScore) / 2)
     : technicalScore.total;
   const scoreColor = getScoreColor(combinedScore);
-  const verdict = getScoreVerdict(combinedScore);
 
   let domain = report.url;
   try { domain = new URL(report.url).hostname; } catch {}
 
-  // Top 3 issues
-  const topIssues = [...technicalScore.criteria]
-    .sort((a, b) => a.score / a.maxScore - b.score / b.maxScore)
-    .slice(0, 3);
+  // --- Personalization from editorial analysis ---
+  const activiteResume = editorialAnalysis?.comprehension_activite?.resume || '';
+  const ctaSuggestion = editorialAnalysis?.call_to_action?.point_amelioration || '';
+  const confianceSuggestion = editorialAnalysis?.signaux_confiance?.point_amelioration || '';
+  const offresSuggestion = editorialAnalysis?.coherence_offres?.point_amelioration || '';
+  const tonaleSuggestion = editorialAnalysis?.coherence_tonale?.point_amelioration || '';
 
-  const issuesHtml = topIssues.map((issue) => {
-    const pct = Math.round((issue.score / issue.maxScore) * 100);
-    const color = getScoreColor(pct);
-    return `
-      <tr>
-        <td style="padding:12px 0;border-bottom:1px solid #f0f0f0;">
-          <p style="margin:0 0 4px;font-size:14px;font-weight:500;color:#1A1A18;">⚠️ ${issue.name}</p>
-          <p style="margin:0;font-size:13px;color:#73726C;line-height:1.4;">${issue.details}</p>
-          <p style="margin:4px 0 0;font-size:12px;color:${color};font-weight:500;">${issue.score}/${issue.maxScore}</p>
-        </td>
-      </tr>`;
-  }).join('');
+  // Pick the 2 best UX/non-technical suggestions (CTA & trust first)
+  const uxSuggestions: string[] = [];
+  if (ctaSuggestion) uxSuggestions.push(ctaSuggestion);
+  if (confianceSuggestion) uxSuggestions.push(confianceSuggestion);
+  if (uxSuggestions.length < 2 && offresSuggestion) uxSuggestions.push(offresSuggestion);
+  if (uxSuggestions.length < 2 && tonaleSuggestion) uxSuggestions.push(tonaleSuggestion);
 
-  const otherCount = technicalScore.criteria.length - 3;
+  // Fallback if no editorial data
+  if (uxSuggestions.length === 0) {
+    const topIssues = [...technicalScore.criteria]
+      .sort((a, b) => a.score / a.maxScore - b.score / b.maxScore)
+      .slice(0, 2);
+    topIssues.forEach(issue => uxSuggestions.push(issue.details));
+  }
+
+  const suggestionsHtml = uxSuggestions.slice(0, 2).map(s =>
+    `<li style="margin-bottom:12px;font-size:14px;color:#5C534B;line-height:1.7;">${s}</li>`
+  ).join('');
+
+  // Context paragraph — reference their activity naturally
+  const contextParagraph = activiteResume
+    ? `<p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0 0 18px;">J'ai pris le temps de parcourir <strong style="color:#3D3530;">${domain}</strong> en détail. ${activiteResume}</p>`
+    : `<p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0 0 18px;">J'ai pris le temps de parcourir <strong style="color:#3D3530;">${domain}</strong> en détail.</p>`;
+
   const expirationDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
     .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -59,79 +56,48 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
 <!DOCTYPE html>
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#F8F8F7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:600px;margin:0 auto;padding:32px 24px;">
+<body style="margin:0;padding:0;background:#FAF8F5;font-family:'Georgia',serif;">
+  <div style="max-width:580px;margin:0 auto;padding:44px 28px;">
 
-    <!-- Header -->
-    <div style="text-align:center;margin-bottom:32px;">
-      <h1 style="font-size:18px;font-weight:500;color:#1A1A18;margin:0 0 4px;">Mamie SEO</h1>
-      <p style="font-size:12px;color:#C2C0B6;margin:0;text-transform:uppercase;letter-spacing:0.07em;">Analyse SEO & Copywriting</p>
+    <div style="margin-bottom:28px;">
+      <p style="font-size:15px;color:#3D3530;line-height:1.8;margin:0 0 18px;">Bonjour,</p>
+      ${contextParagraph}
+      <p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0;">
+        En le parcourant, deux choses m'ont sauté aux yeux qui pourraient vraiment aider à convertir davantage de visiteurs en clients&nbsp;:
+      </p>
     </div>
 
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
+    <div style="background:#FFFFFF;border-left:3px solid #C8A87C;border-radius:0 8px 8px 0;padding:20px 24px;margin-bottom:28px;">
+      <ul style="padding-left:16px;margin:0;">
+        ${suggestionsHtml}
+      </ul>
+    </div>
 
-    <!-- Intro text -->
+    <p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0 0 28px;">
+      Ce ne sont que les points les plus visibles. J'ai compilé une analyse complète de votre site
+      — votre score actuel est de <strong style="color:${scoreColor};">${combinedScore}/100</strong>.
+      Elle couvre la structure, le contenu, les mots-clés et inclut un plan d'action priorisé.
+    </p>
+
+    <!--[if mso]><table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="padding-right:8px;"><![endif]-->
+    <div style="text-align:center;margin-bottom:28px;">
+      <a href="${reportUrl}" style="display:inline-block;padding:13px 28px;background:#3D3530;color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;margin:0 6px 10px;">Voir mon rapport</a>
+      <a href="mailto:contact@maxence-cailleau.fr?subject=Re%20:%20analyse%20de%20${encodeURIComponent(domain)}" style="display:inline-block;padding:13px 28px;background:transparent;color:#3D3530;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;border:1.5px solid #C8A87C;margin:0 6px 10px;">Me contacter</a>
+      <p style="font-size:12px;color:#B8AFA6;margin:14px 0 0;">Rapport disponible jusqu'au ${expirationDate}.</p>
+    </div>
+    <!--[if mso]></td></tr></table><![endif]-->
+
+    <div style="border-top:1px solid #E8E2DA;margin:28px 0;"></div>
+
     <div style="margin-bottom:24px;">
-      <p style="font-size:14px;color:#1A1A18;line-height:1.6;margin:0 0 12px;">Bonjour,</p>
-      <p style="font-size:14px;color:#73726C;line-height:1.6;margin:0;">
-        En parcourant votre site, j'ai lancé une analyse SEO et copywriting automatisée.<br>
-        Voici ce qu'elle a révélé en 60 secondes.
-      </p>
+      <p style="font-size:15px;color:#3D3530;margin:0 0 6px;">Bonne journ&eacute;e,</p>
+      <p style="font-size:15px;font-weight:700;color:#3D3530;margin:0 0 2px;">Maxence Cailleau</p>
+      <p style="font-size:13px;color:#8A7F75;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Designer & D&eacute;veloppeur de sites web</p>
     </div>
 
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
-
-    <!-- Score card -->
-    <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;padding:32px;text-align:center;margin-bottom:24px;">
-      <p style="font-size:11px;color:#73726C;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 12px;">Score global</p>
-      <p style="font-size:48px;font-weight:500;color:${scoreColor};margin:0;">${combinedScore}</p>
-      <p style="font-size:12px;color:#73726C;margin:4px 0 0;">/100</p>
-      ${getProgressBarHtml(combinedScore, scoreColor)}
-      <p style="font-size:13px;color:#73726C;margin:16px 0 0;line-height:1.5;font-style:italic;">"${verdict}"</p>
-    </div>
-
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
-
-    <!-- Top issues -->
-    <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;padding:20px;margin-bottom:24px;">
-      <p style="font-size:11px;color:#73726C;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 12px;">Points critiques détectés</p>
-      <table style="width:100%;border-collapse:collapse;">${issuesHtml}</table>
-    </div>
-
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
-
-    <!-- More points -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0;">
-        + ${otherCount > 0 ? otherCount : ''} autres points analysés dans le rapport complet<br>
-        <span style="font-size:12px;">(mots-clés manquants, maillage interne, analyse éditoriale, plan d'action priorisé).</span>
-      </p>
-    </div>
-
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
-
-    <!-- CTA -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <a href="${reportUrl}" style="display:inline-block;padding:14px 36px;background:#1A1A18;color:#FFFFFF;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;">Voir mon rapport complet →</a>
-      <p style="font-size:12px;color:#C2C0B6;margin:12px 0 0;">Ce rapport est disponible jusqu'au ${expirationDate}.</p>
-    </div>
-
-    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
-
-    <!-- Footer -->
-    <div style="text-align:center;padding-top:16px;">
-      <p style="font-size:13px;color:#1A1A18;margin:0 0 4px;">Bonne journée,</p>
-      <p style="font-size:13px;font-weight:500;color:#1A1A18;margin:0 0 4px;">Maxence Cailleau</p>
-      <p style="font-size:12px;color:#73726C;margin:0;">Consultant SEO & Web pour indépendants</p>
-    </div>
-
-    <div style="border-top:1px solid #EEEDEB;margin:24px 0;"></div>
-
-    <!-- Legal footer -->
-    <div style="text-align:center;">
-      <p style="font-size:10px;color:#C2C0B6;margin:0;">
-        Vous recevez cet email car votre adresse est publique sur votre site.
-        <a href="${unsubscribeUrl}" style="color:#C2C0B6;text-decoration:underline;">Se désabonner</a>
+    <div style="border-top:1px solid #E8E2DA;padding-top:14px;text-align:center;">
+      <p style="font-size:10px;color:#C5BDB4;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+        <a href="${unsubscribeUrl}" style="color:#C5BDB4;text-decoration:underline;">Se d&eacute;sabonner</a>
       </p>
     </div>
 
@@ -141,7 +107,7 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
 }
 
 export function getOutreachSubject(domain: string): string {
-  return `J'ai analysé ${domain} — voici ce que j'ai trouvé`;
+  return `Quelques idées pour ${domain}`;
 }
 
 export async function sendOutreachEmail(
@@ -191,7 +157,6 @@ export async function sendOutreachEmail(
         params: {
           REPORT_ID: reportId,
         },
-        // Enable open and click tracking
       }),
     });
 
