@@ -7,8 +7,15 @@ function getScoreColor(score: number): string {
   return '#22A168';
 }
 
+function getScoreLabel(score: number): string {
+  if (score < 40) return 'Critique';
+  if (score < 65) return 'À améliorer';
+  if (score < 85) return 'Correct';
+  return 'Bon';
+}
+
 export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubscribeUrl: string): string {
-  const { technicalScore, editorialAnalysis } = report;
+  const { technicalScore, editorialAnalysis, crawlResult } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
   const combinedScore = editorialAnalysis
     ? Math.round((technicalScore.total + editorialScore) / 2)
@@ -40,14 +47,39 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
     topIssues.forEach(issue => uxSuggestions.push(issue.details));
   }
 
-  const suggestionsHtml = uxSuggestions.slice(0, 2).map(s =>
-    `<li style="margin-bottom:12px;font-size:14px;color:#5C534B;line-height:1.7;">${s}</li>`
+  const suggestionsHtml = uxSuggestions.slice(0, 2).map((s, i) =>
+    `<tr>
+      <td style="padding:12px 16px;${i === 0 ? 'border-bottom:1px solid #EEEDEB;' : ''}">
+        <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0;">${s}</p>
+      </td>
+    </tr>`
   ).join('');
 
   // Context paragraph — reference their activity naturally
   const contextParagraph = activiteResume
-    ? `<p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0 0 18px;">J'ai pris le temps de parcourir <strong style="color:#3D3530;">${domain}</strong> en détail. ${activiteResume}</p>`
-    : `<p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0 0 18px;">J'ai pris le temps de parcourir <strong style="color:#3D3530;">${domain}</strong> en détail.</p>`;
+    ? `<p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 16px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong> en d&eacute;tail. ${activiteResume}</p>`
+    : `<p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 16px;">J'ai pris le temps de parcourir <strong style="color:#1A1A18;">${domain}</strong> en d&eacute;tail.</p>`;
+
+  // Top 3 criteria for the report preview
+  const topCriteria = [...technicalScore.criteria]
+    .sort((a, b) => a.score / a.maxScore - b.score / b.maxScore)
+    .slice(0, 3);
+
+  const criteriaHtml = topCriteria.map((c, i) => {
+    const pct = Math.round((c.score / c.maxScore) * 100);
+    const color = getScoreColor(pct);
+    const isLast = i === topCriteria.length - 1;
+    return `<tr>
+      <td style="padding:10px 0;${!isLast ? 'border-bottom:1px solid #EEEDEB;' : ''}">
+        <table style="width:100%;"><tr>
+          <td style="font-size:13px;color:#1A1A18;font-weight:500;">${c.name}</td>
+          <td style="text-align:right;font-size:13px;font-weight:500;color:${color};">${c.score}/${c.maxScore}</td>
+        </tr></table>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const cms = crawlResult.technologies.find((t) => t.category === 'cms');
 
   const expirationDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
     .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -55,49 +87,104 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
   return `
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#FAF8F5;font-family:'Georgia',serif;">
-  <div style="max-width:580px;margin:0 auto;padding:44px 28px;">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#F8F8F7;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:580px;margin:0 auto;padding:40px 24px;">
 
-    <div style="margin-bottom:28px;">
-      <p style="font-size:15px;color:#3D3530;line-height:1.8;margin:0 0 18px;">Bonjour,</p>
+    <!-- Header -->
+    <table style="width:100%;margin-bottom:32px;"><tr>
+      <td>
+        <p style="font-size:18px;font-weight:500;color:#1A1A18;margin:0;">Mamie SEO</p>
+      </td>
+      <td style="text-align:right;">
+        <p style="font-size:10px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0;">Rapport pour ${domain}</p>
+      </td>
+    </tr></table>
+
+    <div style="border-top:1px solid #EEEDEB;margin-bottom:28px;"></div>
+
+    <!-- Personal intro -->
+    <div style="margin-bottom:24px;">
+      <p style="font-size:13px;color:#1A1A18;line-height:1.6;margin:0 0 16px;">Bonjour,</p>
       ${contextParagraph}
-      <p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0;">
-        En le parcourant, deux choses m'ont sauté aux yeux qui pourraient vraiment aider à convertir davantage de visiteurs en clients&nbsp;:
+      <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0;">
+        En le parcourant, deux choses m'ont saut&eacute; aux yeux&nbsp;:
       </p>
     </div>
 
-    <div style="background:#FFFFFF;border-left:3px solid #C8A87C;border-radius:0 8px 8px 0;padding:20px 24px;margin-bottom:28px;">
-      <ul style="padding-left:16px;margin:0;">
+    <!-- UX Suggestions -->
+    <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;margin-bottom:28px;">
+      <table style="width:100%;border-collapse:collapse;">
         ${suggestionsHtml}
-      </ul>
+      </table>
     </div>
 
-    <p style="font-size:15px;color:#5C534B;line-height:1.8;margin:0 0 28px;">
-      Ce ne sont que les points les plus visibles. J'ai compilé une analyse complète de votre site
-      — votre score actuel est de <strong style="color:${scoreColor};">${combinedScore}/100</strong>.
-      Elle couvre la structure, le contenu, les mots-clés et inclut un plan d'action priorisé.
+    <div style="border-top:1px solid #EEEDEB;margin-bottom:28px;"></div>
+
+    <!-- Score card -->
+    <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;padding:24px;margin-bottom:20px;">
+      <table style="width:100%;"><tr>
+        <td style="text-align:center;width:120px;vertical-align:top;padding-right:20px;border-right:1px solid #EEEDEB;">
+          <p style="font-size:10px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 8px;">Score global</p>
+          <p style="font-size:36px;font-weight:500;color:${scoreColor};margin:0;line-height:1;">${combinedScore}</p>
+          <p style="font-size:11px;color:#C2C0B6;margin:2px 0 0;">/100</p>
+          <p style="font-size:11px;font-weight:500;color:${scoreColor};margin:8px 0 0;">${getScoreLabel(combinedScore)}</p>
+        </td>
+        <td style="vertical-align:top;padding-left:20px;">
+          <p style="font-size:10px;color:#C2C0B6;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 10px;">Points critiques</p>
+          <table style="width:100%;border-collapse:collapse;">
+            ${criteriaHtml}
+          </table>
+        </td>
+      </tr></table>
+    </div>
+
+    <!-- Tech info -->
+    <div style="background:#FFFFFF;border:1px solid #EEEDEB;border-radius:12px;padding:16px 20px;margin-bottom:28px;">
+      <table style="width:100%;"><tr>
+        <td style="font-size:12px;color:#73726C;">
+          ${crawlResult.totalUrlsCrawled} pages analys&eacute;es${cms ? ` &middot; ${cms.name}` : ''} &middot; ${crawlResult.isHttps ? 'HTTPS' : 'HTTP'}
+        </td>
+        <td style="text-align:right;">
+          ${editorialAnalysis ? `
+          <span style="font-size:12px;color:#73726C;">Technique <strong style="color:#1A1A18;">${technicalScore.total}</strong></span>
+          <span style="font-size:12px;color:#EEEDEB;margin:0 6px;">&middot;</span>
+          <span style="font-size:12px;color:#73726C;">&Eacute;ditorial <strong style="color:#1A1A18;">${editorialScore}</strong></span>
+          ` : `<span style="font-size:12px;color:#73726C;">Score technique <strong style="color:#1A1A18;">${technicalScore.total}/100</strong></span>`}
+        </td>
+      </tr></table>
+    </div>
+
+    <div style="border-top:1px solid #EEEDEB;margin-bottom:28px;"></div>
+
+    <!-- Transition text -->
+    <p style="font-size:13px;color:#73726C;line-height:1.6;margin:0 0 24px;text-align:center;">
+      Le rapport complet contient le d&eacute;tail de chaque crit&egrave;re,<br>l'analyse &eacute;ditoriale et un plan d'action prioris&eacute;.
     </p>
 
-    <!--[if mso]><table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td style="padding-right:8px;"><![endif]-->
+    <!-- Dual CTA -->
     <div style="text-align:center;margin-bottom:28px;">
-      <a href="${reportUrl}" style="display:inline-block;padding:13px 28px;background:#3D3530;color:#FFFFFF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;margin:0 6px 10px;">Voir mon rapport</a>
-      <a href="mailto:contact@maxence-cailleau.fr?subject=Re%20:%20analyse%20de%20${encodeURIComponent(domain)}" style="display:inline-block;padding:13px 28px;background:transparent;color:#3D3530;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:500;text-decoration:none;border-radius:8px;border:1.5px solid #C8A87C;margin:0 6px 10px;">Me contacter</a>
-      <p style="font-size:12px;color:#B8AFA6;margin:14px 0 0;">Rapport disponible jusqu'au ${expirationDate}.</p>
-    </div>
-    <!--[if mso]></td></tr></table><![endif]-->
-
-    <div style="border-top:1px solid #E8E2DA;margin:28px 0;"></div>
-
-    <div style="margin-bottom:24px;">
-      <p style="font-size:15px;color:#3D3530;margin:0 0 6px;">Bonne journ&eacute;e,</p>
-      <p style="font-size:15px;font-weight:700;color:#3D3530;margin:0 0 2px;">Maxence Cailleau</p>
-      <p style="font-size:13px;color:#8A7F75;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">Designer & D&eacute;veloppeur de sites web</p>
+      <a href="${reportUrl}" style="display:inline-block;padding:12px 28px;background:#1A1A18;color:#FFFFFF;font-family:'DM Sans',-apple-system,sans-serif;font-size:13px;font-weight:500;text-decoration:none;border-radius:8px;margin:0 6px 10px;">Voir mon rapport</a>
+      <a href="mailto:contact@maxence-cailleau.fr?subject=Re%20:%20analyse%20de%20${encodeURIComponent(domain)}" style="display:inline-block;padding:12px 28px;background:#FFFFFF;color:#1A1A18;font-family:'DM Sans',-apple-system,sans-serif;font-size:13px;font-weight:500;text-decoration:none;border-radius:8px;border:1px solid #EEEDEB;margin:0 6px 10px;">Me contacter directement</a>
+      <p style="font-size:11px;color:#C2C0B6;margin:14px 0 0;">Disponible jusqu'au ${expirationDate}.</p>
     </div>
 
-    <div style="border-top:1px solid #E8E2DA;padding-top:14px;text-align:center;">
-      <p style="font-size:10px;color:#C5BDB4;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-        <a href="${unsubscribeUrl}" style="color:#C5BDB4;text-decoration:underline;">Se d&eacute;sabonner</a>
+    <div style="border-top:1px solid #EEEDEB;margin-bottom:24px;"></div>
+
+    <!-- Sign-off -->
+    <div style="margin-bottom:20px;">
+      <p style="font-size:13px;color:#1A1A18;margin:0 0 4px;">Bonne journ&eacute;e,</p>
+      <p style="font-size:13px;font-weight:500;color:#1A1A18;margin:0 0 2px;">Maxence Cailleau</p>
+      <p style="font-size:12px;color:#73726C;margin:0;">Designer & D&eacute;veloppeur de sites web</p>
+    </div>
+
+    <div style="border-top:1px solid #EEEDEB;padding-top:12px;text-align:center;">
+      <p style="font-size:10px;color:#C2C0B6;margin:0;">
+        <a href="${unsubscribeUrl}" style="color:#C2C0B6;text-decoration:underline;">Se d&eacute;sabonner</a>
       </p>
     </div>
 
