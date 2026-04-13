@@ -17,9 +17,9 @@ const dmSerif = DM_Serif_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Mamie SEO — Analyseur SEO pour freelances",
+  title: "Mamie SEO — Analyse SEO pour indépendants et petites entreprises",
   description:
-    "Analysez le SEO de votre site en 60 secondes. Audit technique automatisé + analyse éditoriale par IA, pensé pour les indépendants.",
+    "Analysez le SEO de votre site en 60 secondes. Audit technique + analyse éditoriale par IA, pensé pour les artisans, commerçants et indépendants.",
 };
 
 export default function RootLayout({

@@ -10,10 +10,11 @@ import {
 
 // ─── Animated placeholder ───
 const PLACEHOLDER_URLS = [
+  'https://boulangerie-dupont.fr',
   'https://marie-coach.fr',
-  'https://thomas-dev.com',
+  'https://plombier-martin.fr',
   'https://studio-bloom.fr',
-  'https://sophie-naturopathe.fr',
+  'https://salon-beaute-lyon.fr',
 ];
 
 function useAnimatedPlaceholder() {
@@ -104,7 +105,7 @@ export default function LandingPage() {
         {/* Eyebrow */}
         <div className="inline-flex items-center gap-1.5 border border-neutral-300 rounded-full px-4 py-1 mb-8">
           <span className="w-1.5 h-1.5 rounded-full bg-[#E05A2B]" />
-          <span className="text-[12px] text-neutral-500">Pensé pour les freelances et indépendants</span>
+          <span className="text-[12px] text-neutral-500">Pour indépendants, artisans et petites entreprises</span>
         </div>
 
         {/* H1 */}
@@ -229,7 +230,7 @@ export default function LandingPage() {
           { value: '1 200+', label: 'Analyses ce mois' },
           { value: '47 s', label: "Temps moyen d'analyse" },
           { value: '12', label: 'Critères vérifiés' },
-          { value: '100%', label: 'Pensé pour les indépendants' },
+          { value: '100%', label: 'Pour pros et petites entreprises' },
         ].map((s, i) => (
           <div
             key={s.label}
@@ -252,7 +253,7 @@ export default function LandingPage() {
             Découvrez ce qui freine vraiment votre site
           </h2>
           <p className="text-[15px] text-neutral-500 leading-relaxed mb-8">
-            Les outils SEO classiques sont faits pour des équipes marketing. Celui-ci est fait pour vous : un freelance qui veut être trouvé par ses futurs clients, sans passer des heures à apprendre le jargon.
+            Les outils SEO classiques sont faits pour des équipes marketing. Celui-ci est fait pour vous : un artisan, un commerçant, un indépendant qui veut être trouvé par ses futurs clients, sans passer des heures à apprendre le jargon.
           </p>
           <div className="flex items-center gap-4">
             <button

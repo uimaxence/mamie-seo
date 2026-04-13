@@ -74,7 +74,7 @@ function buildReportEmailHtml(report: Report, reportUrl: string): string {
 
     <!-- Footer -->
     <div style="text-align:center;padding-top:24px;border-top:1px solid #EEEDEB;">
-      <p style="font-size:11px;color:#C2C0B6;margin:0;">Mamie SEO — Analyse SEO pour indépendants</p>
+      <p style="font-size:11px;color:#C2C0B6;margin:0;">Mamie SEO — Analyse SEO pour ind&eacute;pendants et petites entreprises</p>
       <p style="font-size:10px;color:#C2C0B6;margin:4px 0 0;">Ce rapport est disponible pendant 24h.</p>
     </div>
 

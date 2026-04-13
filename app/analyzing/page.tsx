@@ -38,7 +38,7 @@ interface CognitiveTip {
 
 const COGNITIVE_TIPS: CognitiveTip[] = [
   // Curiosity gap — "est-ce votre cas ?"
-  { type: 'curiosity', text: "73% des sites de freelances n'ont pas de méta-description sur leurs pages de services. Est-ce votre cas ?" },
+  { type: 'curiosity', text: "73% des sites d'artisans et de petites entreprises n'ont pas de méta-description sur leurs pages de services. Est-ce votre cas ?" },
   { type: 'curiosity', text: "Le premier résultat Google capte 31,7% de tous les clics. Le dixième ? Seulement 3,1%. Où se situe votre site ?" },
   { type: 'curiosity', text: "8 visiteurs sur 10 lisent votre titre, mais seulement 2 sur 10 lisent la suite. Votre H1 fait-il le job ?" },
 
@@ -53,7 +53,7 @@ const COGNITIVE_TIPS: CognitiveTip[] = [
   { type: 'authority', text: "Un H1 bien rédigé peut augmenter votre taux de conversion de 10 à 20%.", source: "Unbounce Research" },
 
   // Social proof
-  { type: 'social', text: "Plus de 1 200 freelances ont déjà analysé leur site ce mois-ci. Les corrections les plus fréquentes : H1, méta-descriptions et maillage interne." },
+  { type: 'social', text: "Plus de 1 200 professionnels ont déjà analysé leur site ce mois-ci. Les corrections les plus fréquentes : H1, méta-descriptions et maillage interne." },
   { type: 'social', text: "En moyenne, les sites analysés gagnent 12 points de score après avoir appliqué les 3 premiers quick wins." },
 
   // Insight — valeur immédiate

@@ -8,6 +8,9 @@ export type Metier =
   | 'therapeute'
   | 'formateur'
   | 'artisan'
+  | 'commercant'
+  | 'restaurateur'
+  | 'professionnel_sante'
   | 'autre';
 
 export type ObjectifSite =
@@ -15,7 +18,8 @@ export type ObjectifSite =
   | 'portfolio'
   | 'formations'
   | 'rassurer'
-  | 'local';
+  | 'local'
+  | 'vendre';
 
 export type AudienceCible =
   | 'particuliers'

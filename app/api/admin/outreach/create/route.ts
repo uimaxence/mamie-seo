@@ -89,10 +89,10 @@ export async function POST(request: NextRequest) {
       await sendEvent({ step: 'editorial', message: 'Analyse éditoriale en cours...' });
       const defaultOnboarding: OnboardingAnswers = {
         metier: 'autre',
-        objectif: 'leads',
+        objectif: 'local',
         audience: 'particuliers',
         niveauSEO: 'jamais',
-        anciennete: '6_mois_2_ans',
+        anciennete: 'plus_2_ans',
       };
 
       let editorialAnalysis = null;

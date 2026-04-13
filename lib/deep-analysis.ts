@@ -26,7 +26,7 @@ function isPrivateUrl(url: string): boolean {
 }
 
 function buildSystemPrompt(width: number, height: number): string {
-  return `Tu es un expert senior en UI design, UX design, copywriting et conversion, spécialisé dans les sites de freelances et d'indépendants.
+  return `Tu es un expert senior en UI design, UX design, copywriting et conversion, spécialisé dans les sites d'indépendants, artisans, commerçants et petites entreprises.
 
 Tu analyses un screenshot de page web ainsi que les données HTML extraites. Tu dois identifier entre 6 et 12 zones clés de la page et produire pour chacune une annotation détaillée.
 

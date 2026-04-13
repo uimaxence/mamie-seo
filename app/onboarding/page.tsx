@@ -5,22 +5,23 @@ import { useRouter } from 'next/navigation';
 import type { OnboardingAnswers, Metier, ObjectifSite, AudienceCible, NiveauSEO, AncienneteSite } from '@/lib/types';
 
 const METIER_OPTIONS: { value: Metier; label: string }[] = [
-  { value: 'developpeur', label: 'Développeur' },
-  { value: 'designer', label: 'Designer' },
-  { value: 'consultant', label: 'Consultant' },
-  { value: 'coach', label: 'Coach' },
-  { value: 'therapeute', label: 'Thérapeute' },
-  { value: 'formateur', label: 'Formateur' },
   { value: 'artisan', label: 'Artisan' },
+  { value: 'commercant', label: 'Commerce / Boutique' },
+  { value: 'restaurateur', label: 'Restaurant / Café' },
+  { value: 'professionnel_sante', label: 'Santé / Bien-être' },
+  { value: 'consultant', label: 'Consultant' },
+  { value: 'coach', label: 'Coach / Formateur' },
+  { value: 'developpeur', label: 'Développeur / Designer' },
   { value: 'autre', label: 'Autre' },
 ];
 
 const OBJECTIF_OPTIONS: { value: ObjectifSite; label: string }[] = [
-  { value: 'leads', label: 'Générer des leads' },
+  { value: 'leads', label: 'Recevoir des demandes de contact' },
+  { value: 'local', label: 'Être trouvé localement' },
+  { value: 'vendre', label: 'Vendre en ligne' },
+  { value: 'rassurer', label: 'Rassurer des prospects' },
   { value: 'portfolio', label: 'Montrer un portfolio' },
   { value: 'formations', label: 'Vendre des formations' },
-  { value: 'rassurer', label: 'Rassurer des prospects' },
-  { value: 'local', label: 'Être trouvé localement' },
 ];
 
 const AUDIENCE_OPTIONS: { value: AudienceCible; label: string }[] = [

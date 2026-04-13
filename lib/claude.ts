@@ -14,7 +14,10 @@ const METIER_LABELS: Record<string, string> = {
   therapeute: 'Thérapeute',
   formateur: 'Formateur',
   artisan: 'Artisan',
-  autre: 'Professionnel indépendant',
+  commercant: 'Commerçant / Gérant de boutique',
+  restaurateur: 'Restaurateur',
+  professionnel_sante: 'Professionnel de santé',
+  autre: 'Professionnel',
 };
 
 const OBJECTIF_LABELS: Record<string, string> = {
@@ -23,6 +26,7 @@ const OBJECTIF_LABELS: Record<string, string> = {
   formations: 'vendre des formations',
   rassurer: 'rassurer des prospects',
   local: 'être trouvé localement',
+  vendre: 'vendre des produits ou services en ligne',
 };
 
 const AUDIENCE_LABELS: Record<string, string> = {
@@ -58,7 +62,7 @@ function buildPrompt(
     ? onboarding.audienceNiche
     : AUDIENCE_LABELS[onboarding.audience] || onboarding.audience;
 
-  const system = `Tu es un expert SEO et copywriting spécialisé dans l'accompagnement des freelances et indépendants.
+  const system = `Tu es un expert SEO et copywriting spécialisé dans l'accompagnement des indépendants, freelances, artisans, commerçants et petites entreprises.
 Tu analyses le site web d'un(e) ${metier} dont l'objectif est ${OBJECTIF_LABELS[onboarding.objectif] || onboarding.objectif} et qui cible ${audience}.
 Ce professionnel ${NIVEAU_LABELS[onboarding.niveauSEO] || onboarding.niveauSEO} d'expérience en SEO et son site existe depuis ${ANCIENNETE_LABELS[onboarding.anciennete] || onboarding.anciennete}.
 
