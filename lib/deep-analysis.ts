@@ -132,7 +132,7 @@ export async function analyzeScreenshotForOutreach(
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
-  // Get screenshot — try Playwright, fall back to thum.io
+  // Get full-page screenshot — try Playwright, fall back to thum.io (tall crop)
   let screenshotBase64: string | null = null;
 
   try {
@@ -141,9 +141,9 @@ export async function analyzeScreenshotForOutreach(
     const optimized = await optimize(screenshots.desktop);
     screenshotBase64 = optimized.toString('base64');
   } catch {
-    // Playwright unavailable — use thum.io
+    // Playwright unavailable — use thum.io with tall crop to see full page
     try {
-      const buf = await externalScreenshot(pageUrl, { width: 1440 });
+      const buf = await externalScreenshot(pageUrl, { width: 1440, crop: 4000 });
       if (buf) screenshotBase64 = bufferToBase64(buf);
     } catch { /* ignore */ }
   }
@@ -156,16 +156,19 @@ export async function analyzeScreenshotForOutreach(
   const message = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 800,
-    system: `Tu es un designer web et expert en conversion qui prospecte des clients potentiels. Tu regardes ce site pour la première fois, comme si tu le découvrais en tant que visiteur.
+    system: `Tu es Maxence Cailleau, designer et développeur web. Tu prospectes des clients en analysant leur site. Tu regardes ce screenshot comme un professionnel bienveillant qui veut aider.
 
-Tu dois donner une analyse honnête, bienveillante et SPÉCIFIQUE à ce que tu vois sur le screenshot.
+RÈGLES CRITIQUES :
+1. Tu vois le screenshot COMPLET de la page (du haut jusqu'en bas). SCROLLE visuellement toute l'image avant de répondre.
+2. Ne dis JAMAIS qu'un élément "manque" ou est "absent" s'il apparaît QUELQUE PART sur la page, même tout en bas. Vérifie toute l'image.
+3. Ton objectif : trouver un point d'amélioration RÉEL et VÉRIFIABLE sur le screenshot — pas inventer un problème.
+4. Parle comme un humain qui a vraiment regardé le site, pas comme un audit automatique.
+5. N'utilise AUCUN jargon technique (pas de "CTA", "UX", "SEO", "responsive", "maillage", "above the fold", "hero").
+6. Chaque point fait 1-2 phrases maximum.
+7. Sois spécifique à CE site — pas de conseil générique applicable à n'importe quel site.
+8. Le ton doit donner envie au propriétaire de te répondre, pas le vexer.
 
-Règles :
-- Parle comme un professionnel qui s'adresse directement au propriétaire du site
-- N'utilise AUCUN jargon technique (pas de "CTA", "UX", "SEO", "responsive", "maillage", "above the fold")
-- Sois concret et spécifique au site que tu vois (pas de conseils génériques)
-- Chaque point doit faire 1-2 phrases maximum
-- Réponds UNIQUEMENT en JSON strict`,
+Réponds UNIQUEMENT en JSON strict.`,
     messages: [{
       role: 'user',
       content: [
@@ -175,12 +178,16 @@ Règles :
         },
         {
           type: 'text',
-          text: `Voici le screenshot de ${domain}. Analyse-le et réponds avec ce JSON :
+          text: `Screenshot COMPLET (full page scroll) de ${domain}.
+
+AVANT de répondre, passe en revue visuellement TOUTE l'image du haut en bas. Note mentalement : les sections, les images, les boutons, les formulaires, les éléments de contact que tu vois.
+
+Réponds avec ce JSON :
 
 {
-  "verdict_visuel": "Ta première impression honnête en une phrase — ce qui te saute aux yeux quand tu arrives sur ce site (positif ou négatif)",
-  "probleme_principal": "Le problème visuel ou d'expérience le plus important que tu vois — décris ce que tu observes concrètement et pourquoi c'est un problème pour les visiteurs",
-  "suggestion_concrete": "Une action concrète et facile à comprendre que le propriétaire pourrait faire pour améliorer son site — quelque chose de spécifique, pas un conseil générique"
+  "verdict_visuel": "Ta vraie première impression en arrivant sur ce site — ce qui te frappe immédiatement (un détail concret, pas une généralité)",
+  "probleme_principal": "Le vrai problème que tu vois pour un visiteur qui veut devenir client — base-toi UNIQUEMENT sur ce que tu observes concrètement sur le screenshot, ne suppose pas qu'un élément manque sans avoir vérifié toute la page",
+  "suggestion_concrete": "Une amélioration précise et réaliste que tu pourrais proposer de faire pour ce site — quelque chose de spécifique qui montre que tu as vraiment regardé"
 }`,
         },
       ],

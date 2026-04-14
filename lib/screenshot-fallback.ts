@@ -10,9 +10,9 @@ const THUM_BASE = 'https://image.thum.io/get';
 
 export async function externalScreenshot(
   url: string,
-  options: { width?: number; fullPage?: boolean; mobile?: boolean } = {}
+  options: { width?: number; fullPage?: boolean; mobile?: boolean; crop?: number } = {}
 ): Promise<Buffer | null> {
-  const { width = 1440, fullPage = true, mobile = false } = options;
+  const { width = 1440, mobile = false, crop = 1200 } = options;
 
   // Build thum.io URL with wait for JS rendering
   const params = [
@@ -21,7 +21,7 @@ export async function externalScreenshot(
     'noanimate',        // Disable CSS animations
     'maxAge/2',
     mobile ? 'viewportWidth/390' : '',
-    'crop/1200',        // Crop to reasonable height
+    `crop/${crop}`,
   ].filter(Boolean).join('/');
 
   const thumbUrl = `${THUM_BASE}/${params}/${url}`;

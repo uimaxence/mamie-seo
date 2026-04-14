@@ -294,7 +294,8 @@ ${reportUrl}
 
 Si vous voulez que je vous l'envoie par email ou si vous avez des questions, n'hésitez pas !
 
-Maxence`;
+Maxence Cailleau
+Designer & développeur web`;
 }
 
 export async function sendOutreachEmail(
