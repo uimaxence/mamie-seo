@@ -147,17 +147,18 @@ export async function POST(request: NextRequest) {
       let domain = report.url;
       try { domain = new URL(report.url).hostname; } catch {}
 
+      // Screenshot + visual analysis (shared by both modes)
+      await sendEvent({ step: 'visual_analysis', message: 'Capture du site et analyse visuelle...' });
+
+      let visualInsights: Awaited<ReturnType<typeof analyzeScreenshotForOutreach>> = null;
+      try {
+        visualInsights = await analyzeScreenshotForOutreach(report.url);
+      } catch (err) {
+        console.error('Visual analysis error (non-blocking):', err);
+      }
+
       if (mode === 'linkedin') {
-        // LinkedIn mode — screenshot + visual analysis, then generate message
-        await sendEvent({ step: 'visual_analysis', message: 'Capture du site et analyse visuelle...' });
-
-        let visualInsights: Awaited<ReturnType<typeof analyzeScreenshotForOutreach>> = null;
-        try {
-          visualInsights = await analyzeScreenshotForOutreach(report.url);
-        } catch (err) {
-          console.error('Visual analysis error (non-blocking):', err);
-        }
-
+        // LinkedIn mode — generate message
         await sendEvent({ step: 'generating', message: 'Génération du message LinkedIn...' });
 
         const linkedinMessage = buildLinkedInMessage(report, reportUrl, visualInsights);
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
       } else {
         // Email mode — send via Brevo
         await sendEvent({ step: 'generating', message: "Préparation de l'email..." });
-        const brevoResult = await sendOutreachEmail(email!, report, report.id);
+        const brevoResult = await sendOutreachEmail(email!, report, report.id, visualInsights);
 
         if (!brevoResult.success) {
           await sendEvent({ step: 'error', message: `Erreur Brevo: ${brevoResult.error}` });

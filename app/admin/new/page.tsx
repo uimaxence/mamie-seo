@@ -98,6 +98,7 @@ export default function AdminNewOutreach() {
       { label: 'Crawl du site en cours...', status: 'pending' },
       { label: 'Calcul des scores', status: 'pending' },
       { label: 'Génération du rapport', status: 'pending' },
+      { label: 'Analyse visuelle du site', status: 'pending' },
       { label: "Préparation de l'email", status: 'pending' },
       { label: 'Envoi via Brevo', status: 'pending' },
     ];
@@ -165,8 +166,9 @@ export default function AdminNewOutreach() {
           analyzing_meta: 2,
           scoring: 3,
           editorial: 3,
-          generating: 4,
-          done: 6,
+          visual_analysis: 5,
+          generating: 6,
+          done: 7,
           error: -1,
         }
         : {

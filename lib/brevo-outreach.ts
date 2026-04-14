@@ -40,7 +40,12 @@ function dejargon(text: string): string {
     .replace(/\bresponsive\b/gi, 'adapt&eacute; au mobile');
 }
 
-export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubscribeUrl: string): string {
+export function buildOutreachEmailHtml(
+  report: Report,
+  reportUrl: string,
+  unsubscribeUrl: string,
+  visualInsights?: OutreachVisualInsights | null,
+): string {
   const { technicalScore, editorialAnalysis, crawlResult } = report;
   const editorialScore = editorialAnalysis?.score_editorial ?? 0;
   const combinedScore = editorialAnalysis
@@ -58,23 +63,35 @@ export function buildOutreachEmailHtml(report: Report, reportUrl: string, unsubs
   const offresSuggestion = editorialAnalysis?.coherence_offres?.point_amelioration || '';
   const tonaleSuggestion = editorialAnalysis?.coherence_tonale?.point_amelioration || '';
 
-  // Pick the 2 best UX/non-technical suggestions (CTA & trust first)
-  const uxSuggestions: string[] = [];
-  if (ctaSuggestion) uxSuggestions.push(ctaSuggestion);
-  if (confianceSuggestion) uxSuggestions.push(confianceSuggestion);
-  if (uxSuggestions.length < 2 && offresSuggestion) uxSuggestions.push(offresSuggestion);
-  if (uxSuggestions.length < 2 && tonaleSuggestion) uxSuggestions.push(tonaleSuggestion);
+  // Build suggestions: mix visual insight + SEO/editorial insight
+  const suggestions: string[] = [];
 
-  // Fallback if no editorial data
-  if (uxSuggestions.length === 0) {
+  // Visual observation first (shows "I actually looked at your site")
+  if (visualInsights?.probleme_principal) {
+    suggestions.push(visualInsights.probleme_principal);
+  }
+  if (visualInsights?.suggestion_concrete && suggestions.length < 2) {
+    suggestions.push(visualInsights.suggestion_concrete);
+  }
+
+  // Fill remaining slots with best editorial/SEO insights
+  const editorialSuggestions = [ctaSuggestion, confianceSuggestion, offresSuggestion, tonaleSuggestion]
+    .filter(Boolean);
+  for (const s of editorialSuggestions) {
+    if (suggestions.length >= 2) break;
+    suggestions.push(s);
+  }
+
+  // Final fallback: technical criteria
+  if (suggestions.length === 0) {
     const topIssues = [...technicalScore.criteria]
       .sort((a, b) => a.score / a.maxScore - b.score / b.maxScore)
       .slice(0, 2);
-    topIssues.forEach(issue => uxSuggestions.push(issue.details));
+    topIssues.forEach(issue => suggestions.push(issue.details));
   }
 
   // Bullet-point list with dejargoned text
-  const suggestionsHtml = uxSuggestions.slice(0, 2).map(s =>
+  const suggestionsHtml = suggestions.slice(0, 2).map(s =>
     `<li style="margin-bottom:10px;color:#1A1A18;font-size:16px;line-height:1.6;">${dejargon(s)}</li>`
   ).join('');
 
@@ -302,6 +319,7 @@ export async function sendOutreachEmail(
   email: string,
   report: Report,
   reportId: string,
+  visualInsights?: OutreachVisualInsights | null,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL;
@@ -317,7 +335,7 @@ export async function sendOutreachEmail(
   const reportUrl = `${APP_URL}/report/${reportId}`;
   const unsubscribeUrl = `${APP_URL}/api/unsubscribe?email=${encodeURIComponent(email)}&report=${reportId}`;
 
-  const htmlContent = buildOutreachEmailHtml(report, reportUrl, unsubscribeUrl);
+  const htmlContent = buildOutreachEmailHtml(report, reportUrl, unsubscribeUrl, visualInsights);
 
   try {
     const res = await fetch('https://api.brevo.com/v3/smtp/email', {
