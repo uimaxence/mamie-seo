@@ -464,11 +464,13 @@ export async function crawlSite(
     homepageResponseTime = Date.now() - start;
     finalUrl = res.url || inputUrl;
 
-    if (!res.ok) {
+    homepageHtml = await res.text();
+
+    // Some sites (esp. WordPress) return 500 but still serve valid HTML.
+    // Only reject if the response has no usable HTML content.
+    if (!res.ok && !homepageHtml.includes('</html>')) {
       throw new Error(`Le site a répondu avec le code ${res.status}`);
     }
-
-    homepageHtml = await res.text();
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new Error("Le site n'a pas répondu dans les 30 secondes. Vérifiez l'URL ou réessayez.");
