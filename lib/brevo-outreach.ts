@@ -228,6 +228,53 @@ export function getOutreachSubject(domain: string): string {
   return `Quelques idées pour ${domain}`;
 }
 
+/** Build a short LinkedIn DM message from report data */
+export function buildLinkedInMessage(report: Report, reportUrl: string): string {
+  const { technicalScore, editorialAnalysis } = report;
+  const editorialScore = editorialAnalysis?.score_editorial ?? 0;
+  const combinedScore = editorialAnalysis
+    ? Math.round((technicalScore.total + editorialScore) / 2)
+    : technicalScore.total;
+
+  let domain = report.url;
+  try { domain = new URL(report.url).hostname; } catch {}
+
+  const activiteResume = editorialAnalysis?.comprehension_activite?.resume || '';
+
+  // Pick the top suggestion (most impactful, non-technical)
+  const topSuggestion =
+    editorialAnalysis?.call_to_action?.point_amelioration ||
+    editorialAnalysis?.signaux_confiance?.point_amelioration ||
+    editorialAnalysis?.coherence_offres?.point_amelioration || '';
+
+  // Keep it short and clean — dejargon inline
+  const cleanSuggestion = topSuggestion
+    .replace(/\bCTA\b/gi, 'bouton d\'action')
+    .replace(/\bmaillage interne\b/gi, 'liens entre vos pages')
+    .replace(/\bmeta[- ]descriptions?\b/gi, 'textes de présentation Google')
+    .replace(/\bm[ée]ta[- ]descriptions?\b/gi, 'textes de présentation Google')
+    .replace(/\bSEO\b/g, 'référencement');
+
+  const intro = activiteResume
+    ? `Je suis tombé sur ${domain} et j'ai pris le temps de regarder votre site. ${activiteResume}`
+    : `Je suis tombé sur ${domain} et j'ai pris le temps de regarder votre site en détail.`;
+
+  const suggestionLine = cleanSuggestion
+    ? `\n\nJ'ai relevé un point qui pourrait vous aider à obtenir plus de clients : ${cleanSuggestion}`
+    : '';
+
+  return `Bonjour,
+
+${intro}${suggestionLine}
+
+J'ai compilé une analyse complète dans un rapport personnalisé (score actuel : ${combinedScore}/100) :
+${reportUrl}
+
+Si vous voulez que je vous l'envoie par email ou si vous avez des questions, n'hésitez pas !
+
+Maxence`;
+}
+
 export async function sendOutreachEmail(
   email: string,
   report: Report,

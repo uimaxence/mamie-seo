@@ -5,7 +5,7 @@ import { calculateTechnicalScore } from '@/lib/scorer';
 import { analyzeWithClaude } from '@/lib/claude';
 import { persistReport } from '@/lib/report-store';
 import { saveReport } from '@/lib/store';
-import { sendOutreachEmail } from '@/lib/brevo-outreach';
+import { sendOutreachEmail, buildLinkedInMessage } from '@/lib/brevo-outreach';
 import { getSupabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import type { Report, OnboardingAnswers, ProgressEvent } from '@/lib/types';
@@ -18,21 +18,26 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  let body: { email: string; url: string; force?: boolean };
+  let body: { email?: string; url: string; force?: boolean; mode?: 'email' | 'linkedin' };
   try {
     body = await request.json();
   } catch {
     return Response.json({ error: 'Requête invalide.' }, { status: 400 });
   }
 
-  const { email, url, force } = body;
+  const { email, url, force, mode = 'email' } = body;
 
-  if (!email || !url) {
-    return Response.json({ error: 'Email et URL requis.' }, { status: 400 });
+  // Email required for email mode
+  if (mode === 'email' && !email) {
+    return Response.json({ error: 'Email requis pour le mode email.' }, { status: 400 });
   }
 
-  // Validate email format
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!url) {
+    return Response.json({ error: 'URL requise.' }, { status: 400 });
+  }
+
+  // Validate email format (only if provided)
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: 'Format email invalide.' }, { status: 400 });
   }
 
@@ -44,8 +49,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "L'URL n'est pas valide." }, { status: 400 });
   }
 
-  // Check for existing outreach
-  if (!force) {
+  // Check for existing outreach (only for email mode with email)
+  if (mode === 'email' && email && !force) {
     const existing = await checkExistingOutreach(email);
     if (existing) {
       const sentDate = existing.sent_at
@@ -117,57 +122,85 @@ export async function POST(request: NextRequest) {
 
       // Save report
       saveReport(report);
-      await persistReport(report, undefined, email);
+      await persistReport(report, undefined, email || undefined);
 
       // Set expiry on report (14 days)
       const supabase = getSupabase();
+      const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://mamie-seo.fr';
+      const reportUrl = `${APP_URL}/report/${report.id}`;
+
       await supabase
         .from('reports')
         .update({
           expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-          email_sent_to: email,
+          ...(email ? { email_sent_to: email } : {}),
         })
         .eq('id', report.id);
 
-      // Step 6: Send email
-      await sendEvent({ step: 'generating', message: "Préparation de l'email..." });
-      const brevoResult = await sendOutreachEmail(email, report, report.id);
+      // Compute combined score
+      const editorialScoreVal = editorialAnalysis?.score_editorial ?? 0;
+      const combinedScore = editorialAnalysis
+        ? Math.round((technicalScore.total + editorialScoreVal) / 2)
+        : technicalScore.total;
 
-      if (!brevoResult.success) {
-        await sendEvent({ step: 'error', message: `Erreur Brevo: ${brevoResult.error}` });
-        await writer.close();
-        return;
-      }
-
-      await sendEvent({ step: 'generating', message: 'Envoi via Brevo...' });
-
-      // Step 7: Record outreach
       let domain = report.url;
       try { domain = new URL(report.url).hostname; } catch {}
 
-      const outreach = await createOutreachRecord({
-        reportId: report.id,
-        email: email.toLowerCase().trim(),
-        domain,
-        brevoMessageId: brevoResult.messageId,
-      });
+      if (mode === 'linkedin') {
+        // LinkedIn mode — generate message, no email
+        await sendEvent({ step: 'generating', message: 'Génération du message LinkedIn...' });
 
-      // Compute combined score
-      const editorialScore = editorialAnalysis?.score_editorial ?? 0;
-      const combinedScore = editorialAnalysis
-        ? Math.round((technicalScore.total + editorialScore) / 2)
-        : technicalScore.total;
+        const linkedinMessage = buildLinkedInMessage(report, reportUrl);
 
-      await sendEvent({
-        step: 'done',
-        message: JSON.stringify({
-          outreachId: outreach?.id,
+        const outreach = await createOutreachRecord({
           reportId: report.id,
-          score: combinedScore,
-          pagesCrawled: crawlResult.totalUrlsCrawled,
-        }),
-        detail: 'Rapport envoyé !',
-      });
+          email: email || `linkedin:${domain}`,
+          domain,
+        });
+
+        await sendEvent({
+          step: 'done',
+          message: JSON.stringify({
+            outreachId: outreach?.id,
+            reportId: report.id,
+            score: combinedScore,
+            pagesCrawled: crawlResult.totalUrlsCrawled,
+            reportUrl,
+            linkedinMessage,
+          }),
+          detail: 'Rapport prêt !',
+        });
+      } else {
+        // Email mode — send via Brevo
+        await sendEvent({ step: 'generating', message: "Préparation de l'email..." });
+        const brevoResult = await sendOutreachEmail(email!, report, report.id);
+
+        if (!brevoResult.success) {
+          await sendEvent({ step: 'error', message: `Erreur Brevo: ${brevoResult.error}` });
+          await writer.close();
+          return;
+        }
+
+        await sendEvent({ step: 'generating', message: 'Envoi via Brevo...' });
+
+        const outreach = await createOutreachRecord({
+          reportId: report.id,
+          email: email!.toLowerCase().trim(),
+          domain,
+          brevoMessageId: brevoResult.messageId,
+        });
+
+        await sendEvent({
+          step: 'done',
+          message: JSON.stringify({
+            outreachId: outreach?.id,
+            reportId: report.id,
+            score: combinedScore,
+            pagesCrawled: crawlResult.totalUrlsCrawled,
+          }),
+          detail: 'Rapport envoyé !',
+        });
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       await sendEvent({ step: 'error', message });
