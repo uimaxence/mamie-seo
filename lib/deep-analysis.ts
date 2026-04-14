@@ -135,16 +135,23 @@ export async function analyzeScreenshotForOutreach(
   // Get full-page screenshot — try Playwright, fall back to thum.io (tall crop)
   let screenshotBase64: string | null = null;
 
+  // Minimum screenshot size (bytes) — below this it's likely a browser error page
+  const MIN_SCREENSHOT_SIZE = 50_000;
+
   try {
     const { captureScreenshots: capture, optimizeForApi: optimize } = await import('./screenshot');
     const screenshots = await capture(pageUrl);
-    const optimized = await optimize(screenshots.desktop);
-    screenshotBase64 = optimized.toString('base64');
+    if (screenshots.desktop.length >= MIN_SCREENSHOT_SIZE) {
+      const optimized = await optimize(screenshots.desktop);
+      screenshotBase64 = optimized.toString('base64');
+    }
   } catch {
     // Playwright unavailable — use thum.io with tall crop to see full page
     try {
       const buf = await externalScreenshot(pageUrl, { width: 1440, crop: 4000 });
-      if (buf) screenshotBase64 = bufferToBase64(buf);
+      if (buf && buf.length >= MIN_SCREENSHOT_SIZE) {
+        screenshotBase64 = bufferToBase64(buf);
+      }
     } catch { /* ignore */ }
   }
 
