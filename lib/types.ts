@@ -251,6 +251,7 @@ export type CrawlStep =
   | 'analyzing_meta'
   | 'scoring'
   | 'editorial'
+  | 'visual_analysis'
   | 'generating'
   | 'done'
   | 'error';

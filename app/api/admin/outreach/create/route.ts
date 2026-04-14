@@ -6,6 +6,7 @@ import { analyzeWithClaude } from '@/lib/claude';
 import { persistReport } from '@/lib/report-store';
 import { saveReport } from '@/lib/store';
 import { sendOutreachEmail, buildLinkedInMessage } from '@/lib/brevo-outreach';
+import { analyzeScreenshotForOutreach } from '@/lib/deep-analysis';
 import { getSupabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import type { Report, OnboardingAnswers, ProgressEvent } from '@/lib/types';
@@ -147,10 +148,19 @@ export async function POST(request: NextRequest) {
       try { domain = new URL(report.url).hostname; } catch {}
 
       if (mode === 'linkedin') {
-        // LinkedIn mode — generate message, no email
+        // LinkedIn mode — screenshot + visual analysis, then generate message
+        await sendEvent({ step: 'visual_analysis', message: 'Capture du site et analyse visuelle...' });
+
+        let visualInsights: Awaited<ReturnType<typeof analyzeScreenshotForOutreach>> = null;
+        try {
+          visualInsights = await analyzeScreenshotForOutreach(report.url);
+        } catch (err) {
+          console.error('Visual analysis error (non-blocking):', err);
+        }
+
         await sendEvent({ step: 'generating', message: 'Génération du message LinkedIn...' });
 
-        const linkedinMessage = buildLinkedInMessage(report, reportUrl);
+        const linkedinMessage = buildLinkedInMessage(report, reportUrl, visualInsights);
 
         const outreach = await createOutreachRecord({
           reportId: report.id,

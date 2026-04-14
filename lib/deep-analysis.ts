@@ -117,6 +117,91 @@ Produis entre 6 et 12 annotations. Ordonne le plan_action par priorité décrois
 Réponds UNIQUEMENT avec le JSON.`;
 }
 
+// ─── Lightweight visual analysis for outreach prospection ───
+
+export interface OutreachVisualInsights {
+  verdict_visuel: string;
+  probleme_principal: string;
+  suggestion_concrete: string;
+}
+
+export async function analyzeScreenshotForOutreach(
+  pageUrl: string,
+): Promise<OutreachVisualInsights | null> {
+  if (isPrivateUrl(pageUrl)) return null;
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
+
+  // Get screenshot — try Playwright, fall back to thum.io
+  let screenshotBase64: string | null = null;
+
+  try {
+    const { captureScreenshots: capture, optimizeForApi: optimize } = await import('./screenshot');
+    const screenshots = await capture(pageUrl);
+    const optimized = await optimize(screenshots.desktop);
+    screenshotBase64 = optimized.toString('base64');
+  } catch {
+    // Playwright unavailable — use thum.io
+    try {
+      const buf = await externalScreenshot(pageUrl, { width: 1440 });
+      if (buf) screenshotBase64 = bufferToBase64(buf);
+    } catch { /* ignore */ }
+  }
+
+  if (!screenshotBase64) return null;
+
+  let domain = pageUrl;
+  try { domain = new URL(pageUrl).hostname; } catch {}
+
+  const message = await client.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 800,
+    system: `Tu es un designer web et expert en conversion qui prospecte des clients potentiels. Tu regardes ce site pour la première fois, comme si tu le découvrais en tant que visiteur.
+
+Tu dois donner une analyse honnête, bienveillante et SPÉCIFIQUE à ce que tu vois sur le screenshot.
+
+Règles :
+- Parle comme un professionnel qui s'adresse directement au propriétaire du site
+- N'utilise AUCUN jargon technique (pas de "CTA", "UX", "SEO", "responsive", "maillage", "above the fold")
+- Sois concret et spécifique au site que tu vois (pas de conseils génériques)
+- Chaque point doit faire 1-2 phrases maximum
+- Réponds UNIQUEMENT en JSON strict`,
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'image',
+          source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 },
+        },
+        {
+          type: 'text',
+          text: `Voici le screenshot de ${domain}. Analyse-le et réponds avec ce JSON :
+
+{
+  "verdict_visuel": "Ta première impression honnête en une phrase — ce qui te saute aux yeux quand tu arrives sur ce site (positif ou négatif)",
+  "probleme_principal": "Le problème visuel ou d'expérience le plus important que tu vois — décris ce que tu observes concrètement et pourquoi c'est un problème pour les visiteurs",
+  "suggestion_concrete": "Une action concrète et facile à comprendre que le propriétaire pourrait faire pour améliorer son site — quelque chose de spécifique, pas un conseil générique"
+}`,
+        },
+      ],
+    }],
+  });
+
+  const textBlock = message.content.find((b) => b.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') return null;
+
+  try {
+    let jsonStr = textBlock.text.trim();
+    const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1].trim();
+    return JSON.parse(jsonStr) as OutreachVisualInsights;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Full deep page analysis ───
+
 export async function analyzePageDeep(
   pageUrl: string,
   crawlResult: CrawlResult,
