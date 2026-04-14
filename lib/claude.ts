@@ -89,9 +89,28 @@ Format de ta réponse : JSON strict, aucun texte en dehors du JSON.`;
     description: p.metaDescription,
     h1: p.h1Content,
     h2Count: p.h2Count,
+    responseTimeMs: p.responseTimeMs,
   }));
 
   const cms = crawl.technologies.find((t) => t.category === 'cms')?.name || 'Non détecté';
+
+  // Aggregate contact & booking signals across all pages
+  const hasContactPage = crawl.pages.some((p) => {
+    const path = new URL(p.url).pathname.toLowerCase();
+    return path.includes('contact');
+  });
+  const totalForms = crawl.pages.reduce((s, p) => s + p.formCount, 0);
+  const allPhones = [...new Set(crawl.pages.flatMap((p) => p.phoneLinks))];
+  const allEmails = [...new Set(crawl.pages.flatMap((p) => p.emailLinks))];
+  const allBookingWidgets = [...new Set(crawl.pages.flatMap((p) => p.bookingWidgets))];
+
+  // Performance
+  const avgResponseTime = Math.round(
+    crawl.pages.reduce((s, p) => s + p.responseTimeMs, 0) / crawl.pages.length
+  );
+  const slowestPage = crawl.pages.reduce((max, p) =>
+    p.responseTimeMs > max.responseTimeMs ? p : max, crawl.pages[0]
+  );
 
   const user = `Voici les données du site ${crawl.finalUrl} à analyser :
 
@@ -102,6 +121,19 @@ Format de ta réponse : JSON strict, aucun texte en dehors du JSON.`;
 - Pages crawlées : ${crawl.totalUrlsCrawled}
 - Sitemap : ${crawl.sitemapFound ? `trouvé (${crawl.sitemapUrls} URLs)` : 'absent'}
 - Temps de réponse homepage : ${crawl.homepageResponseTimeMs}ms
+- Temps de réponse moyen : ${avgResponseTime}ms
+- Page la plus lente : ${slowestPage.url} (${slowestPage.responseTimeMs}ms)
+
+## Signaux de contact & conversion
+- Page contact détectée : ${hasContactPage ? 'Oui' : 'Non'}
+- Formulaires trouvés : ${totalForms}
+- Numéros de téléphone (liens tel:) : ${allPhones.length > 0 ? allPhones.join(', ') : 'Aucun'}
+- Adresses email (liens mailto:) : ${allEmails.length > 0 ? allEmails.join(', ') : 'Aucune'}
+- Widgets de réservation / booking détectés : ${allBookingWidgets.length > 0 ? allBookingWidgets.join(', ') : 'Aucun'}
+
+IMPORTANT sur les widgets de réservation : certains widgets (ZenChef, Calendly, etc.) se chargent via JavaScript et ne sont pas toujours visibles dans le HTML statique. Si un widget est listé ci-dessus, c'est que son script a été détecté. Même s'il n'apparaît pas dans le contenu texte, le site dispose bien de cette fonctionnalité. Ne dis PAS qu'il manque un système de réservation si un widget est détecté.
+
+IMPORTANT sur la performance : un temps de réponse moyen au-dessus de 1500ms est problématique pour l'expérience utilisateur et le SEO. Si les pages sont lentes, c'est un point majeur à remonter dans l'analyse.
 
 ## Contenu de la homepage
 ${homepage?.textContent?.slice(0, 5000) || '(contenu non disponible)'}
@@ -109,7 +141,7 @@ ${homepage?.textContent?.slice(0, 5000) || '(contenu non disponible)'}
 ## Pages principales détectées
 ${keyPages.map((p) => `### ${p.url}\n${p.textContent?.slice(0, 2000) || '(vide)'}`).join('\n\n')}
 
-## Métadonnées de toutes les pages
+## Métadonnées de toutes les pages (avec temps de réponse)
 ${JSON.stringify(allMeta, null, 2)}
 
 ## Structure JSON attendue pour ta réponse

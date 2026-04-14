@@ -339,6 +339,45 @@ function extractPageData(html: string, url: string, responseTimeMs: number): Pag
     }
   });
 
+  // Forms
+  const formCount = $('form').length;
+
+  // Phone links (tel:)
+  const phoneLinks: string[] = [];
+  $('a[href^="tel:"]').each((_, el) => {
+    const href = $(el).attr('href');
+    if (href) phoneLinks.push(href.replace('tel:', '').trim());
+  });
+
+  // Email links (mailto:)
+  const emailLinks: string[] = [];
+  $('a[href^="mailto:"]').each((_, el) => {
+    const href = $(el).attr('href');
+    if (href) emailLinks.push(href.replace('mailto:', '').split('?')[0].trim());
+  });
+
+  // Booking widgets — detect from raw HTML before script removal
+  const bookingWidgets: string[] = [];
+  const widgetPatterns: [RegExp, string][] = [
+    [/zenchef\.com/i, 'ZenChef'],
+    [/thefork\.com|lafourchette\.com/i, 'TheFork / LaFourchette'],
+    [/calendly\.com/i, 'Calendly'],
+    [/doctolib\.fr/i, 'Doctolib'],
+    [/simplybook\.me/i, 'SimplyBook'],
+    [/booksy\.com/i, 'Booksy'],
+    [/planity\.com/i, 'Planity'],
+    [/reservio\.com/i, 'Reservio'],
+    [/resy\.com/i, 'Resy'],
+    [/opentable\.com/i, 'OpenTable'],
+    [/treatwell\.fr|treatwell\.com/i, 'Treatwell'],
+    [/fresha\.com/i, 'Fresha'],
+  ];
+  for (const [pattern, name] of widgetPatterns) {
+    if (pattern.test(html) && !bookingWidgets.includes(name)) {
+      bookingWidgets.push(name);
+    }
+  }
+
   // Text content
   $('script, style, noscript, nav, footer, header').remove();
   const textContent = $('body').text().replace(/\s+/g, ' ').trim();
@@ -363,6 +402,10 @@ function extractPageData(html: string, url: string, responseTimeMs: number): Pag
     internalLinks,
     textContent: textContent.slice(0, 10_000), // cap text for API payload size
     responseTimeMs,
+    formCount,
+    phoneLinks: [...new Set(phoneLinks)],
+    emailLinks: [...new Set(emailLinks)],
+    bookingWidgets: [...new Set(bookingWidgets)],
   };
 }
 
@@ -401,11 +444,11 @@ async function bfsCrawl(
         const res = await fetchWithTimeout(url);
         const responseTimeMs = Date.now() - start;
 
-        if (!res.ok) return null;
-        const contentType = res.headers.get('content-type') || '';
-        if (!contentType.includes('text/html')) return null;
-
         const html = await res.text();
+        // Tolerate 5xx if the server still returned valid HTML (common on WordPress)
+        if (!res.ok && !html.includes('</html>')) return null;
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('text/html') && !html.includes('</html>')) return null;
         const pageData = extractPageData(html, res.url || url, responseTimeMs);
         pages.push(pageData);
 
@@ -525,10 +568,10 @@ export async function crawlSite(
             const start = Date.now();
             const res = await fetchWithTimeout(url, CRAWL_TIMEOUT_PER_PAGE);
             const ms = Date.now() - start;
-            if (!res.ok) return null;
-            const ct = res.headers.get('content-type') || '';
-            if (!ct.includes('text/html')) return null;
             const html = await res.text();
+            if (!res.ok && !html.includes('</html>')) return null;
+            const ct = res.headers.get('content-type') || '';
+            if (!ct.includes('text/html') && !html.includes('</html>')) return null;
             return extractPageData(html, url, ms);
           } catch {
             return null;

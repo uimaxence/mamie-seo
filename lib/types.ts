@@ -70,6 +70,10 @@ export interface PageData {
   internalLinks: string[];
   textContent: string; // raw visible text
   responseTimeMs: number;
+  formCount: number;
+  phoneLinks: string[];
+  emailLinks: string[];
+  bookingWidgets: string[];
 }
 
 export interface DetectedTechnology {

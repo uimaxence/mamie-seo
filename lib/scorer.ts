@@ -47,19 +47,19 @@ export function calculateTechnicalScore(crawl: CrawlResult): TechnicalScore {
     details: sitemapDetails,
   });
 
-  // 3. Meta titles (15 pts)
+  // 3. Meta titles (13 pts)
   const goodTitles = pages.filter(
     (p) => p.title && p.titleLength >= 30 && p.titleLength <= 65
   ).length;
   const titlePercent = goodTitles / totalPages;
-  const titleScore = Math.round(titlePercent * 15);
+  const titleScore = Math.round(titlePercent * 13);
   criteria.push({
     name: 'Meta titres',
     key: 'meta_title',
     score: titleScore,
-    maxScore: 15,
+    maxScore: 13,
     details:
-      titleScore >= 12
+      titleScore >= 10
         ? `${goodTitles}/${totalPages} pages ont un titre de bonne longueur (30-65 caractères).`
         : `Seulement ${goodTitles}/${totalPages} pages ont un titre bien dimensionné. Un titre trop court ou trop long est tronqué dans Google.`,
   });
@@ -81,17 +81,17 @@ export function calculateTechnicalScore(crawl: CrawlResult): TechnicalScore {
         : `${goodDescs}/${totalPages} pages ont une meta description optimale (120-165 car.). Sans description, Google génère un extrait automatique souvent moins convaincant.`,
   });
 
-  // 5. H1 tags (15 pts)
+  // 5. H1 tags (13 pts)
   const goodH1 = pages.filter((p) => p.h1Count === 1).length;
   const h1Percent = goodH1 / totalPages;
-  const h1Score = Math.round(h1Percent * 15);
+  const h1Score = Math.round(h1Percent * 13);
   criteria.push({
     name: 'Balises H1',
     key: 'h1',
     score: h1Score,
-    maxScore: 15,
+    maxScore: 13,
     details:
-      h1Score >= 12
+      h1Score >= 10
         ? `${goodH1}/${totalPages} pages ont exactement un H1 — c'est la bonne pratique.`
         : `Seulement ${goodH1}/${totalPages} pages ont exactement un H1. ${
             pages.filter((p) => p.h1Count === 0).length
@@ -187,6 +187,31 @@ export function calculateTechnicalScore(crawl: CrawlResult): TechnicalScore {
       canonicalScore >= 4
         ? `${withCanonical}/${totalPages} pages ont une balise canonical.`
         : `Seulement ${withCanonical}/${totalPages} pages ont une balise canonical. Sans elle, Google peut considérer des doublons.`,
+  });
+
+  // 11. Page load performance (4 pts)
+  const avgResponseTime = pages.reduce((s, p) => s + p.responseTimeMs, 0) / totalPages;
+  let perfScore: number;
+  let perfDetails: string;
+  if (avgResponseTime <= 800) {
+    perfScore = 4;
+    perfDetails = `Temps de réponse moyen de ${Math.round(avgResponseTime)}ms — rapide.`;
+  } else if (avgResponseTime <= 1500) {
+    perfScore = 3;
+    perfDetails = `Temps de réponse moyen de ${Math.round(avgResponseTime)}ms — correct, mais peut être amélioré.`;
+  } else if (avgResponseTime <= 3000) {
+    perfScore = 1;
+    perfDetails = `Temps de réponse moyen de ${Math.round(avgResponseTime)}ms — lent. Vos visiteurs risquent de partir avant que la page ne s'affiche.`;
+  } else {
+    perfScore = 0;
+    perfDetails = `Temps de réponse moyen de ${Math.round(avgResponseTime)}ms — très lent. Google pénalise les sites lents et vos visiteurs n'attendront pas.`;
+  }
+  criteria.push({
+    name: 'Temps de chargement',
+    key: 'performance',
+    score: perfScore,
+    maxScore: 4,
+    details: perfDetails,
   });
 
   // Total
