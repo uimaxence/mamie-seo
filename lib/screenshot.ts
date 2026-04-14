@@ -40,6 +40,26 @@ async function hideCookieBanners(page: Page) {
   }).catch(() => {});
 }
 
+/** Scroll through the entire page to trigger lazy-loaded images and JS widgets */
+async function scrollFullPage(page: Page) {
+  await page.evaluate(async () => {
+    const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+    const scrollHeight = document.body.scrollHeight;
+    const viewportHeight = window.innerHeight;
+    let scrolled = 0;
+
+    while (scrolled < scrollHeight) {
+      scrolled += viewportHeight;
+      window.scrollTo(0, scrolled);
+      await delay(300);
+    }
+
+    // Scroll back to top
+    window.scrollTo(0, 0);
+    await delay(200);
+  });
+}
+
 export interface ScreenshotResult {
   desktop: Buffer;
   mobile: Buffer;
@@ -68,7 +88,8 @@ export async function captureScreenshots(url: string): Promise<ScreenshotResult>
     await desktopPage.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
     await hideCookieBanners(desktopPage);
     await desktopPage.emulateMedia({ colorScheme: 'light' });
-    await desktopPage.waitForTimeout(1500);
+    await scrollFullPage(desktopPage);
+    await desktopPage.waitForTimeout(1000);
 
     const desktopBuf = await desktopPage.screenshot({ fullPage: true, type: 'png' });
 
@@ -86,7 +107,8 @@ export async function captureScreenshots(url: string): Promise<ScreenshotResult>
     await mobilePage.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
     await hideCookieBanners(mobilePage);
     await mobilePage.emulateMedia({ colorScheme: 'light' });
-    await mobilePage.waitForTimeout(1500);
+    await scrollFullPage(mobilePage);
+    await mobilePage.waitForTimeout(1000);
 
     const mobileBuf = await mobilePage.screenshot({ fullPage: true, type: 'png' });
     const mobileMeta = await sharp(Buffer.from(mobileBuf)).metadata();
