@@ -246,7 +246,8 @@ export function getOutreachSubject(domain: string): string {
   return `Quelques idées pour ${domain}`;
 }
 
-/** Build a short LinkedIn DM message from report data */
+/** Build a short LinkedIn DM message from report data.
+ * Mixes visual (UI) and editorial (SEO) insights for a compelling prospection message. */
 export function buildLinkedInMessage(
   report: Report,
   reportUrl: string,
@@ -263,56 +264,90 @@ export function buildLinkedInMessage(
 
   const activiteResume = editorialAnalysis?.comprehension_activite?.resume || '';
 
-  const intro = activiteResume
-    ? `Je suis tombé sur ${domain} et j'ai pris le temps de regarder votre site. ${activiteResume}`
-    : `Je suis tombé sur ${domain} et j'ai pris le temps de regarder votre site en détail.`;
+  // ─── Visual observation (UI/design) ───
+  const visualLine = visualInsights?.verdict_visuel || visualInsights?.probleme_principal || '';
 
-  // Prefer visual insights (from screenshot) over editorial text suggestions
-  let observationBlock = '';
-  if (visualInsights) {
-    const lines: string[] = [];
-    if (visualInsights.verdict_visuel) {
-      lines.push(visualInsights.verdict_visuel);
-    }
-    if (visualInsights.probleme_principal) {
-      lines.push(visualInsights.probleme_principal);
-    }
-    if (visualInsights.suggestion_concrete) {
-      lines.push(visualInsights.suggestion_concrete);
-    }
-    observationBlock = lines.join('\n\n');
-  } else {
-    // Fallback: editorial text suggestion (dejargoned)
-    const topSuggestion =
-      editorialAnalysis?.call_to_action?.point_amelioration ||
-      editorialAnalysis?.signaux_confiance?.point_amelioration ||
-      editorialAnalysis?.coherence_offres?.point_amelioration || '';
+  // ─── SEO/editorial observation (pick the most impactful, dejargoned) ───
+  const seoSuggestions = [
+    editorialAnalysis?.signaux_confiance?.point_amelioration,
+    editorialAnalysis?.coherence_offres?.point_amelioration,
+    editorialAnalysis?.call_to_action?.point_amelioration,
+    editorialAnalysis?.coherence_tonale?.point_amelioration,
+  ].filter(Boolean) as string[];
 
-    const cleanSuggestion = topSuggestion
+  // Pick the best SEO insight (different from the visual one)
+  let seoLine = '';
+  for (const s of seoSuggestions) {
+    seoLine = s
       .replace(/\bCTA\b/gi, 'bouton d\'action')
+      .replace(/\bcall[- ]to[- ]action\b/gi, 'bouton d\'action')
       .replace(/\bmaillage interne\b/gi, 'liens entre vos pages')
       .replace(/\bmeta[- ]descriptions?\b/gi, 'textes de présentation Google')
       .replace(/\bm[ée]ta[- ]descriptions?\b/gi, 'textes de présentation Google')
-      .replace(/\bSEO\b/g, 'référencement');
-
-    if (cleanSuggestion) {
-      observationBlock = `J'ai relevé un point qui pourrait vous aider à obtenir plus de clients : ${cleanSuggestion}`;
-    }
+      .replace(/\bSEO\b/g, 'référencement')
+      .replace(/\bUX\b/g, 'expérience utilisateur');
+    break;
   }
 
-  const observationSection = observationBlock ? `\n\n${observationBlock}` : '';
+  // ─── Performance insight (if slow) ───
+  const homepageMs = report.crawlResult.homepageResponseTimeMs;
+  const perfLine = homepageMs > 2000
+    ? `Votre page d'accueil met ${(homepageMs / 1000).toFixed(1)}s à charger — c'est long, et beaucoup de visiteurs ne vont pas attendre.`
+    : '';
+
+  // ─── Build the message ───
+  // Intro: show you understand their business (1-2 sentences)
+  const intro = activiteResume
+    ? `J'ai pris le temps de parcourir ${domain}. ${activiteResume}`
+    : `J'ai pris le temps de parcourir ${domain} en détail.`;
+
+  // Observations: mix visual + SEO (2 short paragraphs)
+  const observations: string[] = [];
+
+  if (visualLine) {
+    observations.push(visualLine);
+  }
+  if (perfLine && observations.length < 2) {
+    observations.push(perfLine);
+  }
+  if (seoLine && observations.length < 2) {
+    observations.push(seoLine);
+  }
+  // If no visual, use 2 editorial suggestions
+  if (observations.length === 0 && seoSuggestions.length > 0) {
+    observations.push(seoSuggestions[0]);
+    if (seoSuggestions.length > 1) observations.push(seoSuggestions[1]);
+  }
+
+  const observationsText = observations.length > 0
+    ? observations.map(o => `→ ${o}`).join('\n')
+    : '';
+
+  // Concrete suggestion from visual analysis (if available)
+  const suggestion = visualInsights?.suggestion_concrete || '';
+  const suggestionLine = suggestion
+    ? `\n\n${suggestion}`
+    : '';
+
+  // Tease: create curiosity with the score
+  const teaser = combinedScore < 60
+    ? `J'ai noté pas mal de points à corriger — j'ai tout mis dans un rapport détaillé`
+    : combinedScore < 80
+    ? `Il y a quelques ajustements qui pourraient faire une vraie différence — j'ai détaillé tout ça ici`
+    : `Votre site est déjà bien, mais j'ai repéré quelques optimisations qui pourraient vous amener plus de clients`;
 
   return `Bonjour,
 
-${intro}${observationSection}
+${intro}
 
-J'ai compilé une analyse complète dans un rapport personnalisé (score actuel : ${combinedScore}/100) :
+En regardant le site, deux choses m'ont marqué :
+${observationsText}${suggestionLine}
+
+${teaser} (score actuel : ${combinedScore}/100) :
 ${reportUrl}
 
-Si vous voulez que je vous l'envoie par email ou si vous avez des questions, n'hésitez pas !
-
-Maxence Cailleau
-Designer & développeur web`;
+Bonne continuation,
+Maxence Cailleau — Designer & développeur web`;
 }
 
 export async function sendOutreachEmail(
